@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 function [rev_comp] = Reverse_complement_probes(probes)
 %This takes a list of DNA sequences and makes the next column column containing the reverse complement 
 %Import probes from excel as cell array, then change what probes is equal
