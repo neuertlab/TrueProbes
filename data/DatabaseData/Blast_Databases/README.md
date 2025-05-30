@@ -1,0 +1,1 @@
+Location of where BLAST databases are stored
