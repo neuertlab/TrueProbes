@@ -1,0 +1,139 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+function Spots = confusionMatrixWrapper_MultiCellMultiModel(Non_MultiCellMultiModelVector,Noff_MultiCellMultiModelVector)
+N_cells = size(Non_MultiCellMultiModelVector,2);
+N_models = size(Non_MultiCellMultiModelVector,1);
+FalseNegative_SpotCounts = CATnWrapper({zeros([size(Non_MultiCellMultiModelVector,1) size(Non_MultiCellMultiModelVector,2) 1]),cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end-1)),3)},3);
+TrueNegative_SpotCounts = CATnWrapper({zeros([size(Noff_MultiCellMultiModelVector,1) size(Noff_MultiCellMultiModelVector,2) 1]),cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end-1)),3)},3);
+TruePositive_SpotCounts = cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+FalsePositive_SpotCounts = cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+% FalseNegative_SpotCounts = cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end)),3);
+% TrueNegative_SpotCounts = cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end)),3);
+% TruePositive_SpotCounts = cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+% FalsePositive_SpotCounts = cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+True_Spots = TruePositive_SpotCounts + FalseNegative_SpotCounts;%Actual Positive
+Removed_Spots = TrueNegative_SpotCounts + FalsePositive_SpotCounts;% Actual Negative
+Measured_Spots = TruePositive_SpotCounts + FalsePositive_SpotCounts;%Predicted Positive
+Negative_Spots = TrueNegative_SpotCounts + FalseNegative_SpotCounts;% Predicted Negative
+Prevalence_Spots = True_Spots./(Measured_Spots+Negative_Spots);
+Accuracy_Spots = (TruePositive_SpotCounts+TrueNegative_SpotCounts)./(TruePositive_SpotCounts+TrueNegative_SpotCounts+FalsePositive_SpotCounts+FalseNegative_SpotCounts);
+BalancedAccuracy_Spots = 50*TruePositive_SpotCounts./True_Spots+50*TrueNegative_SpotCounts./Removed_Spots;
+F1_Spots = 2*TruePositive_SpotCounts./(2*TruePositive_SpotCounts+FalsePositive_SpotCounts+FalseNegative_SpotCounts);
+MCC_Spots = (TruePositive_SpotCounts.*TrueNegative_SpotCounts-FalsePositive_SpotCounts.*FalseNegative_SpotCounts)./sqrt(Measured_Spots.*True_Spots.*Removed_Spots.*Negative_Spots);
+Spots.TPR = 100*TruePositive_SpotCounts./True_Spots;
+Spots.FNR = 100*FalseNegative_SpotCounts./True_Spots;
+Spots.TNR= 100*TrueNegative_SpotCounts./Removed_Spots;
+Spots.FPR = 100*FalsePositive_SpotCounts./Removed_Spots;
+Spots.PPV = 100*TruePositive_SpotCounts./Measured_Spots;
+Spots.FDR = 100*FalsePositive_SpotCounts./Measured_Spots;
+Spots.NPV = 100*TrueNegative_SpotCounts./Negative_Spots;
+Spots.FOR = 100*FalseNegative_SpotCounts./Negative_Spots;
+Spots.TP = TruePositive_SpotCounts;
+Spots.FN = FalseNegative_SpotCounts;
+Spots.TN = TrueNegative_SpotCounts;
+Spots.FP = FalsePositive_SpotCounts;
+Spots.T = TrueNegative_SpotCounts+TruePositive_SpotCounts;
+Spots.F = FalsePositive_SpotCounts+FalseNegative_SpotCounts;
+Spots.P = True_Spots;
+Spots.N = Removed_Spots;
+Spots.PREV = Prevalence_Spots;
+Spots.ACC = Accuracy_Spots;
+Spots.BA = BalancedAccuracy_Spots;
+Spots.F1 = F1_Spots;
+Spots.MCC = MCC_Spots;
+Spots.ConfusionMatrixFunction = @(d) permute(CATnWrapper(arrayfun(@(x) CATnWrapper(arrayfun(@(y) ...
+    squeeze([TruePositive_SpotCounts(x,y,d); FalsePositive_SpotCounts(x,y,d); FalseNegative_SpotCounts(x,y,d); TrueNegative_SpotCounts(x,y,d)])...
+    ,1:N_cells,'Un',0),3),1:N_models,'Un',0),4),[4 3 1 2]);
+=======
+function Spots = confusionMatrixWrapper_MultiCellMultiModel(Non_MultiCellMultiModelVector,Noff_MultiCellMultiModelVector)
+N_cells = size(Non_MultiCellMultiModelVector,2);
+N_models = size(Non_MultiCellMultiModelVector,1);
+FalseNegative_SpotCounts = CATnWrapper({zeros([size(Non_MultiCellMultiModelVector,1) size(Non_MultiCellMultiModelVector,2) 1]),cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end-1)),3)},3);
+TrueNegative_SpotCounts = CATnWrapper({zeros([size(Noff_MultiCellMultiModelVector,1) size(Noff_MultiCellMultiModelVector,2) 1]),cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end-1)),3)},3);
+TruePositive_SpotCounts = cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+FalsePositive_SpotCounts = cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+% FalseNegative_SpotCounts = cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end)),3);
+% TrueNegative_SpotCounts = cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end)),3);
+% TruePositive_SpotCounts = cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+% FalsePositive_SpotCounts = cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+True_Spots = TruePositive_SpotCounts + FalseNegative_SpotCounts;%Actual Positive
+Removed_Spots = TrueNegative_SpotCounts + FalsePositive_SpotCounts;% Actual Negative
+Measured_Spots = TruePositive_SpotCounts + FalsePositive_SpotCounts;%Predicted Positive
+Negative_Spots = TrueNegative_SpotCounts + FalseNegative_SpotCounts;% Predicted Negative
+Prevalence_Spots = True_Spots./(Measured_Spots+Negative_Spots);
+Accuracy_Spots = (TruePositive_SpotCounts+TrueNegative_SpotCounts)./(TruePositive_SpotCounts+TrueNegative_SpotCounts+FalsePositive_SpotCounts+FalseNegative_SpotCounts);
+BalancedAccuracy_Spots = 50*TruePositive_SpotCounts./True_Spots+50*TrueNegative_SpotCounts./Removed_Spots;
+F1_Spots = 2*TruePositive_SpotCounts./(2*TruePositive_SpotCounts+FalsePositive_SpotCounts+FalseNegative_SpotCounts);
+MCC_Spots = (TruePositive_SpotCounts.*TrueNegative_SpotCounts-FalsePositive_SpotCounts.*FalseNegative_SpotCounts)./sqrt(Measured_Spots.*True_Spots.*Removed_Spots.*Negative_Spots);
+Spots.TPR = 100*TruePositive_SpotCounts./True_Spots;
+Spots.FNR = 100*FalseNegative_SpotCounts./True_Spots;
+Spots.TNR= 100*TrueNegative_SpotCounts./Removed_Spots;
+Spots.FPR = 100*FalsePositive_SpotCounts./Removed_Spots;
+Spots.PPV = 100*TruePositive_SpotCounts./Measured_Spots;
+Spots.FDR = 100*FalsePositive_SpotCounts./Measured_Spots;
+Spots.NPV = 100*TrueNegative_SpotCounts./Negative_Spots;
+Spots.FOR = 100*FalseNegative_SpotCounts./Negative_Spots;
+Spots.TP = TruePositive_SpotCounts;
+Spots.FN = FalseNegative_SpotCounts;
+Spots.TN = TrueNegative_SpotCounts;
+Spots.FP = FalsePositive_SpotCounts;
+Spots.T = TrueNegative_SpotCounts+TruePositive_SpotCounts;
+Spots.F = FalsePositive_SpotCounts+FalseNegative_SpotCounts;
+Spots.P = True_Spots;
+Spots.N = Removed_Spots;
+Spots.PREV = Prevalence_Spots;
+Spots.ACC = Accuracy_Spots;
+Spots.BA = BalancedAccuracy_Spots;
+Spots.F1 = F1_Spots;
+Spots.MCC = MCC_Spots;
+Spots.ConfusionMatrixFunction = @(d) permute(CATnWrapper(arrayfun(@(x) CATnWrapper(arrayfun(@(y) ...
+    squeeze([TruePositive_SpotCounts(x,y,d); FalsePositive_SpotCounts(x,y,d); FalseNegative_SpotCounts(x,y,d); TrueNegative_SpotCounts(x,y,d)])...
+    ,1:N_cells,'Un',0),3),1:N_models,'Un',0),4),[4 3 1 2]);
+>>>>>>> 08410c48414cbfd1141b5d6a99035e1f365fbe06
+=======
+function Spots = confusionMatrixWrapper_MultiCellMultiModel(Non_MultiCellMultiModelVector,Noff_MultiCellMultiModelVector)
+N_cells = size(Non_MultiCellMultiModelVector,2);
+N_models = size(Non_MultiCellMultiModelVector,1);
+FalseNegative_SpotCounts = CATnWrapper({zeros([size(Non_MultiCellMultiModelVector,1) size(Non_MultiCellMultiModelVector,2) 1]),cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end-1)),3)},3);
+TrueNegative_SpotCounts = CATnWrapper({zeros([size(Noff_MultiCellMultiModelVector,1) size(Noff_MultiCellMultiModelVector,2) 1]),cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end-1)),3)},3);
+TruePositive_SpotCounts = cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+FalsePositive_SpotCounts = cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+% FalseNegative_SpotCounts = cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end)),3);
+% TrueNegative_SpotCounts = cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end)),3);
+% TruePositive_SpotCounts = cumsum(full(Non_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+% FalsePositive_SpotCounts = cumsum(full(Noff_MultiCellMultiModelVector(:,:,1:end)),3,'reverse');
+True_Spots = TruePositive_SpotCounts + FalseNegative_SpotCounts;%Actual Positive
+Removed_Spots = TrueNegative_SpotCounts + FalsePositive_SpotCounts;% Actual Negative
+Measured_Spots = TruePositive_SpotCounts + FalsePositive_SpotCounts;%Predicted Positive
+Negative_Spots = TrueNegative_SpotCounts + FalseNegative_SpotCounts;% Predicted Negative
+Prevalence_Spots = True_Spots./(Measured_Spots+Negative_Spots);
+Accuracy_Spots = (TruePositive_SpotCounts+TrueNegative_SpotCounts)./(TruePositive_SpotCounts+TrueNegative_SpotCounts+FalsePositive_SpotCounts+FalseNegative_SpotCounts);
+BalancedAccuracy_Spots = 50*TruePositive_SpotCounts./True_Spots+50*TrueNegative_SpotCounts./Removed_Spots;
+F1_Spots = 2*TruePositive_SpotCounts./(2*TruePositive_SpotCounts+FalsePositive_SpotCounts+FalseNegative_SpotCounts);
+MCC_Spots = (TruePositive_SpotCounts.*TrueNegative_SpotCounts-FalsePositive_SpotCounts.*FalseNegative_SpotCounts)./sqrt(Measured_Spots.*True_Spots.*Removed_Spots.*Negative_Spots);
+Spots.TPR = 100*TruePositive_SpotCounts./True_Spots;
+Spots.FNR = 100*FalseNegative_SpotCounts./True_Spots;
+Spots.TNR= 100*TrueNegative_SpotCounts./Removed_Spots;
+Spots.FPR = 100*FalsePositive_SpotCounts./Removed_Spots;
+Spots.PPV = 100*TruePositive_SpotCounts./Measured_Spots;
+Spots.FDR = 100*FalsePositive_SpotCounts./Measured_Spots;
+Spots.NPV = 100*TrueNegative_SpotCounts./Negative_Spots;
+Spots.FOR = 100*FalseNegative_SpotCounts./Negative_Spots;
+Spots.TP = TruePositive_SpotCounts;
+Spots.FN = FalseNegative_SpotCounts;
+Spots.TN = TrueNegative_SpotCounts;
+Spots.FP = FalsePositive_SpotCounts;
+Spots.T = TrueNegative_SpotCounts+TruePositive_SpotCounts;
+Spots.F = FalsePositive_SpotCounts+FalseNegative_SpotCounts;
+Spots.P = True_Spots;
+Spots.N = Removed_Spots;
+Spots.PREV = Prevalence_Spots;
+Spots.ACC = Accuracy_Spots;
+Spots.BA = BalancedAccuracy_Spots;
+Spots.F1 = F1_Spots;
+Spots.MCC = MCC_Spots;
+Spots.ConfusionMatrixFunction = @(d) permute(CATnWrapper(arrayfun(@(x) CATnWrapper(arrayfun(@(y) ...
+    squeeze([TruePositive_SpotCounts(x,y,d); FalsePositive_SpotCounts(x,y,d); FalseNegative_SpotCounts(x,y,d); TrueNegative_SpotCounts(x,y,d)])...
+    ,1:N_cells,'Un',0),3),1:N_models,'Un',0),4),[4 3 1 2]);
+>>>>>>> 08410c48414cbfd1141b5d6a99035e1f365fbe06
+end
