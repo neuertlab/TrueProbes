@@ -59,6 +59,7 @@ function A0_BKJH_ProbeComparison_Wrapper_cluster_V5(id,cluster,id2)
 %combineMaps code to for those
 %% Genes To Design Probes For
 inputs1 = {...
+    {'NM_001660.4'},{},{}, 'Human','(ARF4)','(ARF4)','3',{},1 ;... %
     {'NM_000805.5'},{},{}, 'Human','(GAST)','(GAST)','17',{},1 ;...          %ENST00000329402.4 ,  465bp, 1-Iso
     {'NR_002844.2'},{},{}, 'Mice','(TSIX)','(TSIX)','X',{},1 ;... %4306
     {'NM_016307.4'},{},{}, 'Human','(PRRX2)','(PRRX2)','9',{},1 ;...         %ENST00000372469.6 , 1305bp, 2-Isos
