@@ -1,0 +1,890 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Demo script for my High Precision Floating point decimal</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-10-14"><meta name="DC.source" content="hpf_demo.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Demo script for my High Precision Floating point decimal</h1><!--introduction--><p>format. The user can specify any number of digits to be carried, while doing a variety of different numerical computations on these numbers. Not all MATLAB operators are defined, as my main goal here was merely to build a general tool for this purpose while learning to use MATLAB's OOP facilities. As well, it seems a useful tool to learn how one MIGHT accomplish the goal of a "big" float format.</p><p>Considerably more information is provided in the document HPF.pdf, where I provide many details of the computational methods employed in HPF.</p><p>Author: John D'Errico e-mail: <a href="mailto:woodchips@rochester.rr.com">woodchips@rochester.rr.com</a></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Create a hpf number at the command line</a></li><li><a href="#18">Special numbers in hpf</a></li><li><a href="#19">Properties of a hpf number</a></li><li><a href="#20">Methods currently defined for hpf numbers.</a></li><li><a href="#21">Arithmetic operations are defined on a hpf number</a></li><li><a href="#23">Many of the standard functions in mathematics have been defined for hpf numbers</a></li><li><a href="#25">Changing the number of digits in an hpf number</a></li><li><a href="#28">Trig functions</a></li><li><a href="#31">Basic arithmetic is provided, and much more.</a></li><li><a href="#34">A test of some identities</a></li><li><a href="#37">Computing pi</a></li><li><a href="#46">A timing test</a></li><li><a href="#47">Linear algebraic tools: chol, LU, det</a></li><li><a href="#52">Use, and "Abuse" of HPF</a></li></ul></div><h2>Create a hpf number at the command line<a name="1"></a></h2><p>Note that you don't need to specify the number of digits in advance. HPF has a default of 66 total digits, 2 of which are shadowed, carried as guard digits, but not reported.</p><pre class="codeinput">DefaultNumberOfDigits <span class="string">64</span> <span class="string">2</span>
+F = hpf(12)
+</pre><pre class="codeoutput">F =
+12
+</pre><p>There are 66 digits carried in this format by default, two of which are generally hidden from view.</p><pre class="codeinput">F.NumberOfDigits
+</pre><pre class="codeoutput">ans =
+    64     6
+</pre><p>Note that the number 12 is an integer in MATLAB, so it is exactly convertable in the hpf format. Next, convert a true floating point number into hpf form.</p><pre class="codeinput">F = hpf(1.2)
+</pre><pre class="codeoutput">F =
+1.199999999999999955591079014993738383054733276367187500000000000
+</pre><p>As we see here, the number was not truly exactly 1.2. This happens because I let MATLAB create the value 1.2, which is then passed into hpf and then converted into the decimal form for that number from the hex form carried internally. The digits here are the exact representation of that number as MATLAB has stored it in the ieee form. In fact, the last 40 digits are essentially random floating point trash. Also see that this number has a few trailing zeros.</p><pre class="codeinput">mantissa(F)
+</pre><pre class="codeoutput">ans =
+  Columns 1 through 13
+     1     1     9     9     9     9     9     9     9     9     9     9     9
+  Columns 14 through 26
+     9     9     9     9     5     5     5     9     1     0     7     9     0
+  Columns 27 through 39
+     1     4     9     9     3     7     3     8     3     8     3     0     5
+  Columns 40 through 52
+     4     7     3     3     2     7     6     3     6     7     1     8     7
+  Columns 53 through 65
+     5     0     0     0     0     0     0     0     0     0     0     0     0
+  Columns 66 through 70
+     0     0     0     0     0
+</pre><p>Had we specified F in a different way, we could have generated the exact decimal form. Thus</p><pre class="codeinput">F = hpf(<span class="string">'1.2'</span>)
+</pre><pre class="codeoutput">F =
+1.2
+</pre><p>This number is the exact representation of the desired decimal value. A nice feature of HPF is that it will parse anumber with a long string of decimal digits correctly. Thus we can provide a number with many digits and expect that hpf will store all of them exactly as we desire.</p><pre class="codeinput">F = hpf(<span class="string">'123.45678909876543210123456789098765432101234567890987654321012345'</span>,[100 0])
+</pre><pre class="codeoutput">F =
+123.45678909876543210123456789098765432101234567890987654321012345
+</pre><p>since we requested exactly 100 digits in the result, there are zeros appended to the end of the digit string.</p><pre class="codeinput">mantissa(F)
+</pre><pre class="codeoutput">ans =
+  Columns 1 through 13
+     1     2     3     4     5     6     7     8     9     0     9     8     7
+  Columns 14 through 26
+     6     5     4     3     2     1     0     1     2     3     4     5     6
+  Columns 27 through 39
+     7     8     9     0     9     8     7     6     5     4     3     2     1
+  Columns 40 through 52
+     0     1     2     3     4     5     6     7     8     9     0     9     8
+  Columns 53 through 65
+     7     6     5     4     3     2     1     0     1     2     3     4     5
+  Columns 66 through 78
+     0     0     0     0     0     0     0     0     0     0     0     0     0
+  Columns 79 through 91
+     0     0     0     0     0     0     0     0     0     0     0     0     0
+  Columns 92 through 100
+     0     0     0     0     0     0     0     0     0
+</pre><p>Be careful though, since if you provide many digits, but then indicate that only a few digits be stored, then I'll do as you tell me, truncating the extra digits from that number.</p><pre class="codeinput">F = hpf(<span class="string">'123.45678909876543210123456789098765432101234567890987654321012345'</span>,[10 0])
+mantissa(F)
+</pre><pre class="codeoutput">F =
+123.4567890
+ans =
+     1     2     3     4     5     6     7     8     9     0
+</pre><p>Note that the digits of F are stored as Migits, with an initial default set as 4-migits</p><pre class="codeinput">DefaultDecimalBase
+</pre><pre class="codeoutput">ans =
+     5
+</pre><p>We can see the migits themselves</p><pre class="codeinput">F.Migits
+</pre><pre class="codeoutput">ans =
+       12345       67890
+</pre><p>Numbers are stored in a floating point form, with a separate sign and exponent from the Mantissa. The sign is stored as either -1, 0 or 1. We can extract the sign directly.</p><pre class="codeinput">F.Sign
+</pre><pre class="codeoutput">ans =
+     1
+</pre><p>Extracting the exponent is also easily done.</p><pre class="codeinput">F.Exponent
+</pre><pre class="codeoutput">ans =
+                    3
+</pre><p>That exponent is stored as an int64 integer, so numbers as large in magnitude as the largest int64 number can be formed and manipulated.</p><pre class="codeinput">intmax(<span class="string">'int64'</span>)
+</pre><pre class="codeoutput">ans =
+  9223372036854775807
+</pre><p>HPF does include both Inf and NaN as permissable values.</p><pre class="codeinput">hpf(inf)
+hpf(nan)
+</pre><pre class="codeoutput">ans =
+  Inf
+ans =
+  NaN
+</pre><p>In some cases a computation can have a problem. So just as 0/0 produces a NaN in matlab, it does so with HPF numbers too. The latter two examples here create HPF NaNs.</p><pre class="codeinput">0/0
+hpf(0)/0
+hpf(0)/hpf(0)
+</pre><pre class="codeoutput">ans =
+   NaN
+ans =
+  NaN
+ans =
+  NaN
+</pre><p>Inf is as easily generated, even by some functions. As large as the exponent in any floating point form can be, we can always overflow that value if we try hard enough.</p><pre class="codeinput">1/0
+hpf(1)/0
+cot(hpf(0))
+tan(hpf(<span class="string">'pi'</span>,[64 1])/2)
+exp(hpf(<span class="string">'1e1000'</span>))
+</pre><pre class="codeoutput">ans =
+   Inf
+ans =
+  Inf
+ans =
+  Inf
+ans =
+  Inf
+ans =
+  Inf
+</pre><p>Most numeric classes are currently supported for conversion into a hpf format, with the exception of complex numbers. (Sorry, perhaps in a future version.)</p><h2>Special numbers in hpf<a name="18"></a></h2><p>The numbers pi and e are useful enough that I'm willing to store the true value for those digits, up to a realistic limit. Thus, there are 100000 digits available for pi, and 100000 digits stored away for e.</p><p>Here I will define a 100 digit version of the number pi. Of course, I cannot simply type hpf(pi), as that would convert the double precision version of pi that MATLAB supplies into a hpf. Instead, HPF looks for 'pi' and 'e' as keys here.</p><pre class="codeinput">PI = hpf(<span class="string">'pi'</span>,100)
+</pre><pre class="codeoutput">PI =
+3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068
+</pre><h2>Properties of a hpf number<a name="19"></a></h2><pre class="codeinput">properties(<span class="string">'hpf'</span>)
+</pre><pre class="codeoutput">Properties for class hpf:
+    NumberOfDigits
+    DecimalBase
+    Base
+    Numeric
+    Sign
+    Exponent
+    Migits
+</pre><h2>Methods currently defined for hpf numbers.<a name="20"></a></h2><pre class="language-matlab">(This will grow with time of course.)
+</pre><pre class="codeinput">methods(<span class="string">'hpf'</span>)
+</pre><pre class="codeoutput">
+Methods for class hpf:
+
+abs                csch               isinf              round              
+acos               cubrt              isnan              roundn             
+acosd              cumprod            isnumeric          sec                
+acosh              cumsum             iszero             secd               
+acot               det                le                 sech               
+acotd              diag               linspace           sign               
+acsc               disp               log                sin                
+acscd              display            log10              sind               
+adjustdecimalbase  double             log2               single             
+asec               eps                lt                 sinh               
+asecd              eq                 lu                 sort               
+asin               erf                mantissa           sqrt               
+asind              exp                max                sum                
+asinh              factorial          min                tan                
+atan               fix                minus              tand               
+atand              floor              mod                tanh               
+atanh              fminsearch         mpower             times              
+augmentdigits      fractionalpart     mrdivide           uint16             
+ceil               full               mtimes             uint32             
+chol               ge                 ne                 uint64             
+cos                gt                 nthroot            uint8              
+cosd               hpf                num2str            uminus             
+cosh               int16              plus               uplus              
+cot                int2str            power              vpi                
+cotd               int32              prod               
+coth               int64              rat                
+csc                int8               rdivide            
+cscd               isfinite           reciprocal         
+
+Static methods:
+
+eye                ten                
+ones               zeros              
+
+</pre><h2>Arithmetic operations are defined on a hpf number<a name="21"></a></h2><pre class="codeinput">2*PI
+</pre><pre class="codeoutput">ans =
+6.283185307179586476925286766559005768394338798750211641949889184615632812572417997256069650684234136
+</pre><p>So if we subtract the value of 2*pi, as defined by MATLAB, we expect a result that is on the order of eps.</p><pre class="codeinput">2*PI - 2*pi
+</pre><pre class="codeoutput">ans =
+0.0000000000000002449293598294706354452131864550002116419498891846156328125724179972560696506842341359642800000000000
+</pre><h2>Many of the standard functions in mathematics have been defined for hpf numbers<a name="23"></a></h2><p>For example, I could get 100 digits in the value of e as simply</p><pre class="codeinput">e_100 = hpf(<span class="string">'e'</span>,100)
+</pre><pre class="codeoutput">e_100 =
+2.718281828459045235360287471352662497757247093699959574966967627724076630353547594571382178525166427
+</pre><p>But I could have also found that value as</p><pre class="codeinput">exp(hpf(1,100))
+</pre><pre class="codeoutput">ans =
+2.718281828459045235360287471352662497757247093699959574966967627724076630353547594571382178525166427
+</pre><h2>Changing the number of digits in an hpf number<a name="25"></a></h2><p>We can specify the number of digits to be carried in an hpf number in a variety of ways.</p><p>First, I'll define 1/3 as a hpf number, with 100 decimal digits shown. in fact, there will be 104 digits stored, the last four of which are simply there to be conservative, for an extra bit of accuracy.</p><pre class="codeinput">F = hpf(<span class="string">'1'</span>,100)/3
+F.Migits
+F.NumberOfDigits
+</pre><pre class="codeoutput">F =
+0.3333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+ans =
+  Columns 1 through 6
+       33333       33333       33333       33333       33333       33333
+  Columns 7 through 12
+       33333       33333       33333       33333       33333       33333
+  Columns 13 through 18
+       33333       33333       33333       33333       33333       33333
+  Columns 19 through 21
+       33333       33333       33333
+ans =
+   100     5
+</pre><p>Reduce the number of digits in F</p><pre class="codeinput">F = augmentdigits(F,[50,2])
+F.NumberOfDigits
+</pre><pre class="codeoutput">F =
+0.33333333333333333333333333333333333333333333333333
+ans =
+    50     5
+</pre><p>Of course, we can increase the number of digits stored again, but the information in those truncated digits is lost. Future computations will now be carried out with the new precision.</p><pre class="codeinput">F = augmentdigits(F,[250,4])
+F.NumberOfDigits
+F.Migits
+</pre><pre class="codeoutput">F =
+0.3333333333333333333333333333333333333333333333333333333
+ans =
+   250     5
+ans =
+  Columns 1 through 6
+       33333       33333       33333       33333       33333       33333
+  Columns 7 through 12
+       33333       33333       33333       33333       33333           0
+  Columns 13 through 18
+           0           0           0           0           0           0
+  Columns 19 through 24
+           0           0           0           0           0           0
+  Columns 25 through 30
+           0           0           0           0           0           0
+  Columns 31 through 36
+           0           0           0           0           0           0
+  Columns 37 through 42
+           0           0           0           0           0           0
+  Columns 43 through 48
+           0           0           0           0           0           0
+  Columns 49 through 51
+           0           0           0
+</pre><h2>Trig functions<a name="28"></a></h2><p>The standard trigonometric functions are all defined (although I've probably missed your favorite special function as there are so many. I seem to be constantly adding new functions as I notice that one is missing.)</p><p>The sine of 30 degrees = pi/6 radians is 1/2</p><pre class="codeinput">sin(hpf(<span class="string">'pi'</span>,200)/6)
+sind(hpf(<span class="string">'30'</span>,1000))
+</pre><pre class="codeoutput">ans =
+0.5
+ans =
+0.5
+</pre><p>The cosine of 45 degrees = pi/4 radians is sqrt(2)/2</p><pre class="codeinput">C = cosd(hpf(<span class="string">'45'</span>,500))
+<span class="comment">% and of course, the square of that number should be 1/2</span>
+C.^2
+</pre><pre class="codeoutput">C =
+0.70710678118654752440084436210484903928483593768847403658833986899536623923105351942519376716382078636750692311545614851246241802792536860632206074854996791570661133296375279637789997525057639103028573505477998580298513726729843100736425870932044459930477616461524215435716072541988130181399762570399484362669827316590441482031030762917619752737287514387998086491778761016876592850567718730170424942358019344998534950240751527201389515822712391153424646845931079028923155579833435650650780928449361862
+ans =
+0.5
+</pre><p>The tangent of 45 degrees = pi/4 radians is 1</p><pre class="codeinput">tand(hpf(<span class="string">'pi'</span>,1000)/4)
+atand(hpf(<span class="string">'1'</span>,1000))
+</pre><pre class="codeoutput">ans =
+0.01370864253439405605227298869790930363121380384841842673544536711960521807164775059427280020891113254561562378582045422164719174631109765713950037630957898860802480020923765874675922829584873864221797843978765892606013704345929094437512442369399787095125097994006840738875250901794241128544100024806068605721788387338083182793243192696944371011114307326529305276957593055314700017836809662218854752179847180761861543376311460311997654051066068212362010944818083667667870312358230187038986881975475528319227379662049032167313596293521706598712408936830751971770520631033465064783718752512525241556030042759546136161110199432687468919207329256921678814504836256955001984830490726781332113305296750494156109972970571233516623036276312379019005767225536128258770802849775452059663312639073442324922770841878513726292896357741375245258143298927264569637440177459635257380514260980739539297643828167434020129368034683562815450708160231110620759427376454042367056840328205686160894406218718726859525538377348
+ans =
+45.00000000000000000000000000000061126127699329378291627080405353152961002069794566320284014987471586052921522972883322289189941252744527347380985012593057152946666228033261577480426283714271065393213449833936939677437166541523596761541420694844119118451822347307618593269157362614758226121617600011016392320700428591759140538802010327262537812895257965616974942371276177308128567919439465090686362505853869732633506914223762428271613477563266694960330121597931964084357505973850173535781669912167706917407337403560066173710033526063926319316534276889372163811835099753296679926834353991235661061045441264751144652206643842483595530083773086694052909636811439835155571285930860308793060637890021090891380636492407776295192078845422380592318320307672367231862136068772502805614320021785865993228945458469309758700596486223048360859093858162813729399889969337289369183726107403360333791009804296254519712364059904368532189367831417474788343677658152703552888266673618731191211537941671369877978713250536
+</pre><h2>Basic arithmetic is provided, and much more.<a name="31"></a></h2><p>As long as one term in the expression is an HPF number, the computation is done with an HPF result. Be careful though. Here I forced 5 to be an hpf number, with the current DefaultNumberOfDigits, because then I took a square root of 5. I can add an integer to that, since HPF converts 1 on the fly into HPF.</p><pre class="codeinput">DefaultNumberOfDigits <span class="string">64</span> <span class="string">4</span>
+phi = (1 + sqrt(hpf(5)))/2
+</pre><pre class="codeoutput">phi =
+1.618033988749894848204586834365634158823368255109555301291650298
+</pre><p>Beware however, that while the following result will be in HPF form, with the desired number of digits, that the result will be incorrect past the 16th digit or so, because here sqrt(5) is computed as a double precision number, and only then converted to an HPF form.</p><pre class="codeinput">(hpf(1) + sqrt(5))/2
+</pre><pre class="codeoutput">ans =
+1.618033988749894902525738871190696954727172851562500000000000000
+</pre><p>If you want to be confident that the number computed is accurate, then do it a second time, but with more digits of precision, using a few more spare digits in the number. Here, I'll subtract the more accurate result from phi. All the reported digits are identical to those from our original computation.</p><pre class="codeinput">phi - (1 + sqrt(hpf(5,[64 10])))/2
+</pre><pre class="codeoutput">ans =
+    0
+</pre><h2>A test of some identities<a name="34"></a></h2><p>Working in 1000 decimal digits, with no shadow digits to hide any flaws...</p><pre class="codeinput">DefaultNumberOfDigits <span class="string">1000</span> <span class="string">0</span>
+x = sqrt(hpf(rand))
+</pre><pre class="codeoutput">x =
+0.35635209595778450416563669407896462587713144320364254245988443923232647798600668882384640419170789466741025019641200123731418935451583012300799336534546783620886726673640409688350916789668607299430414966561066515151300071462259211330092512071132659912109375
+</pre><p>Should be 1</p><pre class="codeinput">sin(x).^2 + cos(x).^2
+</pre><pre class="codeoutput">ans =
+0.9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999996
+</pre><p>Should be -2</p><pre class="codeinput">(log(cosh(x)/exp(x) - 1/2) + log(hpf(2)))/x
+</pre><pre class="codeoutput">ans =
+-2.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004
+</pre><h2>Computing pi<a name="37"></a></h2><p>As I've shown, I already store the value of pi internally in HPF to a rather large number of digits. But, one could use HPF to compute pi yourself. Here I'll use Viete's formula to generate 64 digits of pi.   <a href="http://en.wikipedia.org/wiki/Pi">http://en.wikipedia.org/wiki/Pi</a></p><pre class="codeinput">a = sqrt(hpf(2,[64 3]));
+b = a/2;
+tol = 10*eps(b)
+niter = 0;
+<span class="keyword">while</span> 1
+  niter = niter + 1;
+  a = sqrt(2 + a);
+  b0 = b;
+  b = b*a/2;
+
+  <span class="keyword">if</span> abs(b - b0) &lt;= tol
+    <span class="keyword">break</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+piest = 2/b
+</pre><pre class="codeoutput">tol =
+1.e-69
+piest =
+3.141592653589793238462643383281337594640838857701917327089225014
+</pre><p>It took niter iterations before it had converged to my specified tolerance.</p><pre class="codeinput">niter
+</pre><pre class="codeoutput">niter =
+   114
+</pre><p>As you can see, the approximation yields the same digits as those I have stored for pi.</p><pre class="codeinput">hpf(<span class="string">'pi'</span>,64)
+</pre><pre class="codeoutput">ans =
+3.141592653589793238462643383279502884197169399375105820974944592
+</pre><p>Another choice might be Chudnovski's formula:   <a href="http://en.wikipedia.org/wiki/Chudnovsky_algorithm">http://en.wikipedia.org/wiki/Chudnovsky_algorithm</a></p><pre class="codeinput">DefaultNumberOfDigits <span class="string">5000</span> <span class="string">10</span>
+DefaultDecimalBase <span class="string">5</span>
+a1 = hpf(13591409); <span class="comment">% small integers, so exact</span>
+a2 = hpf(545140134);
+a3 = hpf(640320);
+a4 = a3.*a3.*a3;
+num = hpf(1);
+den = sqrt(a4);
+tol = eps(num);
+piinv = hpf(0);
+k = 0;
+<span class="keyword">while</span> 1
+
+  piterm = num.*(a1+a2.*k)./den;
+  piinv = piinv + piterm;
+
+  <span class="keyword">if</span> abs(piterm) &lt; tol
+    <span class="keyword">break</span>
+  <span class="keyword">end</span>
+
+  k = k + 1;
+  num = num.*prod(hpf(6*k+(-5:0)));
+  den = den.*a4.*(3*k-2).*(3*k-1).*(3*k).*hpf(k).^3;
+
+  num = -num;
+
+<span class="keyword">end</span>
+piest = reciprocal(12.*piinv)
+</pre><pre class="codeoutput">piest =
+3.1415926535897932384626433832793909304074940369500141177724882830002667582175677534238500349122595480051550203519998032783479590370264426370833005237512528693652545212823962637546181312689885611034582341403118413868252540236632365314377422474157438814781175156133543630619768306671517119588104634503781851570210541885221432240484817565938951252388200066329475978083991623403328565758927052102881260001431839872946181084932609454905832715472143706767923321430146686786739354427444764254713849040522793379140027577820849235788652223132965057543889604386531005970894426308513794096965069183274365193023857508441010964343904364272134602548145155763129743974517318238901293156295689299600905565000531440272263479619052100042622789767910812753272533062668899788815419526581979802628287376273673678698142045936909914452642278994236613222963254859934900481793562809094399062916691578743888036362139182637860557845546984341923751244757686981701424169909602146615315722506505296285725910134635838143671352405930179121462940961619088359359590468600325771551614362378865518548404163186522733883576905762099953879157911963730870298902941589173492099444071912204144489177765166716184774592758984317402041270031592104908836762334867461228814146520436359175394701333029043327046710713444200032732837249452235255538978431241127920369378417333800372763557442051478877416277388623856271405632167925274554395608316355696022009358304975304420693258131472304989358654163436328452296342690100852300273995074398598077718487156180560635132143670735367399011224307015200431526637311459066091054241751260623673153265564632294078541298289341910532887585140926616444624022300099272373263019611956697782054220149223870079769394266750197443165839257944819272773780578514832274071290174237770846206760403197876566256199070096625830769052377406164405750177099156461767577326128757602959597959030511841184865371682939650228386518506518097130061602940217425866266085122879869172707458319561840914924659063906711082376286165737812519108891661540285386642450959950324237641449405417809720346174624898813119802847205858827410198456038767517719645353006186137127188382468686737919963423996265324691923251878373162338390351559817127347828399207543309425187844711387257596072094615388289330860099970878233050901714345524313283466391786485644602878954570058576533480090631966858900752752635228031236516534442727028113756841443064952217654097337251306459159013117235603527549845836037787650425760858515894769102957544452777212803967425130874984441926242383015248793359081735556436575765301481633588907421671058396894588567950745723814103789254902448833043327066541839321531944049982869458738741148014888623180661246910771033574907026970710902891926861466867617671769599979009963039748374783947377939139347839905000195930464802403954695904493574614859871092840160144788354952542411098239009129960292686287391201934737209913996687432245266303156498046790020640525376163096570097625967410257896612016576511082018826099081062256278089813695566018112723842779997993167778864747997367250177300117873298369830258608671526466017020214333915589868697440611043996513341542852038499158620486662004869551448060034543684427440240951754268883156304842795201361167505424916365859690784536654020214757927481021631003436746002290395089847890790961641391885451987575452914486636916100307580944858430029451919766531546724436367184145670339496115106297638694286806152677506777661580099491137400910406899139705991100980822374108175644321266728042542743932805386552999778971003216154225736759976072522523239354727020499724969116939131011448887403402819611106792307607465029801293077657657119517797598446506617681505190464563166166528279369325602825852896965436734171138406509449856585117537926773091109465944922594728770638986122204917644854708348273150851094946244927266872988786304606248600324356990231801886682835359936683191730727401704286561263068471983681253033067015540122953847416465229360047933677775259822972822356739742436798823514824268731647855855891418658109272895166718227588884676493618620758008394826844403189786302315925891292576063970434298224799431953201276403231803300382510607363842312894469194428278866574766506172827857337275331570641734648776443444117292084779474095756946476898990342210162091890562209643485408363473350031868288091502019046456363574759052437943237158508156185363726085017688799793405503418077755086797061272115300625954591858209108650082224930005218322117299749337237211122066220839135183735649512122087043444934843948741401728773139864621833724091166496561889219644661881746554681409992762982921708499365532960476373372068877008741488928358870411437428199207066854130188439425924966466269506537381395842942665206286791247225636862249816530271193165138075349384092470611668509567768338218289053715282075043667965164873317687641163488956525489210842957402488275188953189881677939806455838017138543281669343154542608448032804552270331251213596720957871699614196874063205096518823720041120523433665938331042259024003284899174
+</pre><p>The numner of iterations required for this accuracy is</p><pre class="codeinput">k
+</pre><pre class="codeoutput">k =
+   354
+</pre><p>So roughly 5000/k digits per iteration</p><pre class="codeinput">5000/k
+</pre><pre class="codeoutput">ans =
+       14.124
+</pre><p>With an error of:</p><pre class="codeinput">piest - hpf(<span class="string">'pi'</span>)
+</pre><pre class="codeoutput">ans =
+-0.00000000000000000000000000000011195378967536242509170320245630930754964806864124520418479042985751997699306616128250336874588557252413959464205888437722824808502958141954225735094151335396039382692373028849913427910819210481241170234904091785545802766753105131010598554847749598106168164844978569089553942998555212706603165747243920623535896647654436125964276220293136820848760994549144174165338560928987328307114148345983124062679866106457873444175574231936529407089341644300824846575655327895966979191967060465857171950715617263309871898280174174120784310568109658632491376705587775649103115010274624972402604882917039135855788250297509359732420432401670907733482411451698065541096023577963611489631567199420691901769858505762707853830252146504307053982566939734180039271522121343236436494628211400133346801008268040321886098595701919904177188300881472909369793246121742965881957778440325940536124781369879199456309360668379416571221137060279174312032620828152069717804041091441302738154208117960592018311090696932395444292997710652179539107514051579741530111415535730394714050289203119907348374359978366086936712080565667061576765178344869785468393283686094826770077760112502926993093488284566480236747792733022091398182876729091196028140729770414654392267510365550268404426136248310146073351559345018956423695221426301878201968966831383300230576962564356764996049968427968073645875971177263435319458141895113847889965231540677735581609442076663092286152020423648450335689959618348735098973745423970310928147398838888669974076437668918031475460090263866151993342243837669235520735756442130956439222751723108195419590341470312211070567903974355862092403485539135646369753642745351613631593045471665952801810027859318908755828472116137070104514312523946389470587392561314701733200161288477642320130692273023606501352593617387071477392233161224944482143318899303294437014040843594800026218355881053449703127246174517320246049710527467296944710117145551158056608149650750019472440836719681669677567921029961005041260522330235756328606167767998070843569210201577860128949670618205425365341760970119145172428791644878103771871097094379057714522535406188917738919508541004864353913646377418004119368529834792953800025537152071719948634674996951114359159483599018582139075848240218379129775248542940267942410255578713069210943278865249475010762485435256663857121690240413365061069654168418215293669061877229171209353636615595533489938353796635088796278141037074452687797593482301122031431323782566123661407088344524114957171675811705532406723556913898870386985819839299566361915907188584630237950744601309876483160534327860718161762869872478653473712507460785731599524594814578647802902215074882667514407535017229810850410064409114345373943554827594877136434205560144745245246534414062990536993399983057694225602020129452304771955195255423737985942053271783948331476731002497947005708133662739015404460362838651893788800888204711909743088114838269240251879673336481135993206523458501412113192581693763015029556093009534723344734512908219341707603212606862680195476122217191714547564470074917104067463167744196363879640039491740156475006315283124236377737385999867806564544668639115630776133582342151674842488875756416716041219449628271865054998331014896197701062753168021000025053088807860425619868139080847301347172769573026309438902604708518888099414921416690675477813041459743665996376006595822232803105702334749132537000740155753476728159726955033628647442987094709757255608247161675247664018657165882673323989054423621725782597255789891619320829305978518315397321607675883749860518804967439696868777514672320536032436716737790528444483060840914733089750340314502052744304506174964190366787473921717520948544635472642592181947281207328024666525410725770654024420166254027376356675502512235659341865206908269004552444028629626015886633401483957344182650893565319691117174579333832776892183758475542735490644340367343085860254278103263783097329979671550552508324146685736479997378919323210044162557689780074638196519438396261745821441594912757689102257379249093808000543042596897147175426283305629543051015353021847333450642321119060730324234849827163664172507875518875791333155869813114381808148794192305589346592992592376533989472591454063996034029786193794418689038472910273411966145905198812062477841779650130979306144148521721494178825908455527348532213561521123959247461754888800300494148838380004516988568236790302465622952530609969152105545338892333940511694562114834499852533940740225156658476176609399719258079491323838655354250259206424189781582464127114794501965547692268586095880690299495029760526813924474915602217800900987795555175914031682907675810211203600121131053035979632273771466531720557944716473227961678005740164582542346958046063792330185873846132310057582421681928552541271052785300328889648120859041165441635613566739940755919645832753145294987681917418379403860244319387107090699544403379368985888866176334821440040137275028789816993003268540081766929675658408646841283612980398128053000000000000000000000
+</pre><p>Of course, we can use the rat function to give a simple rational fraction approximation for pi also. Perhaps you have tried rat out for doubles.</p><pre class="codeinput">[N,D] = rat(pi)
+</pre><pre class="codeoutput">N =
+   355
+D =
+   113
+</pre><p>Rat now works on HPF numbers, and as you can see, here it yields a rational approximation for pi accurate to 100 digits. Its not terribly fast, since there are a lot of divides. Sorry about that, but 100 digits is no problem at all.</p><pre class="codeinput">[N,D] = rat(hpf(<span class="string">'pi'</span>,100),hpf(<span class="string">'1e-101'</span>))
+hpf(<span class="string">'pi'</span>,100)
+N/D
+</pre><pre class="codeoutput">N =
+394372834342725903069943709807632345074473102456264
+D =
+125532772013612015195543173729505082616186012726141
+ans =
+3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068
+ans =
+3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068
+</pre><h2>A timing test<a name="46"></a></h2><p>Time for a multiply in HPF should be roughly inversely quadratic although 35000 digits is not enough to really stress the system</p><pre class="codeinput">DefaultNumberOfDigits <span class="string">35000</span> <span class="string">0</span>
+DefaultDecimalBase <span class="string">1</span>
+tic,hpf(<span class="string">'pi'</span>)*hpf(<span class="string">'e'</span>);toc
+
+DefaultDecimalBase <span class="string">2</span>
+tic,hpf(<span class="string">'pi'</span>)*hpf(<span class="string">'e'</span>);toc
+
+DefaultDecimalBase <span class="string">3</span>
+tic,hpf(<span class="string">'pi'</span>)*hpf(<span class="string">'e'</span>);toc
+
+DefaultDecimalBase <span class="string">4</span>
+tic,hpf(<span class="string">'pi'</span>)*hpf(<span class="string">'e'</span>);toc
+
+DefaultDecimalBase <span class="string">5</span>
+tic,hpf(<span class="string">'pi'</span>)*hpf(<span class="string">'e'</span>);toc
+
+DefaultDecimalBase <span class="string">6</span>
+tic,hpf(<span class="string">'pi'</span>)*hpf(<span class="string">'e'</span>);toc
+</pre><pre class="codeoutput">Elapsed time is 0.227864 seconds.
+Elapsed time is 0.060248 seconds.
+Elapsed time is 0.045643 seconds.
+Elapsed time is 0.027505 seconds.
+Elapsed time is 0.024214 seconds.
+Elapsed time is 0.024402 seconds.
+</pre><h2>Linear algebraic tools: chol, LU, det<a name="47"></a></h2><p>Start with a Hilbert matrix of order 5</p><pre class="codeinput">N = 5;
+k = repmat(hpf(1:N,100),N,1);
+A = reciprocal(k + k' - 1);
+</pre><p>Cholesky factor</p><pre class="codeinput">L = chol(A);
+</pre><p>Max error</p><pre class="codeinput">max(max(abs(A - L'*L)))
+</pre><pre class="codeoutput">ans =
+5.93560228369665931268754727907941298465405429655213843281917621573723e-33
+</pre><p>LU factorization</p><pre class="codeinput">[L,U,P] = lu(A);
+max(max(abs(P*A - L*U)))
+</pre><pre class="codeoutput">ans =
+1.e-102
+</pre><p>Determinant. For this one, lets create a little higher order matrix. Note that the matrix is NOT truly singular, but the deterinant is vanishingly tiny. Had I used too high of a order for this matrix, we would have seen problems even in 100 digits of precision.</p><pre class="codeinput">N = 25;
+k = repmat(hpf(1:N,100),N,1);
+A = reciprocal(k + k' - 1);
+det(A)
+</pre><pre class="codeoutput">ans =
+-1.339885345032204390143551076857085237546956006581482557366597988101633171274685669261626122466988338e-357
+</pre><h2>Use, and "Abuse" of HPF<a name="52"></a></h2><p>Of course, you can do many interesting things with the HPF toolbox. Above I used it to compute pi to many digits of precision. You can also use this tool to do computations to many digits of precision on numbers that you know inexactly, an abuse of both those numbers and this toolbox. As well, you can also use this toolbox to do computations that are better done using well thought out numerical methods. Good numerical analysis will always trump brute force computation. But, at times brute force can be too much of a temptation.</p><p>For example, from a recent Project Euler problem (318), how many leading nines are there in the fractional part of (sqrt(2) + sqrt(3)).^n, where n is a large even number?</p><p>Thus, for various values of n...</p><pre class="codeinput">DefaultNumberOfDigits <span class="string">2000</span> <span class="string">3</span> <span class="string">session</span>
+k = sqrt(hpf(2)) + sqrt(hpf(3));
+<span class="keyword">for</span> n = [2 4 8 16 32 64 128 256 512 1024]
+  f = fractionalpart(k.^n)
+  <span class="comment">% How many 9's does that fractional part begin with?</span>
+  find(mantissa(f) ~= 9,1,<span class="string">'first'</span>) - 1
+<span class="keyword">end</span>
+</pre><pre class="codeoutput">f =
+0.89897948556635619639456814941170967512964847039917284858587868124577889314176966169444681852915598558452077409123274046978323335955485891507629014207641528247435599958732976112872434022943130369278062789231143591485827043116338218714787978831933342229962919918843434509414525024340036907233297824859619140625
+ans =
+     0
+f =
+0.9897948556635619639456814941163804342516449309419118573183352454123299988050466163636589237776443590044182357597873202954285007996812168105398763076743547752788437066471125426758210093876510928058948101223203771369078318808707841140607029180252440700356725458889473477002521351042830173738704418570312642568701146431327022179014523251651550437894320090365806570906800083455239556017911247996781013889269948962658971805273640991424536444902768343406983077134241018991362880636387847731319132159190220637493752734003157787831228238602414188897337948713307944155354872279046888651488078636475620442070066928863525390625
+ans =
+     1
+f =
+0.99989585502907246667678642326346640202059464972498721482550430414880335712101187890182202075285883691322644487657043300573409155095902252650905563503096152453636935703788403372954235965591695965212737472742324476138449976189744579252256546336897457828660294878964398774092858641853273072402005751783133111974892014984158055653411969755223144969650165868620532327912934654085384390108808596402365596697135320991339516891419131002482728919202898478128305579192392224895256953255483390166068606189395253712359404752341185739112044876121252001869560305291771395380713186100080088405104159463589480768538718620742168122660094314878776199638818517313109817372794144656809168641792997410959815236601089408069264169844943300711850408437100279821355301105298268973810824996429002899289894028566754610693268153653037882405397670473860007937835821417582992048672759572691499407539240223491762766049976398517131295520558076903022341392954276424172276819105047686994087545164685239211130524079438814691371059228180156147719133552296344061827882977608803740506253345593154749277448774450358644595732934455054385644742250301486025361591968713752654883951865441536496527827256391398060385453930677143071490721448757454936639987863600254058837890625
+ans =
+     3
+f =
+0.99999998915382503050323345208335571309999378373841032658331506526935899950368792002839666611742452268792868920428877055693521384423257770932922164404707314916213148887981860710735987034418377245911741505782467024053437923653210591539826102589892741621219766168873840580288651551123272931071445077689341228963791733578230268368862078006562791257128683016258939102373556615988394888257819992708938367176037361035868885889591155296488947728105660303443904709840254423729065718846307870252995049874614456243088804895002502481515058757235086038249880831988274259483102197345456909352053964606324990770024036150206064557090194683354120380419321856413062043025071595193640286047766572861333956731748327193628387091470622377525418265491138104971563284367938617807339485254947827801788326890862203265691403981524577989811248562240904838497879443769269082944276403151164474041208933159873341662498387548259484610829339233234086781760967941428149693400263424929942113471416962712202769399329689954817890347631864920425546535168766643860774372661845257268912778075308608262772348115368338566021236360871062239634150457075607228326272988793146458693510102392544624160956685025028286294348378091151170649929334674927320199573762009536125134541668621048815635237237905586612658249943517731306580005385957644889554690879795391374589675205743589892965501416506104073316054983386664851130485872134404403131101139424587412545284688588114401435812243317608653629847525051601803620265838994218576186042459195134535753913171533211862180736820337053690589153105125205207622050396947512728512026457000036792212913053766683918576630187607991250338894827182011222766279482137369584510478012186959529070678790771151270901360523907767876688487285360153918568124950465287658644862408732653643940477335901772988632943297884615554141818854158704544713294553199880333316530139047026075890667625854830918921719788218568716252754126772201877663887235946328044438438000718707659499045896682730401286199968195252925913924875642861210000
+ans =
+     7
+f =
+0.99999999999999887786956940402896454228809976549498323958385413592701454013587092285638730298942863800626761678151507577786227333017795171212448988159568756331004448353049755674842654961380637209339288254809956794478849551703699149917847633135430698072688400835228699864854009278912980331625388820409601439214584705167391346490688043534101643512425589843422878385689891227320746420923768488983034587169668846353692415716166694676520074833263563984472326202005657216291835481870921908800245836828584759888304607765595574894115008550324812273942693194513692497165769675352456361456646512515014613590008695330534578215263482438706489918615418601702686754718626370482199432546824085045677683709947229232852050843355417959348576936170711598956451003155110108751132515446458738158772354943624511240513616624170418813441323727092371045880775581187836014398313317421851034802895541334680473803266680636919312385737485541371770213396378042366544905399811419598139512878165971412850997381938096571082420451132180751209261963042504307510453874881078097005577834926108616494890791612528529007287389317753357735919862846022195528456319834586035125238715245536375793462333194851355568310828138219050771685803384466086927615254728149643307397300972574563746358050610527074152884514414107340190928912638853925788738999432371676534700943452950162710444358803317475675851268535116766727075954575031748106004174754506185098066780397321022632108316161474402991501884684690818230070708881080217268691037151370668477393703840573969143892433993016894874757278740466634679612774099739206371480255870439233955398381878930288256828163335627009917258098884999225640920137024989470340963317555387899536800550867489617343973344505637019451070727310870312951868575209553499074149860726293832745564212031773684915889114573475469973322716869716413355977663834025838373249876793916953482184051103054838339087503158598391911974919899761627703995255271900295843605416261972673480466488949435410021837450141462585971752379576000000000000
+ans =
+    14
+f =
+0.92255881405522260521823021687830463937216218481217210207014336947428099253623053489857751426708977364849372070278062664911918395336870098729644363516772318012127530034775618380105323664669138280489011238374709343764447762868725859553697051405573569642134164060138793783059567455057291253218595876799665911011893408424786907609811184492828941580383064605057634433835231618701033448911054332930137067007203644933010693505577463132898101408777156192565635362770058875504674922458769005235894954833497164413862765893256684547681290967340494358013015659425703203102626368603716395299924637068076734432600359982450619797043755158063365778487247840301970526118918818309986892635531639355582822706522766241120012663557866448443731828472027447333985391175033859929140455281084108037050638397693942559985585447298740663007462453425664582851249722034102069889460182518007890665513829078555866319643086737651922130537405084000496595290675777976438474320210971911017770332658687688979314952003821182546252567562858983074420930569582396729458554694195035911417453673500277953197281981582248755015809737256901097030733323859002725626462077013397547263173729701846112906834508029967077209294554608313904463353765363869292864587024332281345120355361711934282332290540975511640301154588267649591404186742717617037032831959947054959225184096129361823124769804676246547222649947654583639309976589733018318878232821417606216607473512834306884407323575965986026296936676801760801399011593073544588091423473087518717242873811388002785487299949506904473424931835023955032299980452578440071371833339372588233023320553030865279464898964806915139781157900252692024664583261490364035729676589725287514213975805844850883591788195916101810407185365444186479930524773971543460678474537961226951916089151860724517102877904289541211850969809454443780587028104085369662127707119142480490450893954674787822651121164907323423120790691861522832346577974071149874827323309731045178198146869882093144011981181560000000000000000000000000000
+ans =
+     1
+f =
+0.84838511579154507028137197233380596132950297757530524917256051841381686676363009679676643375422667846605018537262244943964796064341937267737412051290900859959698957787077296167218164804826222869958912925003989188804671248155091408499307712105915700656466436820524764802547208204386510337310883422483939058199447321451757536738300261656449836131003871243664628138916814826985408579988845178128728917410051851047601676966233790390484412112893949777813302558088383500385596430955004775223028599949439821261146467821930227149862498381624733590870318521778825011469792456922290186667943608961716221640246269220905692016164311253704924226872224765682007859832980428580437594645935044636310086290603100341494564908501255141336661858865571236013448910112040357940244022712247886194101583589963366623913446283471489657730526610807121757823859299914840076667925416886423897461898385002049454172231132767791638088685302277433882938266624379792922119104561170776874859175664762449724147709155157571055921114843885202391950503554031969904199773893990462607803740237115814729001629210846450613891658317640714771207896506870029644106368424013678114887192977401332053644236789162553353373101910653977423530121027858201636543801688635829460730538277062543034482960179449266310175734099211444383328870900985257635037323467835244892209980922984929807002731032635150959799386080027279663628717652060876508131200016377222158809533412729155393765902039880835766827154289419168672608686824656687659327434066366255757908253416213645686001225664302297859498767756249232527760869807687086064338008161013281112609761770450151077613706711042010935408691610424064284826646800229815312187453178932539749151943895112305396689481100888079610172645208543973494078120338055633823410271876368186293455148214632579238633107063211061238366540065754244449619241828669773008531054856117893342022523056981848212756301886493555831354893309747104849476375385129471413149216039881714000000000000000000000000000000000000000000000000000000000000
+ans =
+     0
+f =
+0.33116915405007761467367272029938444598558730982855983039607839028087699376726417906599974568634880813836521370564520998256241179711801999788916456174265079625198504111430165133178432379650666477687974760140255959382094051641614608444334476356903369609403817787630278680589083278538008861050757246894018046748016421178409342518818474129772766849868141739695744270700948592627682380700585964724000104377117075314806308417568995704472909152707076054456595306716307473308080134242876719882112966682704031237346985106986975502678137756542712575726645348433191242720095021524620392731445347416864903684538163108416819922607844291002446871949703657172501489677419151791386211043629796490253438262825569657151206286428695642058802257457941844746809798810150288959947427268535845807857218574262052951771396274731339118323458956771254730291440470605169664406853294397350384880999841360538445724409619707426980503679112721966963389144476253180443029548148621483645466142086953022959693903750787493658777950687666480535192908211102944449847378254230195375365579643867405394923230720573554498880424945906012032044726823016497657110042980200740726380317231864376664482230961790458874344967097787825128326938917472893101585549546667748162011928459993975520164533984111224120084767612590421487343717760094266188682524860071278974318080985536194859590686409113766051843083327623393527079011592259300452236629969343664393963081142118459046574929163148519970640906918601712280380931054446080823406306367171581465363940343628770135688446194707114166071053427354895741925219659039317273571416658151559254294693703510249617713860532314533236308404340889149699166425559411759312057163673263708976303617980274337568583434666040152886549289370207405984484705776681999415643608234986798451939805121089776647099286438847585595059730541233783764867091175178497726315403098910672029653912590269283975534060000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+ans =
+     0
+f =
+0.99165400522392012265781253424858004682312891222003893113885843353505209976276480932842970646230664492107776431446497783458207563213632359457156785761645822746366182976510831151260419365219698554169348109789930519936372737363239452020604998935127769172070102959879635687778685549582950298078922697532013331533902871876244717714533915447452157327300264185398676975117364476198476071090783535333336836200503920565586371675465455632030737117876048499414332974916191796145403123406819012066976407198179590902045894333341314683828296433882409250530952279180907611944728632694557425241446079095964827491000362839352839000599143381170574570289069622084175172986615366924227689299520527739017425856664141023012478254841538549784641468217863094697044001538376894646594588663872549503524001637857862486604841320714027861660740885294353986386566206933842378863029253019975169445826243179682724545547286757943299149506879513901057677615689104357937183704426052977035433726081545238817505639745546244507678447968704943821454257350496480956424418695522376747345323026102651246442576832879917750300123929280446098249355096972762061499455863117687034044007772291563027954370677998162977861680620626608218691916680817740901322240422003546597238372606610204701047301136306610258494759207129702899925164612300076554128483170127050442656795728902124831229586469396583562249864794984100185348418811171606679166483654631555696658033150823366465139682282330147445962848827879141616015580021682032882638979858287190995999021901903889884036877414500988877020634820090341134649650637194096723033672221177720446256838097755653007710313335385641413666699555134570753352065511025472703506886269536504351504980980926795922761608596020673210614389496881259252065202750722729561517600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+ans =
+     2
+f =
+0.398846026065970500309467997100544781302796629868038337100274252839438445834490857469262493847692008809807896610796113271209019792043510620311765648608027446528641043249511593184967554346008246172630337096512579287507220961745795654605571857714471033085668398762687094365833526167609276186019421901225210021589416731908085691877619986202344590214814373444224588113088753165453514965596242934751059778953182459435178069689655917599319453334683407142938449668774548995132159240277406442402174367747339351327434300352349536422980500666182528015661510214274710416136411789409468001559519515979667926618501567550991610707608333804165032646214279368608788346128977065398902015122696377908180627412149988263638249457437411555375845308071869448312997663393542796953922913214244253667251917785863084930009912829712043716929862720691110600439710047497737726102297876820457999833330055642399380148590691119473350932280342709643789453941597383727140823074765816203540107868971001220913907630316578338158681208778560634388505979886938800391297591694061293720347283759494909072697309396705499462779184051420832644310403205239357627310882812676290280278246158347042392447516021441042466929174874373164955443748974707018283798419278631249340750799064329981518995011933576991081067655424406185689969703490487116980824957827304979932398884066267740064726901089155046876362166604962666202503401527386644073900876044716110613323339564607820997415838791747549269950461853910965937548828707450902170363569918291367273
+ans =
+     0
+</pre><p>The problem is brute force will fail you in this quest, unless you find the key. That, of course, is the essence of all Project Euler problems.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Demo script for my High Precision Floating point decimal
+% format. The user can specify any number of digits to be carried, while
+% doing a variety of different numerical computations on these numbers. Not
+% all MATLAB operators are defined, as my main goal here was merely to build
+% a general tool for this purpose while learning to use MATLAB's OOP
+% facilities. As well, it seems a useful tool to learn how one MIGHT
+% accomplish the goal of a "big" float format.
+%
+% Considerably more information is provided in the document HPF.pdf,
+% where I provide many details of the computational methods employed in
+% HPF.
+%
+% Author: John D'Errico
+% e-mail: woodchips@rochester.rr.com
+
+%% Create a hpf number at the command line
+% Note that you don't need to specify the number of digits in advance.
+% HPF has a default of 66 total digits, 2 of which are shadowed, carried
+% as guard digits, but not reported. 
+DefaultNumberOfDigits 64 2
+F = hpf(12)
+
+%%
+% There are 66 digits carried in this format by default, two of which are
+% generally hidden from view.
+F.NumberOfDigits
+
+%%
+% Note that the number 12 is an integer in MATLAB, so it is exactly
+% convertable in the hpf format. Next, convert a true floating point number
+% into hpf form.
+F = hpf(1.2)
+
+%%
+% As we see here, the number was not truly exactly 1.2. This happens because
+% I let MATLAB create the value 1.2, which is then passed into hpf and then
+% converted into the decimal form for that number from the hex form carried
+% internally. The digits here are the exact representation of that number as
+% MATLAB has stored it in the ieee form. In fact, the last 40 digits are
+% essentially random floating point trash. Also see that this
+% number has a few trailing zeros.
+mantissa(F)
+
+%% 
+% Had we specified F in a different way, we could have generated the exact
+% decimal form. Thus
+F = hpf('1.2')
+
+%%
+% This number is the exact representation of the desired decimal value.
+% A nice feature of HPF is that it will parse anumber with a long string of
+% decimal digits correctly. Thus we can provide a number with many digits
+% and expect that hpf will store all of them exactly as we desire.
+F = hpf('123.45678909876543210123456789098765432101234567890987654321012345',[100 0])
+
+%%
+% since we requested exactly 100 digits in the result, there are zeros
+% appended to the end of the digit string.
+mantissa(F)
+
+%%
+% Be careful though, since if you provide many digits, but then indicate
+% that only a few digits be stored, then I'll do as you tell me, truncating
+% the extra digits from that number.
+F = hpf('123.45678909876543210123456789098765432101234567890987654321012345',[10 0])
+mantissa(F)
+
+%%
+% Note that the digits of F are stored as Migits, with an initial default
+% set as 4-migits
+DefaultDecimalBase
+
+%%
+% We can see the migits themselves
+F.Migits
+
+%%
+% Numbers are stored in a floating point form, with a separate sign and
+% exponent from the Mantissa. The sign is stored as either -1, 0 or 1.
+% We can extract the sign directly.
+F.Sign
+
+%%
+% Extracting the exponent is also easily done.
+F.Exponent
+
+%%
+% That exponent is stored as an int64 integer, so numbers as large in
+% magnitude as the largest int64 number can be formed and manipulated.
+intmax('int64')
+
+%%
+% HPF does include both Inf and NaN as permissable values.
+hpf(inf)
+hpf(nan)
+
+%%
+% In some cases a computation can have a problem. So just as 0/0 produces a NaN 
+% in matlab, it does so with HPF numbers too. The latter two examples here
+% create HPF NaNs.
+0/0
+hpf(0)/0
+hpf(0)/hpf(0)
+
+%%
+% Inf is as easily generated, even by some functions. As large as the
+% exponent in any floating point form can be, we can always overflow that
+% value if we try hard enough.
+1/0
+hpf(1)/0
+cot(hpf(0))
+tan(hpf('pi',[64 1])/2)
+exp(hpf('1e1000'))
+
+%%
+% Most numeric classes are currently supported for conversion into a hpf
+% format, with the exception of complex numbers. (Sorry, perhaps in a
+% future version.)
+
+%% Special numbers in hpf
+% The numbers pi and e are useful enough that I'm willing to store the
+% true value for those digits, up to a realistic limit. Thus, there are
+% 100000 digits available for pi, and 100000 digits stored away for e.
+%
+% Here I will define a 100 digit version of the number pi. Of course, I
+% cannot simply type hpf(pi), as that would convert the double precision
+% version of pi that MATLAB supplies into a hpf. Instead, HPF looks for
+% 'pi' and 'e' as keys here.
+PI = hpf('pi',100)
+
+%% Properties of a hpf number
+properties('hpf')
+
+%% Methods currently defined for hpf numbers.
+%   (This will grow with time of course.)
+methods('hpf')
+
+%% Arithmetic operations are defined on a hpf number
+2*PI
+
+%%
+% So if we subtract the value of 2*pi, as defined by MATLAB, we expect a
+% result that is on the order of eps.
+2*PI - 2*pi
+
+%% Many of the standard functions in mathematics have been defined for hpf numbers
+% For example, I could get 100 digits in the value of e as simply
+e_100 = hpf('e',100)
+
+%%
+% But I could have also found that value as
+exp(hpf(1,100))
+
+%% Changing the number of digits in an hpf number
+% We can specify the number of digits to be carried in an hpf number in a
+% variety of ways.
+%
+% First, I'll define 1/3 as a hpf number, with 100 decimal digits shown.
+% in fact, there will be 104 digits stored, the last four of which are
+% simply there to be conservative, for an extra bit of accuracy.
+F = hpf('1',100)/3
+F.Migits
+F.NumberOfDigits
+
+%%
+% Reduce the number of digits in F
+F = augmentdigits(F,[50,2])
+F.NumberOfDigits
+
+%%
+% Of course, we can increase the number of digits stored again, but the
+% information in those truncated digits is lost. Future computations will
+% now be carried out with the new precision.
+F = augmentdigits(F,[250,4])
+F.NumberOfDigits
+F.Migits
+
+%% Trig functions
+% The standard trigonometric functions are all defined (although I've
+% probably missed your favorite special function as there are so many.
+% I seem to be constantly adding new functions as I notice that one is
+% missing.)
+%
+% The sine of 30 degrees = pi/6 radians is 1/2
+sin(hpf('pi',200)/6)
+sind(hpf('30',1000))
+
+%%
+% The cosine of 45 degrees = pi/4 radians is sqrt(2)/2
+C = cosd(hpf('45',500))
+% and of course, the square of that number should be 1/2
+C.^2
+
+%%
+% The tangent of 45 degrees = pi/4 radians is 1
+tand(hpf('pi',1000)/4)
+atand(hpf('1',1000))
+
+%% Basic arithmetic is provided, and much more.
+% As long as one term in the expression is an HPF number, the computation
+% is done with an HPF result. Be careful though. Here I forced 5 to be an
+% hpf number, with the current DefaultNumberOfDigits, because then I took a
+% square root of 5. I can add an integer to that, since HPF converts 1 on
+% the fly into HPF.
+DefaultNumberOfDigits 64 4
+phi = (1 + sqrt(hpf(5)))/2
+
+%%
+% Beware however, that while the following result will be in HPF form, with
+% the desired number of digits, that the result will be incorrect past the
+% 16th digit or so, because here sqrt(5) is computed as a double precision
+% number, and only then converted to an HPF form.
+(hpf(1) + sqrt(5))/2
+
+%%
+% If you want to be confident that the number computed is accurate, then do
+% it a second time, but with more digits of precision, using a few more
+% spare digits in the number. Here, I'll subtract the more accurate result
+% from phi. All the reported digits are identical to those from our
+% original computation. 
+phi - (1 + sqrt(hpf(5,[64 10])))/2
+
+%% A test of some identities
+% Working in 1000 decimal digits, with no shadow digits to hide any flaws...
+DefaultNumberOfDigits 1000 0
+x = sqrt(hpf(rand))
+
+%%
+% Should be 1
+sin(x).^2 + cos(x).^2
+
+%%
+% Should be -2
+(log(cosh(x)/exp(x) - 1/2) + log(hpf(2)))/x
+
+%% Computing pi
+% As I've shown, I already store the value of pi internally in HPF to a
+% rather large number of digits. But, one could use HPF to compute pi
+% yourself. Here I'll use Viete's formula to generate 64 digits of pi.
+%   http://en.wikipedia.org/wiki/Pi
+a = sqrt(hpf(2,[64 3]));
+b = a/2;
+tol = 10*eps(b)
+niter = 0;
+while 1
+  niter = niter + 1;
+  a = sqrt(2 + a);
+  b0 = b;
+  b = b*a/2;
+  
+  if abs(b - b0) <= tol
+    break
+  end
+end
+piest = 2/b
+
+%%
+% It took niter iterations before it had converged to my specified tolerance.
+niter
+
+%%
+% As you can see, the approximation yields the same digits as those I have
+% stored for pi.
+hpf('pi',64)
+
+%%
+% Another choice might be Chudnovski's formula:
+%   http://en.wikipedia.org/wiki/Chudnovsky_algorithm
+DefaultNumberOfDigits 5000 10
+DefaultDecimalBase 5
+a1 = hpf(13591409); % small integers, so exact
+a2 = hpf(545140134);
+a3 = hpf(640320);
+a4 = a3.*a3.*a3;
+num = hpf(1);
+den = sqrt(a4);
+tol = eps(num);
+piinv = hpf(0);
+k = 0;
+while 1
+  
+  piterm = num.*(a1+a2.*k)./den;
+  piinv = piinv + piterm;
+
+  if abs(piterm) < tol
+    break
+  end
+  
+  k = k + 1;
+  num = num.*prod(hpf(6*k+(-5:0)));
+  den = den.*a4.*(3*k-2).*(3*k-1).*(3*k).*hpf(k).^3;
+  
+  num = -num;
+
+end
+piest = reciprocal(12.*piinv)
+
+%%
+% The numner of iterations required for this accuracy is
+k
+
+%%
+% So roughly 5000/k digits per iteration
+5000/k
+
+%%
+% With an error of:
+piest - hpf('pi')
+
+%%
+% Of course, we can use the rat function to give a simple rational fraction
+% approximation for pi also. Perhaps you have tried rat out for doubles.
+[N,D] = rat(pi)
+
+%%
+% Rat now works on HPF numbers, and as you can see, here it yields a
+% rational approximation for pi accurate to 100 digits. Its not terribly
+% fast, since there are a lot of divides. Sorry about that, but 100 digits
+% is no problem at all.
+[N,D] = rat(hpf('pi',100),hpf('1e-101'))
+hpf('pi',100)
+N/D
+
+%% A timing test
+% Time for a multiply in HPF should be roughly inversely quadratic
+% although 35000 digits is not enough to really stress the system
+DefaultNumberOfDigits 35000 0
+DefaultDecimalBase 1
+tic,hpf('pi')*hpf('e');toc
+
+DefaultDecimalBase 2
+tic,hpf('pi')*hpf('e');toc
+
+DefaultDecimalBase 3
+tic,hpf('pi')*hpf('e');toc
+
+DefaultDecimalBase 4
+tic,hpf('pi')*hpf('e');toc
+
+DefaultDecimalBase 5
+tic,hpf('pi')*hpf('e');toc
+
+DefaultDecimalBase 6
+tic,hpf('pi')*hpf('e');toc
+
+%% Linear algebraic tools: chol, LU, det
+% Start with a Hilbert matrix of order 5
+N = 5;
+k = repmat(hpf(1:N,100),N,1);
+A = reciprocal(k + k' - 1);
+
+%%
+% Cholesky factor
+L = chol(A);
+%%
+% Max error
+max(max(abs(A - L'*L)))
+
+%%
+% LU factorization
+[L,U,P] = lu(A);
+max(max(abs(P*A - L*U)))
+
+%%
+% Determinant. For this one, lets create a little higher order matrix.
+% Note that the matrix is NOT truly singular, but the deterinant is
+% vanishingly tiny. Had I used too high of a order for this matrix, we
+% would have seen problems even in 100 digits of precision.
+N = 25;
+k = repmat(hpf(1:N,100),N,1);
+A = reciprocal(k + k' - 1);
+det(A)
+
+%% Use, and "Abuse" of HPF
+% Of course, you can do many interesting things with the HPF toolbox. Above
+% I used it to compute pi to many digits of precision. You can also use
+% this tool to do computations to many digits of precision on numbers that
+% you know inexactly, an abuse of both those numbers and this toolbox. As
+% well, you can also use this toolbox to do computations that are better
+% done using well thought out numerical methods. Good numerical analysis
+% will always trump brute force computation. But, at times brute force can
+% be too much of a temptation.
+%
+% For example, from a recent Project Euler problem (318), how many leading
+% nines are there in the fractional part of (sqrt(2) + sqrt(3)).^n, where
+% n is a large even number?
+%
+% Thus, for various values of n...
+DefaultNumberOfDigits 2000 3 session
+k = sqrt(hpf(2)) + sqrt(hpf(3));
+for n = [2 4 8 16 32 64 128 256 512 1024]
+  f = fractionalpart(k.^n)
+  % How many 9's does that fractional part begin with?
+  find(mantissa(f) ~= 9,1,'first') - 1
+end
+
+%%
+% The problem is brute force will fail you in this quest, unless you find
+% the key. That, of course, is the essence of all Project Euler problems.
+
+
+##### SOURCE END #####
+--></body></html>
