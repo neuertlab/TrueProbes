@@ -284,7 +284,9 @@ pause(600);
 
 % process each batch blast report into structure needed for downstream usage in probe design and evaluation
 % concantenate each batches results together into a single output file
-
+fprintf('\n')
+fprintf('\n')
+fprintf("Generating MATLAB tables from probe BLAST batch results")
 Batch_List = parallel.pool.Constant(Batch);
 parfor y = 1:length(batch_nums_to_check2)
     i = batch_nums_to_check2(y);
@@ -539,6 +541,9 @@ parfor y = 1:length(batch_nums_to_check2)
 end
 
 %% Load all files and clear
+fprintf('\n')
+fprintf('\n')
+fprintf("Aggregating probe BLAST batch MATLAB tables into a single MATLAB BLAST gene hits table")
 % delete temporary files generated for each batches blast report
 for i = 1:N_Batches
     if isfile([FolderRootName filesep TranscriptName designerName '_gene_hits_table_batch' num2str(i) '.mat'])
