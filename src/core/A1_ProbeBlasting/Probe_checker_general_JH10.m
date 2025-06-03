@@ -178,7 +178,7 @@ end
 if (length(Results_Made2)<=most_recent_num)
     results_check2 = Results_Made2;
 else
-    Results_RecentMade_Dates2(:,1) = ResultsDate(Results_Made2);
+    Results_RecentMade_Dates2(:,1) = ResultsDate2(Results_Made2);
     Results_RecentMade_Dates2(:,2) = num2cell(Results_Made2);
     Results_RecentMade_Dates2 = table2timetable(cell2table(Results_RecentMade_Dates2));
     Results_RecentMade_Dates2 = sortrows(Results_RecentMade_Dates2,1,'descend');

@@ -132,9 +132,9 @@ SaltConcentration = 0.05; %Concentration of Salt in thermodynamic calculations m
 MinHomologySearchTargetSize = 15; % minimum off-target match size
 probeBatchSize = 20;%batch size for parallelizing probe evaluations in probe design
 targetBatchSize = 200;%batch size for parallelizing target evaluations in probe design
-BLASTpath_Windows = strcat('src',filesep,'thirdparty',filesep,'ncbi-blast-2.8.1+-x64-win64',filesep,'blast-2.8.1+',filesep,'bin',filesep,'blastn'); %version of blast database used and path to blast
-BLASTpath_Mac = strcat('src',filesep,'thirdparty',filesep,'ncbi-blast-2.8.1+-x64-macosx',filesep,'blast-2.8.1+',filesep,'bin',filesep,'blastn'); %version of blast database used and path to blast
-BLASTpath_Linux = strcat('src',filesep,'thirdparty',filesep,'ncbi-blast-2.8.1+-x64-linux',filesep,'blast-2.8.1+',filesep,'bin',filesep,'blastn'); %version of blast database used and path to blast
+BLASTpath_Windows = strcat('src',filesep,'thirdparty',filesep,'ncbi-blast-2.8.1+-x64-win64',filesep,'ncbi-blast-2.8.1+',filesep,'bin',filesep,'blastn'); %version of blast database used and path to blast
+BLASTpath_Mac = strcat('src',filesep,'thirdparty',filesep,'ncbi-blast-2.8.1+-x64-macosx',filesep,'ncbi-blast-2.8.1+',filesep,'bin',filesep,'blastn'); %version of blast database used and path to blast
+BLASTpath_Linux = strcat('src',filesep,'thirdparty',filesep,'ncbi-blast-2.8.1+-x64-linux',filesep,'ncbi-blast-2.8.1+',filesep,'bin',filesep,'blastn'); %version of blast database used and path to blast
 %% BLAST Parameters (You Usually will not change)
 outfmt = 5;
 reward = 1;
