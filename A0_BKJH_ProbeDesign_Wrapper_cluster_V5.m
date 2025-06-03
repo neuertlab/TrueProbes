@@ -601,7 +601,7 @@ else  %custom organism
 end
 tEnd = toc;
 fprintf('\n')
-fprinf("Time elapsed to load annotation files %g seconds",round(tEnd,3,"significant"))
+fprintf("Time elapsed to load annotation files %g seconds",round(tEnd,3,"significant"))
 
 %% Generate Folder
 if (not(isfolder([saveRoot])))
@@ -666,7 +666,7 @@ catch
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_probes' designerName '.mat'],'probes','-v7.3')
         tEnd = toc;
         fprintf('\n')
-        fprinf("Time elapsed to tile probes %g seconds",round(tEnd,3,"significant"))
+        fprintf("Time elapsed to tile probes %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
         fprintf(1,'There was an error! The message was:\n%s',e.message);
@@ -684,7 +684,7 @@ catch
         [~,gene_table] = Probe_checker_general_JH10(probes,inputs1{gene_num,4},inputs1{gene_num,5},inputs1{gene_num,6},inputs1{gene_num,7},settings);
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_hits_table' designerName '.mat'],'-mat','gene_table','-v7.3');
         tEnd = toc;fprintf('\n')
-        fprinf("Time elapsed to generate probe BLAST results table %g seconds",round(tEnd,3,"significant"))
+        fprintf("Time elapsed to generate probe BLAST results table %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
         fprintf(1,'There was an error! The message was:\n%s',e.message);
@@ -702,7 +702,7 @@ catch
         [ExpressionMatrix,get_expression_time] = A_JH_GetExpressionInfo_V2(gene_table,settings);
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_ExpressionInfo' designerName '.mat'],'ExpressionMatrix','get_expression_time','settings','-v7.3');
         tEnd = toc;fprintf('\n')
-        fprinf("Time elapsed to generate probe BLAST hits gene expression information %g seconds",round(tEnd,3,"significant"))
+        fprintf("Time elapsed to generate probe BLAST hits gene expression information %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
         fprintf(1,'There was an error! The message was:\n%s',e.message);
@@ -732,7 +732,7 @@ catch
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_dCpInfo' designerName '.mat'],'-mat','dCpon_eq','dCpeq_Match','-v7.3');
         toc
         tEnd = toc;fprintf('\n')
-        fprinf("Time elapsed to compute probe target thermodynamic information %g seconds",round(tEnd,3,"significant"))
+        fprintf("Time elapsed to compute probe target thermodynamic information %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
         fprintf(1,'There was an error! The message was:\n%s',e.message);
@@ -758,7 +758,7 @@ catch
             dHeq_Complement,dSeq_Complement,dHf_Complement,dSf_Complement,dHr_Complement,dSr_Complement,dCp_Complement] = ...
             A_JH_GetSiteMapping_V6(probes,settings,gene_table,Kb_Match,dHeq_Match,dSeq_Match,dHf_Match,dSf_Match,dHr_Match,dSr_Match,dCpeq_Match,Tm_Match);
         tEnd = toc;fprintf('\n')
-        fprinf("Time elapsed to create probe target binding site maps %g seconds",round(tEnd,3,"significant"))
+        fprintf("Time elapsed to create probe target binding site maps %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
         fprintf(1,'There was an error! The message was:\n%s',e.message);
@@ -826,7 +826,7 @@ catch
             'Tvec_DNA','Svec_DNA','TPvec_DNA','TSvec_DNA','TPvec_logKOFF_DNA','TPvec_logKOFFdivON_DNA','TPvec_logKONdivOFF_DNA','TPvec_logKOFFdivCOMP_DNA','TPvec_logKCOMPdivOFF_DNA',...
             'Nvec_RNAmulti','Off_Score','Specificity_Score','NumRNAOffTargetOptions','Probes_WithNRNAOFF','NumDNAOffTargetOptions','Probes_WithNDNAOFF','-v7.3')
         tEnd = toc;fprintf('\n')
-        fprinf("Time elapsed to compute probe target statistics %g seconds",round(tEnd,3,"significant"))
+        fprintf("Time elapsed to compute probe target statistics %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
         fprintf(1,'There was an error! The message was:\n%s',e.message);
@@ -845,7 +845,7 @@ catch
         chosenProbes = A_ZigZagProbeSelection_V5(probes,gene_table,settings,addSelfProb,packOptimal,Kon,Nvec_RNAmulti,Off_Score,Specificity_Score,Tvec_RNA,Svec_RNA,TPvec_RNA,TSvec_RNA,TPvec_logKOFF_RNA,TPvec_logKOFFdivON_RNA,TPvec_logKONdivOFF_RNA,ExpressionMatrix,DoesProbeBindSite,Kb_mod);
         save([saveRoot filesep settings.FolderName filesep settings.FolderName '_chosen.mat'],'chosenProbes','-v7.3')
         tEnd = toc;fprintf('\n')
-        fprinf("Time elapsed to select TrueProbes probes %g seconds",round(tEnd,3,"significant"))
+        fprintf("Time elapsed to select TrueProbes probes %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
         fprintf(1,'There was an error! The message was:\n%s',e.message);
@@ -903,7 +903,7 @@ catch
             RNAsolver_JH(chosenProbes,settings,probes,gene_table,ExpressionMatrix,DoesProbeBindSite2,dHeq_mod,dSeq_mod,dCp_mod,dHeq_Complement,dSeq_Complement,dCp_Complement)
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_Tm' num2str(T_hybrid) '_ModelMetrics' designerName '.mat'],'ModelMetrics','chosenProbes','settings','-v7.3')
         tEnd = toc;fprintf('\n')
-        fprinf("Time elapsed to select TrueProbes probes %g seconds",round(tEnd,3,"significant"))
+        fprintf("Time elapsed to select TrueProbes probes %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
         fprintf(1,'There was an error! The message was:\n%s',e.message);
