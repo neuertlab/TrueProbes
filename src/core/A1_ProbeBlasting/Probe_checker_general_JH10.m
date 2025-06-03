@@ -66,6 +66,7 @@ else
     end
 end
 
+
 %probe_nums = 1:size(probes,1);
 % each row is information for a probe, then within the cell array in the second column, rows are genes, columns are number of hits
 first_loaded = 0;
@@ -225,59 +226,34 @@ end
 N_Batches
 batch_nums_to_check1
 MinHomologySize_Constant = parallel.pool.Constant(settings.MinHomologySearchTargetSize);
-currDir = pwd;
+
+%if no database can make database
+%how to check if 
 parfor v = 1:length(batch_nums_to_check1)
     i = batch_nums_to_check1(v);
     if (runDNA)
-        matched_DNA = 1;check_counter_DNA = 1;
-        sequence_data = ['"' currDir filesep FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa' '"'];
-        outputfile_DNA = ['"' currDir filesep FolderRootName  filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsDNA.xml' '"'];
-        database_DNA = ['"' db1 '"'];
+        sequence_data = [FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa'];
+        outputfile_DNA = [FolderRootName  filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsDNA.xml'];
+        database_DNA = db1;
         per_id = 100*MinHomologySize_Constant.Value/MaxProbeSize;
         strand = 'both';
-        message1 = strcat(BLASTpath," -out ",outputfile_DNA," -outfmt ",num2str(outfmt)," -num_alignments ", num2str(num_alignments)," -query ",...
-            sequence_data," -db ",database_DNA," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
-            " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id))
-        status1 = system(message1);
-        while (double(matched_DNA > 0)+double(check_counter_DNA <3)==0)
-            pause(60)
-            if (isfile([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsDNA.xml']))%keeps going until BLAST suceeds
-                matched_DNA = 0;
-            else
-                matched_DNA = 1;
-                check_counter_DNA = check_counter_DNA + 1;
-            end
-        end
-        if (double(matched_DNA == 0)+double(check_counter_DNA > 3)>0)
-            fprintf('\n')
-            fprintf(['Probe Batch ' " " num2str(i) " " 'DNA Hits failed to run'])
-        end
+        bnopts_DNA = blastplusoptions("blastn",strcat(" -num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
+            " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)))
+        bnopts_DNA.Task = "blastn";
+        bnopts_DNA.ReportFormat = "BLASTXML";
+        blastplus("blastn",sequence_data,database_DNA ,outputfile_DNA,bnopts_DNA)
     end
     if (runRNA)
-        matched_RNA = 1;check_counter_RNA = 1;
-        sequence_data = ['"' currDir filesep FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa' '"'];
-        outputfile_RNA = ['"' currDir filesep FolderRootName  filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsRNA.xml' '"'];
-        database_RNA = ['"' db2 '"'];
+        sequence_data = [FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa'];
+        outputfile_RNA = [FolderRootName  filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsRNA.xml'];
+        database_RNA = db2;
         per_id = 100*MinHomologySize_Constant.Value/MaxProbeSize;
         strand = 'plus';
-        message2 = strcat(BLASTpath," -out ",outputfile_RNA," -outfmt ",num2str(outfmt)," -num_alignments ", num2str(num_alignments)," -query ",...
-            sequence_data," -db ",database_RNA," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
-            " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id))
-        status2 = system(message2);
-        while (double(matched_RNA > 0)+double(check_counter_RNA <3)==0)
-            pause(60)
-            if (isfile([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsRNA.xml']))%keeps going until BLAST suceeds
-                matched_RNA = 0;
-            else
-                matched_RNA = 1;
-                check_counter_RNA = check_counter_RNA + 1;
-            end
-        end
-        if (double(matched_RNA == 0)+double(check_counter_RNA > 3)>0)
-            fprintf('\n')
-            fprintf(['Probe Batch ' " " num2str(i) " " 'RNA Hits failed to run'])
-        end
-
+        bnopts_RNA = blastplusoptions("blastn",strcat(" -num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
+            " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)))
+        bnopts_RNA.Task = "blastn";
+        bnopts_RNA.ReportFormat = "BLASTXML";
+        blastplus("blastn",sequence_data,database_RNA,outputfile_RNA,bnopts_RNA)
     end
 end
 pause(600);

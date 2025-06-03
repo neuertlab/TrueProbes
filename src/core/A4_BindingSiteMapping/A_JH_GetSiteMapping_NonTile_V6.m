@@ -369,7 +369,7 @@ if (calcSiteMap > 0)
         MolN_ProbesAtEvents{w}=[];
         Event_Rates_In_Site_at_Target{w}=[];
         dHeq_In_Site_at_Target{w}=[];
-        dSeq_In_Site_at_Target{w}=[];{w}
+        dSeq_In_Site_at_Target{w}=[];
         dHf_In_Site_at_Target{w}=[];
         dSf_In_Site_at_Target{w}=[];
         dHr_In_Site_at_Target{w}=[];

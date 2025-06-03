@@ -153,7 +153,6 @@ dust = 'no';
 
 SingleOverMultiplex = 1;
 AllIsoforms = 0;
-
 gene_num = id;
 addSelfProb = 1;
 packOptimal = 1;
@@ -166,6 +165,7 @@ RemoveMisMatches = 1;
 SpecificityThreshold = 2;
 DecisionAlgorithmFloorSize = 0.5;
 withNascentTranscripts = 0;
+
 if (minProbeSize>maxProbeSize)
     msg = 'Error. Minimum probe size must be less than or equal to max probe size';
     error(msg)
@@ -178,14 +178,10 @@ if (max_probes<0)
     msg = 'Error. Maximum number of probes must be greater than zero';
     error(msg)
 end
-
-
 %Update so that more species can be included in list for their blast database
 % Add Yeast Expression, update to use GTF
 % Update that way more species can be used and alignment of database files
 % and GTF with reference genome, and add custom gene expression file
-
-
 %Specify Genes, [Expr], [Tfixed, Topt, Tgradient] & Application
 %Modes [Single Isoform, Multiple Isoforms, Multile Gene Isoforms]
 %Specify Data
@@ -222,7 +218,6 @@ end
 %Cross-Software Figures
 %Aggregate Results Across Genes/Isoforms
 %Cross-Gene Cross-Software Results
-
 %outline of changes
 %Update FolderName to not reference temperature
 %size of every variable in byyrd
@@ -236,33 +231,21 @@ end
 %update to have higher dimensions for versions of code/ cell array
 %might turn 4D multiTargetLocations into two 3d matricies and change
 %combineMaps code to for those
-probes = [];%  SNP allele specificity  (similar to yeast)
-startup
+%  SNP allele specificity  (similar to yeast)
 %Banerjee RNA/DNA Improved nearest-neighbor parameters for the stability of RNA/DNA hybrids under a physiological condition
-
-
 %find ncbi gene name alias's  (since its on ncbi page)
 
 
-%37-65
+probes = [];
+startup
 settings.BUILD_STRING = '2024.11.12.00';
 settings.VERSION_STRING = 'v1.1.1';
-
-
-%read(seqBioIFobj,inputs1{x}{1}).Sequence
-
 %% Settings Specification
-
-
-
-
 if (strcmp(inputs1{gene_num,4},'Yeast'))
     DoAllGenesHaveSameExpression = 1;%same expr.
 else
     DoAllGenesHaveSameExpression = 0;%diff expr
 end
-
-
 if (length(inputs1{gene_num,1})==1)
     %single
     refInfo = inputs1{gene_num,1}{1}(1:2);
