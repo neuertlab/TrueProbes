@@ -372,7 +372,7 @@ if (calcSiteMap > 0)
         MolN_ProbesAtEvents{w}=[];
         Event_Rates_In_Site_at_Target{w}=[];
         dHeq_In_Site_at_Target{w}=[];
-        dSeq_In_Site_at_Target{w}=[];{w}
+        dSeq_In_Site_at_Target{w}=[];
         dHf_In_Site_at_Target{w}=[];
         dSf_In_Site_at_Target{w}=[];
         dHr_In_Site_at_Target{w}=[];
@@ -469,7 +469,9 @@ if (calcSiteMap > 0)
     %Check Sites On Target Have Multiplicity with Probes Given
     %Pset
     
-    
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Filtering Binding Site Map to be non-overlapping in adjacent binding site regions between probes on individual targets.")
     %Cmin  Cmax 
     DoesProbeBindSite2 = DoesProbeBindSite;
     for p=1:size(probes,1)

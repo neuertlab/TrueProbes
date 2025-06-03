@@ -608,43 +608,13 @@ fprintf("Time elapsed to load annotation files %g seconds",round(tEnd,3,"signifi
 if (not(isfolder([saveRoot])))
     mkdir([saveRoot])
 end
+
 fprintf('\n')
 fprintf("Making probe target design output folder")
-tic
-if (settings.SingleOrMulti==1&&settings.AllIsoforms == 0)%One Gene/One Isoform
-    if (not(isfolder([saveRoot inputs1{gene_num,5} '_' settings.rootName])))
-        mkdir([saveRoot inputs1{gene_num,5} '_' settings.rootName])
-    end
-    settings.FolderName = [inputs1{gene_num,5} '_' settings.rootName];
-elseif (settings.SingleOrMulti==1&&settings.AllIsoforms == 1)%One Gene/All Isoform
-    ENST_ID = Gencode_db.Var1{strcmp(inputs1{gene_num,1}{1},Gencode_db.Var2)};
-    ENST_GeneName = EMBLAttrAlign_db.geneName{strcmp(ENST_ID,EMBLAttrAlign_db.transcriptId)};
-    ENST_GeneIDs = EMBLAttrAlign_db.transcriptId(strcmp(ENST_GeneName,EMBLAttrAlign_db.geneName));
-    EMBL_ChrNums = arrayfun(@(x) extractAfter(EMBLComp_db.chrom{strcmp(ENST_GeneIDs{x},EMBLComp_db.transcriptId)},'chr'),1:length(ENST_GeneIDs),'Un',0);
-    ENST_RefSeqIDs = cell(1,size(ENST_GeneIDs,1));
-    for k = 1:size(ENST_GeneIDs,1)
-        if (sum(strcmp(ENST_GeneIDs{k},Gencode_db.Var1))>0)
-            ENST_RefSeqIDs{k} = Gencode_db.Var2(find(strcmp(ENST_GeneIDs{k},Gencode_db.Var1)));
-        end
-    end
-    ENST_RefSeqIDz = unique(vertcat(ENST_RefSeqIDs{:}));
-    Exists_Match = find(~cellfun(@isempty,ENST_RefSeqIDs));
-    match_Found = arrayfun(@(x) find(arrayfun(@(y) sum(contains(ENST_RefSeqIDs{y},ENST_RefSeqIDz{x})),find(~cellfun(@isempty,ENST_RefSeqIDs))),1),1:length(ENST_RefSeqIDz));
-    Isoform_chrom = {EMBL_ChrNums{Exists_Match(match_Found)}};
-    FoldName = cell(1,size(ENST_RefSeqIDz,1));
-    for k = 1:size(ENST_RefSeqIDz,1)
-        if (not(isfolder([saveRoot filesep inputs1{gene_num,5} '_' ENST_RefSeqIDz{k}])))
-            mkdir([saveRoot filesep inputs1{gene_num,5} '_' ENST_RefSeqIDz{k}])
-        end
-        FoldName{k} = [inputs1{gene_num,5} '_' ENST_RefSeqIDz{k}];
-    end
-    settings.rootName = strjoin(ENST_RefSeqIDz,'_');
-    if (not(isfolder([saveRoot filesep inputs1{gene_num,5} '_' settings.rootName])))
-        mkdir([saveRoot filesep inputs1{gene_num,5} '_' settings.rootName])
-    end
-    All_chrom = Isoform_chrom;
-    settings.FolderName = [inputs1{gene_num,5} '_' settings.rootName];
+if (not(isfolder([saveRoot inputs1{gene_num,5} '_' settings.rootName])))
+    mkdir([saveRoot inputs1{gene_num,5} '_' settings.rootName])
 end
+settings.FolderName = [inputs1{gene_num,5} '_' settings.rootName];
 settings.FolderRootName = strcat('output',filesep,settings.FolderName);
 settings.rootName = strjoin(inputs1{gene_num,1},'_');
 settings.TargetLists = strjoin(inputs1{gene_num,1},', ');
@@ -727,8 +697,8 @@ try
     fprintf("Loading probe target thermodynamic information")
 catch
     fprintf("Computing probe target thermodynamic information")
-    tic
     try
+        tic
         [Kb_Match,Kon,Koff,dHeq_Match,dSeq_Match,dHf_Match,dSf_Match,dHr_Match,dSr_Match,dCpeq_Match,dHon_eq,dSon_eq,dHon_f,dSon_f,dHon_r,dSon_r,dCpon_eq,Tm_on,Tm_Match] = ...
             A_JH_GenerateThermoInfo_V5(probes,gene_table,inputs1{gene_num,5},settings);%add Kon Koff
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_Tm' num2str(settings.HybridizationTemperature) '_OnOffThermoInfo' designerName '.mat'],'-mat','Kon','Koff','Kb_Match','-v7.3');
@@ -914,7 +884,7 @@ catch
             RNAsolver_JH(chosenProbes,settings,probes,gene_table,ExpressionMatrix,DoesProbeBindSite2,dHeq_mod,dSeq_mod,dCp_mod,dHeq_Complement,dSeq_Complement,dCp_Complement)
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_Tm' num2str(T_hybrid) '_ModelMetrics' designerName '.mat'],'ModelMetrics','chosenProbes','settings','-v7.3')
         tEnd = toc;fprintf('\n')
-        fprintf("Time elapsed to select TrueProbes probes %g seconds",round(tEnd,3,"significant"))
+        fprintf("Time elapsed to compute TrueProbes probe metrics %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
         fprintf(1,'There was an error! The message was:\n%s',e.message);
