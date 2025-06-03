@@ -16,23 +16,22 @@ function [Px1] = F_DiscretePossionBinomialStable_2D(p)
    %problem when have ones that are zero
    %mean(sum(p)),  var =  sumP*(1-p)
 %    sum(p,2);
-%    sum(p*(1-p),2);
-   p(1,p(1,:)>0)
-   full(p(144,p(144,:)>0))
-   %F_DiscretePossionBinomial(p(1,p(1,:)>0))
-   ss = find(p(144,:)>0)
-   F_DiscretePossionBinomial(p(144,ss(1:10)))
-   %N = length(p) p>0
-   %alpha prod
-   % s = -(1-p)./p
-   % alpha*poly(s);
-   p = [0 1/2 1/2 1/2 0.99];
-   x = F_DiscretePossionBinomial(p(2:end));
-   0   0.125000000000000   0.375000000000000   0.375000000000000   0.125000000000000
-   p1 = p;
-   p1(p1==0) = 1;
-   alpha = prod(p1)
-   s = -(1-p)./p;
-   alpha*poly(s);
-   
+% %    sum(p*(1-p),2);
+%    p(1,p(1,:)>0)
+%    full(p(144,p(144,:)>0))
+%    %F_DiscretePossionBinomial(p(1,p(1,:)>0))
+%    ss = find(p(144,:)>0)
+%    F_DiscretePossionBinomial(p(144,ss(1:10)))
+%    %N = length(p) p>0
+%    %alpha prod
+%    % s = -(1-p)./p
+%    % alpha*poly(s);
+%    p = [0 1/2 1/2 1/2 0.99];
+%    x = F_DiscretePossionBinomial(p(2:end));
+%    p1 = p;
+%    p1(p1==0) = 1;
+%    alpha = prod(p1)
+%    s = -(1-p)./p;
+%    alpha*poly(s);
+% 
 end

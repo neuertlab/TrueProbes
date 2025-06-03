@@ -224,7 +224,7 @@ if (isDNA)
         ResultsDate{i} = datetime(d.date);
         clear d
     end
-end
+
 Results_NotMade = find(ResultsExist==0);
 Results_Made = find(ResultsExist==1);
 %Sort get most 8 recent ResultsMade GeneHitsMade and GeneHitsTable Made and
@@ -270,7 +270,6 @@ for t = 1:length(DNA_IDs)
     TPvec_logKOFFdivCOMP_DNA{t} = log10(diag(full(squeeze(Kb(TPvec_DNA{t},DNA_IDs(t),TSvec_DNA{t}))))'./full(Kb_Complement(DNA_IDs(t),TSvec_DNA{t})));
     TPvec_logKCOMPdivOFF_DNA{t} = log10(full(Kb_Complement(DNA_IDs(t),TSvec_DNA{t}))./diag(full(squeeze(Kb(TPvec_DNA{t},DNA_IDs(t),TSvec_DNA{t}))))');
 end
-end
 
     Cout{2}{1} = Tvec_DNA;
     Cout{2}{2} = Svec_DNA;
@@ -292,7 +291,6 @@ end
         DNASpecificity_Score(Probes_With_DNAOFF(v)) = dot(EKernel(temp_T)',temp_KOFFdivON); 
         DNAOFF_Score(Probes_With_DNAOFF(v)) = dot(EKernel(temp_T)',temp_KOFF);  
     end
-
 
 end
 
