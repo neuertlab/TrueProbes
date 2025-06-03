@@ -1,4 +1,26 @@
 function A0_BKJH_ProbeDesign_Wrapper_cluster_V5(id,cluster)
+% Main FIle for designing TrueProbes RNA-FISH probes
+% Input Argument 1: id
+% id is an integer and is the row of the input design table at the top of the script to run and design probes against. 
+% 
+% Input Argument 2: cluster
+% cluster is an integer and determines the software parallelization pool between local or remote servers when running the script via Slurm. 
+% The only difference between running on a cluster is the number of cores in the Slurm file.
+% cluster = (0,if run locally and 1 if run on cluster)
+% 
+% Inputs1 Table
+% Table describing all the targets to design probes against. Each row is a different desired target design. 
+% Input table columns:
+% 	1. Included target Accession IDs. Designs probes shared across all target accession number(s)
+% 	2. Text Sequence Files to Include (files). Default is Empty
+% 	3. Text Sequence Files to Exclude (files). Default is Empty
+% 	4. Organism you are trying to design probes in.
+% 	5. Gene Name 1. First name of gene in parenthesis
+%     6. Gene Name 2. Second potential gene name to use instead of the first  in parenthesis
+% 	7. Chromosome. The chromosome number or letter symbol
+% 	8. Excluded target accession IDs. Removes probes in any exclusion accession number(s). Default is Empty
+%    9. Strand. Which strand to design probes against for RNA default is  plus .
+
 %% Genes To Design Probes For
 inputs1 = {...
     {'NM_001660.4'},{},{}, 'Human','(ARF4)','(ARF4)','3',{},1 ;... %
@@ -539,6 +561,9 @@ end
 
 
 %% Load Annotation File
+fprintf('\n')
+fprintf("Loading genome and transcriptome annotation files")
+tic
 if (strcmp(settings.Organism,'Human'))
     optsUCSC = detectImportOptions(settings.Human_wgEncodeGencodeRefSeqFile);
     optsUCSC.VariableNames = {'Var1','Var2','Var3'};
@@ -574,12 +599,17 @@ else  %custom organism
     optsUCSC3.VariableNames = settings.wgEncodeGencodeCompVariableNames;
     EMBLComp_db = readtable(settings.Custom_wgEncodeGencodeCompFile,optsUCSC3);
 end
+tEnd = toc;
+fprintf('\n')
+fprinf("Time elapsed to load annotation files %g seconds",round(tEnd,3,"significant"))
 
 %% Generate Folder
 if (not(isfolder([saveRoot])))
     mkdir([saveRoot])
 end
-
+fprintf('\n')
+fprintf("Making probe target design output folder")
+tic
 if (settings.SingleOrMulti==1&&settings.AllIsoforms == 0)%One Gene/One Isoform
     if (not(isfolder([saveRoot inputs1{gene_num,5} '_' settings.rootName])))
         mkdir([saveRoot inputs1{gene_num,5} '_' settings.rootName])
@@ -616,11 +646,12 @@ elseif (settings.SingleOrMulti==1&&settings.AllIsoforms == 1)%One Gene/All Isofo
 end
 settings.FolderRootName = strcat('output',filesep,settings.FolderName);
 settings.rootName = strjoin(inputs1{gene_num,1},'_');
-
+settings.TargetLists = strjoin(inputs1{gene_num,1},', ');
 
 
 %% Generate Probes
-
+fprintf('\n')
+fprintf(strcat("Designing probes for"," ",inputs1{gene_num,5},"Transcript IDs:"," ",settings.TargetLists))
 fprintf('\n')
 try
     load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_probes' designerName '.mat'],'probes')
@@ -634,8 +665,9 @@ catch
         probes = init_probes;
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_probes' designerName '.mat'],'probes','-v7.3')
         tEnd = toc;
+        fprintf('\n')
         fprinf("Time elapsed to tile probes %g seconds",round(tEnd,3,"significant"))
-    catch
+    catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
         fprintf(1,'There was an error! The message was:\n%s',e.message);
     end
@@ -651,7 +683,7 @@ catch
         tic                                                                                                           %Organism           %(Gene Name)        %(Gene Name)        %ChrNum
         [~,gene_table] = Probe_checker_general_JH10(probes,inputs1{gene_num,4},inputs1{gene_num,5},inputs1{gene_num,6},inputs1{gene_num,7},settings);
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_hits_table' designerName '.mat'],'-mat','gene_table','-v7.3');
-        tEnd = toc;
+        tEnd = toc;fprintf('\n')
         fprinf("Time elapsed to generate probe BLAST results table %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
@@ -669,7 +701,7 @@ catch
         tic
         [ExpressionMatrix,get_expression_time] = A_JH_GetExpressionInfo_V2(gene_table,settings);
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_ExpressionInfo' designerName '.mat'],'ExpressionMatrix','get_expression_time','settings','-v7.3');
-        tEnd = toc;
+        tEnd = toc;fprintf('\n')
         fprinf("Time elapsed to generate probe BLAST hits gene expression information %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
@@ -699,7 +731,7 @@ catch
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_TmInfo' designerName '.mat'],'-mat','Tm_on','Tm_Match','-v7.3');
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_dCpInfo' designerName '.mat'],'-mat','dCpon_eq','dCpeq_Match','-v7.3');
         toc
-        tEnd = toc;
+        tEnd = toc;fprintf('\n')
         fprinf("Time elapsed to compute probe target thermodynamic information %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
@@ -725,7 +757,7 @@ catch
             dHeq_mod,dSeq_mod,dHf_mod,dSf_mod,dHr_mod,dSr_mod,~,dCp_mod,...
             dHeq_Complement,dSeq_Complement,dHf_Complement,dSf_Complement,dHr_Complement,dSr_Complement,dCp_Complement] = ...
             A_JH_GetSiteMapping_V6(probes,settings,gene_table,Kb_Match,dHeq_Match,dSeq_Match,dHf_Match,dSf_Match,dHr_Match,dSr_Match,dCpeq_Match,Tm_Match);
-        tEnd = toc;
+        tEnd = toc;fprintf('\n')
         fprinf("Time elapsed to create probe target binding site maps %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
@@ -793,7 +825,7 @@ catch
             'Tvec_RNA','Svec_RNA','TPvec_RNA','TSvec_RNA','TPvec_logKOFF_RNA','TPvec_logKOFFdivON_RNA','TPvec_logKONdivOFF_RNA',...
             'Tvec_DNA','Svec_DNA','TPvec_DNA','TSvec_DNA','TPvec_logKOFF_DNA','TPvec_logKOFFdivON_DNA','TPvec_logKONdivOFF_DNA','TPvec_logKOFFdivCOMP_DNA','TPvec_logKCOMPdivOFF_DNA',...
             'Nvec_RNAmulti','Off_Score','Specificity_Score','NumRNAOffTargetOptions','Probes_WithNRNAOFF','NumDNAOffTargetOptions','Probes_WithNDNAOFF','-v7.3')
-        tEnd = toc;
+        tEnd = toc;fprintf('\n')
         fprinf("Time elapsed to compute probe target statistics %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
@@ -812,7 +844,7 @@ catch
         tic
         chosenProbes = A_ZigZagProbeSelection_V5(probes,gene_table,settings,addSelfProb,packOptimal,Kon,Nvec_RNAmulti,Off_Score,Specificity_Score,Tvec_RNA,Svec_RNA,TPvec_RNA,TSvec_RNA,TPvec_logKOFF_RNA,TPvec_logKOFFdivON_RNA,TPvec_logKONdivOFF_RNA,ExpressionMatrix,DoesProbeBindSite,Kb_mod);
         save([saveRoot filesep settings.FolderName filesep settings.FolderName '_chosen.mat'],'chosenProbes','-v7.3')
-        tEnd = toc;
+        tEnd = toc;fprintf('\n')
         fprinf("Time elapsed to select TrueProbes probes %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
@@ -870,7 +902,7 @@ catch
         ModelMetrics = ...
             RNAsolver_JH(chosenProbes,settings,probes,gene_table,ExpressionMatrix,DoesProbeBindSite2,dHeq_mod,dSeq_mod,dCp_mod,dHeq_Complement,dSeq_Complement,dCp_Complement)
         save([settings.FolderRootName filesep inputs1{gene_num,5} '_Tm' num2str(T_hybrid) '_ModelMetrics' designerName '.mat'],'ModelMetrics','chosenProbes','settings','-v7.3')
-        tEnd = toc;
+        tEnd = toc;fprintf('\n')
         fprinf("Time elapsed to select TrueProbes probes %g seconds",round(tEnd,3,"significant"))
     catch e
         fprintf(1,'The identifier was:\n%s',e.identifier);
