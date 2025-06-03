@@ -562,6 +562,7 @@ end
 
 %% Load Annotation File
 fprintf('\n')
+fprintf('\n')
 fprintf("Loading genome and transcriptome annotation files")
 tic
 if (strcmp(settings.Organism,'Human'))
@@ -650,8 +651,10 @@ settings.TargetLists = strjoin(inputs1{gene_num,1},', ');
 
 
 %% Generate Probes
+fprintf('\n') 
 fprintf('\n')
-fprintf(strcat("Designing probes for"," ",inputs1{gene_num,5},"Transcript IDs:"," ",settings.TargetLists))
+fprintf(strcat("Designing probes for"," ",inputs1{gene_num,5}," ","Transcript IDs:"," ",settings.TargetLists))
+fprintf('\n')
 fprintf('\n')
 try
     load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_probes' designerName '.mat'],'probes')
@@ -674,6 +677,7 @@ catch
 end
 %% BLAST Probes
 fprintf('\n')
+fprintf('\n')
 try
     load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_hits_table' designerName '.mat'],'gene_table')
     fprintf("Loading probe BLAST results table")
@@ -691,6 +695,7 @@ catch
     end
 end
 %% Get Gene Expression Information
+fprintf('\n')
 fprintf('\n')
 try
     load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_ExpressionInfo' designerName '.mat'],'ExpressionMatrix');
@@ -711,6 +716,7 @@ end
 settings.saveRoot = saveRoot;
 
 %% Get Thermodynamic Information (On-Target,Off-Target)
+fprintf('\n')
 fprintf('\n')
 try
     load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_Tm' num2str(settings.HybridizationTemperature) '_OnOffThermoInfo' designerName '.mat'],'Kon','Koff','Kb_Match');
@@ -739,6 +745,7 @@ catch
     end
 end
 %% Get Binding Site Mapping and Energy
+fprintf('\n')
 fprintf('\n')
 try
     load([settings.FolderRootName filesep settings.GeneName '_binding_hits_map' designerName '.mat'],'DoesProbeBindSite2','Num_of_Molecule_Sites')
@@ -803,6 +810,7 @@ else
 end
 
 fprintf('\n')
+fprintf('\n')
 try
     load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_Tm' num2str(T_hybrid) '_BasicDesignerStats' designerName '.mat'],'Tvec_RNA','Svec_RNA','TPvec_RNA','TSvec_RNA','TPvec_logKOFF_RNA','TPvec_logKOFFdivON_RNA','TPvec_logKONdivOFF_RNA',...
         'Nvec_RNAmulti','Tvec_DNA','Svec_DNA','TPvec_DNA','TSvec_DNA','TPvec_logKOFF_DNA','TPvec_logKOFFdivON_DNA','TPvec_logKONdivOFF_DNA','TPvec_logKOFFdivCOMP_DNA','TPvec_logKCOMPdivOFF_DNA',...
@@ -835,6 +843,7 @@ end
 
 %% Selection of TrueProbes Probes
 fprintf('\n')
+fprintf('\n')
 try
     load([saveRoot filesep settings.FolderName filesep settings.FolderName '_chosen.mat'],'chosenProbes')
     fprintf("Loading TrueProbes designed probes")
@@ -853,6 +862,7 @@ catch
 end
 
 %% Print Excel Spreedsheet of Probes
+fprintf('\n')
 fprintf('\n')
 fprintf("Printing TrueProbes probes to Excel spreadsheet")
 Lpmin = min(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
@@ -891,6 +901,7 @@ size(final_probe_info,1)
 
 %% Get Metric Information (Probes, Final Probe Set)
 %Using Concentrations Solve For Equilibrium and Get Distributions and probe set metrics for detection
+fprintf('\n')
 fprintf('\n')
 try
     load([settings.FolderRootName filesep inputs1{gene_num,5} '_Tm' num2str(T_hybrid) '_ModelMetrics' designerName '.mat'],'ModelMetrics')
