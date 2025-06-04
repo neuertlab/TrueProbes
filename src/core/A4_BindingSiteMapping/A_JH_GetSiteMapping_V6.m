@@ -58,7 +58,9 @@ gene_table = sortrows(gene_table,[7 13],'ascend');
 Names = unique(gene_table.Name);
 Names = convertCharsToStrings(Names);
 uniNames = extractBefore(Names,'.');
-
+if (sum(ismissing(uniNames))>0)
+uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+end
 if (strcmp(settings.referenceType,'RefSeq'))
 DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
 DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs

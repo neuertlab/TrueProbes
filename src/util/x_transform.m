@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 function [x,idx1,idx2] = x_transform(x,xlim,gap_size)
 idx1 = x <= xlim(1,2);
 idx2 = x >= xlim(2,1);
@@ -8,24 +6,4 @@ x = [ ...
     (x(idx1)-xlim(1,1))/(xlim(1,2)-xlim(1,1))*w NaN ...
     (x(idx2)-xlim(2,1))/(xlim(2,2)-xlim(2,1))*w+1-w ...
     ];
-=======
-function [x,idx1,idx2] = x_transform(x,xlim,gap_size)
-idx1 = x <= xlim(1,2);
-idx2 = x >= xlim(2,1);
-w = (1-gap_size)/2;
-x = [ ...
-    (x(idx1)-xlim(1,1))/(xlim(1,2)-xlim(1,1))*w NaN ...
-    (x(idx2)-xlim(2,1))/(xlim(2,2)-xlim(2,1))*w+1-w ...
-    ];
->>>>>>> 08410c48414cbfd1141b5d6a99035e1f365fbe06
-=======
-function [x,idx1,idx2] = x_transform(x,xlim,gap_size)
-idx1 = x <= xlim(1,2);
-idx2 = x >= xlim(2,1);
-w = (1-gap_size)/2;
-x = [ ...
-    (x(idx1)-xlim(1,1))/(xlim(1,2)-xlim(1,1))*w NaN ...
-    (x(idx2)-xlim(2,1))/(xlim(2,2)-xlim(2,1))*w+1-w ...
-    ];
->>>>>>> 08410c48414cbfd1141b5d6a99035e1f365fbe06
 end
