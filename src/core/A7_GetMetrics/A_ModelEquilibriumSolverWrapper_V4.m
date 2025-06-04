@@ -110,7 +110,7 @@ eqSSE = sum((squeeze(ProbeConc)-squeeze(CProbes_Free).*(1+A1+A2+A3+A4)).^2,1,'om
 
 i = i + 1;
 if (double(i>MaxIter)+double(max(err)<errThreshold)==0)
-    [CProbes_Free,varSSE,err,i,eqSSE] = A_ModelEquilibriumSolverWrapper_V3(ModelSolverFunctions,MaxIter,errThreshold,Pset,nExpressionMatrix,Tvec,Mvec,Dvec,Cvec,Tref,Ns_Config,Nc_Config,CProbes_Free0,CProbes_Free,ProbeConc,Js_RNA,Js_DNA,Js_Sites,i);
+    [CProbes_Free,varSSE,err,i,eqSSE] = A_ModelEquilibriumSolverWrapper_V4(ModelSolverFunctions,MaxIter,errThreshold,Pset,nExpressionMatrix,Tvec,Mvec,Dvec,Cvec,Tref,Ns_Config,Nc_Config,CProbes_Free0,CProbes_Free,ProbeConc,Js_RNA,Js_DNA,Js_Sites,i);
 end
 
 end
