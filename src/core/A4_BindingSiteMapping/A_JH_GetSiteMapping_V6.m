@@ -2,27 +2,22 @@ function [Kb_mod,Kb_Complement,DoesProbeBindSite2,Num_of_Molecule_Sites,MolProbe
 N_methods = 8;
 N_methods2 = 3;
 N_methods3 = 9;
+kb = 0.001987204259;%boltzman constant
 %Jason Hughes code to parsing gene_table to get sites where probes bind
 %For RNA, DNA, and complementary binding for double stranded DNA
 %Code also computes nascent transcription sites given expression profile
 %get sites for on-target DNA, RNA, and Nascent.
-%Fix Bug in first and last probes in tiling not entering DoesProbeBindSite
 %or or getting mapped.
 %Also bug in Koff giving off-target score for on-target ID
 Lpmin = min(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
-kb = 0.001987204259;%boltzman constant
 T_hybrid = settings.HybridizationTemperature;
 SaltConcentration = settings.SaltConcentration;
-RemoveMisMatches = settings.RemoveMisMatches;
 Organism = settings.Organism;
 ChrNum = settings.ChrNum;
 GeneChr = settings.GeneChr;
 TranscriptName = settings.GeneName;
-transcriptID = settings.transcript_IDs;
 designerName = settings.designerName;
 FolderRootName = settings.FolderRootName;
-withNascent = settings.withNascent;
-probeBatchSize = settings.BLASTbatchSize;
 targetBatchSize = settings.TargetBatchSize;
 
 
@@ -543,10 +538,6 @@ if (calcEnergyMatrix2)
     dSr_Complement = ndSparse.build([size(probes,1),length(Names),size(probes,1)-Lpmin+1,N_methods2],0);
     targetMatch = arrayfun(@(x) strrep(gene_table.Alignment{x}(3,:),'-','N'),1:size(gene_table,1),'UniformOutput',false);%slow not so slow
     if (settings.BLASTdna)
-
-
-
-        
     for i=DNA_IDs
         for site=1:length(MolN_ProbesAtEvents{i})
             for l=1:MolN_ProbesAtEvents{i}(site)
@@ -579,144 +570,5 @@ if (calcEnergyMatrix2)
     save([settings.FolderRootName filesep settings.GeneName  '_Tm' num2str(T_hybrid) '_BindingEnergyMatrix2' settings.designerName '.mat'],'POGmod_Complement','Kb_Complement','-v7.3')  
     save([settings.FolderRootName filesep settings.GeneName '_BindingMatrices2' settings.designerName '.mat'],'dHeq_Complement','dSeq_Complement','dHf_Complement','dSf_Complement','dHr_Complement','dSr_Complement','Tm_Complement','dCp_Complement','-v7.3')  
 end
-%filter out repeats for DoesProbeBindSite2-3 
-nascentInfo = [];
-try
-if (withNascent)
-    if (strcmp(settings.Organism,'Human'))
-        Expression_Null = settings.DoAllGenesHaveSameExpression; %do genes have same expression
-        CellTypeID = settings.CellType_ExprID;
-        HumanOntology = settings.HumanSpecific.Ontology;%Normal/Cancer
-        HumanTissueOnly = settings.HumanSpecific.TissueOrTissueAndCellType; % 0 (TissueOnssue/Cell Type)
-        HumanExpGeneOrTransc = settings.HumanSpecific.HumanExpGeneOrTransc; % 1 (Gene/EMBL GENEID) , 0 (Transcript/EMBL Transcript ID)
-        Human_SelTrack = settings.HumanSpecific.SCOutputTrack;
-        expValType = settings.expressionValType;% 1-4 (expCounts,expValues,mean(CellTypeExpValues),one cell types CellTypeExpValues)
-        NascentRecordID = strcat(HumanOntology,num2str(Expression_Null),num2str(CellTypeID),num2str(HumanTissueOnly),...
-                num2str(HumanExpGeneOrTransc),num2str(Human_SelTrack),num2str(expValType));
-    else
-        NascentRecordID = '1';
-    end
-    try
-       load([settings.FolderRootName filesep settings.GeneName '_Tm' num2str(T_hybrid) '_Nascent' NascentRecordID '' settings.designerName '.mat'],'DoesProbeBindSite_TS','Kb_TS','OnTargetTS',...
-            'NumPolymeraseOnTS','TS_SenseInfo','TS_ChrInfo','AN_ListTS','Num_of_Molecule_SitesTS','maxPolymeraseOnTS',...
-            'dHeq_TS','dSeq_TS','dHf_TS','dSf_TS','dHr_TS','dSr_TS')  
-        calcNascent = 0;
-    catch
-        calcNascent = 1;
-    end
-    if (calcNascent)
-        [DoesProbeBindSite_TS,Kb_TS,OnTargetTS,NumPolymeraseOnTS,maxPolymeraseOnTS,TS_SenseInfo,TS_ChrInfo,Names_TS,Num_of_Molecule_SitesTS,dHeq_TS,dSeq_TS,dHf_TS,dSf_TS,dHr_TS,dSr_TS,dCp_TS] = ...
-        getNascentBindingInfo_JH3(NumberOfPolymerase,settings,probes,transcript_ID,DoesProbeBindSite2,Kb_mod,cTypeIndx,Ix_DNA,T_hybrid,Names,MolProbesAtEvents,Mol_ProbesAtEventsID,Event_Name,Event_Strands,Event_LocStart,Event_ID,dHeq_mod,dSeq_mod,dHf_mod,dSf_mod,dHr_mod,dSr_mod,dCp_mod);
-        save([settings.FolderRootName filesep settings.GeneName '_Tm' num2str(T_hybrid) '_Nascent' NascentRecordID settings.designerName '.mat'],'DoesProbeBindSite_TS','Kb_TS','OnTargetTS',...
-            'NumPolymeraseOnTS','TS_SenseInfo','TS_ChrInfo','AN_ListTS','Num_of_Molecule_SitesTS','maxPolymeraseOnTS',...
-           'dHeq_TS','dSeq_TS','dHf_TS','dSf_TS','dHr_TS','dSr_TS','-v7.3'); 
-    end
-    Exp_TS = 2*ones(1,length(OnTargetTS));
-    NamesV2 = [Names(:).' Names_TS(:).'];
-    Ix_Nascent = length(Names) + find(OnTargetTS);
-    Names = NamesV2;
-    if (size(DoesProbeBindSite2,3)<size(DoesProbeBindSite_TS,3))
-        DoesProbeBindSite2(1,1,size(DoesProbeBindSite_TS,3))=0;
-        Kb_mod(1,1,size(Kb_mod,3),1)=0;
-        dHeq_mod(1,1,size(dHeq_mod,3),1)=0;
-        dSeq_mod(1,1,size(dSeq_mod,3),1)=0;
-        dHf_mod(1,1,size(dHf_mod,3),1)=0;
-        dSf_mod(1,1,size(dSf_mod,3),1)=0;
-        dHr_mod(1,1,size(dHr_mod,3),1)=0;
-        dSr_mod(1,1,size(dSr_mod,3),1)=0;
-        dCp_mod(1,1,size(dCp_mod,3),1)=0;
-    end
-    DoesProbeBindSite2(1:size(probes,1),...
-    size(DoesProbeBindSite2,2)+1:size(DoesProbeBindSite2,2)+size(DoesProbeBindSite_TS,2),...
-        1:size(DoesProbeBindSite_TS,3)) = DoesProbeBindSite_TS;
-    Kb_mod(1:size(probes,1),...
-        size(Kb_mod,2)+1:size(Kb_mod,2)+size(Kb_TS,2),...
-        1:size(Kb_TS,3),:) = Kb_TS; 
-    dHeq_mod(1:size(probes,1),...
-        size(dHeq_mod,2)+1:size(dHeq_mod,2)+size(dHeq_TS,2),...
-        1:size(dHeq_TS,3),:) = dHeq_TS; 
-    dSeq_mod(1:size(probes,1),...
-        size(dSeq_mod,2)+1:size(dSeq_mod,2)+size(dSeq_TS,2),...
-        1:size(dSeq_TS,3),:) = dSeq_TS; 
-    dHf_mod(1:size(probes,1),...
-        size(dHf_mod,2)+1:size(dHf_mod,2)+size(dHf_TS,2),...
-        1:size(dHf_TS,3),:) = dHf_TS;  
-    dSf_mod(1:size(probes,1),...
-        size(dSf_mod,2)+1:size(dSf_mod,2)+size(dSf_TS,2),...
-        1:size(dSf_TS,3),:) = dSf_TS;  
-    dHr_mod(1:size(probes,1),...
-        size(dHr_mod,2)+1:size(dHr_mod,2)+size(dHr_TS,2),...
-        1:size(dHr_TS,3),:) = dHr_TS;  
-    dSr_mod(1:size(probes,1),...
-        size(dSr_mod,2)+1:size(dSr_mod,2)+size(dSr_TS,2),...
-        1:size(dSr_TS,3),:) = dSr_TS; 
-    dCp_mod(1:size(probes,1),...
-        size(dCp_mod,2)+1:size(dCp_mod,2)+size(dCp_TS,2),...
-        1:size(dCp_TS,3),:) = dCp_TS; 
-    Num_of_Molecule_Sites = [Num_of_Molecule_Sites Num_of_Molecule_SitesTS];
-    nascentInfo.Updated.NumMolSites = Num_of_Molecule_Sites;
-    nascentInfo.Updated.Names = Names;
-    nascentInfo.Expression_TS = Exp_TS;
-    nascentInfo.Updated.Kbmod = Kb_mod;
-    nascentInfo.Updated.dHeqmod = dHeq_mod;
-    nascentInfo.Updated.dSeqmod = dSeq_mod;
-    nascentInfo.Updated.dHfmod = dHf_mod;
-    nascentInfo.Updated.dSfmod = dSf_mod;
-    nascentInfo.Updated.dHrmod = dHr_mod;
-    nascentInfo.Updated.dSrmod = dSr_mod;
-    nascentInfo.Updated.DoesProbeBindSite = DoesProbeBindSite2;
-    try
-        nascentInfo.maxPolymerase = maxPolymeraseOnTS;
-    catch ME
-        disp(ME.message)
-    end
-    try
-        nascentInfo.numPolymerase = NumPolymeraseOnTS;
-        nascentInfo.sense_info = TS_SenseInfo;
-        nascentInfo.chr_info = TS_ChrInfo;
-    catch ME
-        disp(ME.message)
-    end
-    save([settings.FolderRootName filesep settings.GeneName '_Tm' num2str(T_hybrid) '_NascentInfo' NascentRecordID settings.designerName '.mat'],'nascentInfo','-v7.3','-append'); 
-    
-end
-catch ME
-   disp(ME.message)
-end
 end
         
-%math for site conflict and probs
-
-%Overmap(P,I,J) = DPS(P,T,I)*DPS(P,T,J)*double(Cmax{T}(I)>=Cmin{T}(J));
-%%J>I
-%Tree of overlapping sites.
-
-%decision process for update rule
-
-%store and save branches.
-
-% The first six lines of the code create empty ndSparse matrices and cell arrays to store the output of the function.
-% 
-% The following commented lines are test examples that can be used to verify the function.
-% 
-% The for loop that iterates over each element of the Names cell array. For each Name, it finds the corresponding row in gene_table, which contains information about the probe's location and the target gene's name.
-% 
-% The Ax and Bx values in the gene_table table represent the start and end positions of the probes that target the gene. The code first determines the unique start and end regions where probes exist (Cn). It then finds all intervals and assigns which probes are inside each interval.
-% 
-% The probesInInterval variable is a cell array that contains the indices of the probes that are inside each interval. For example, probesInInterval{1} contains the indices of the probes that are inside the first interval.
-% 
-% The code then finds all sites with unique sets of probes and assigns a number of probes binding to each site (InInterval_order). It also finds the boundary of each probe site (InInterval_Cmax and InInterval_Cmin).
-% 
-% The IsSubSet variable is an ndSparse matrix that contains information about the probe sites that are subsets of another site.
-% 
-% The remaining code inside the for loop checks which sites are a subset of another site and returns the output.
-
-%The second part of the code is modifying the "DoesProbeBindSite2" variable based on the results of the first part.
-
-% The purpose of this code is to ensure that each probe only binds to one site on a molecule. The code accomplishes this by iterating over each probe and each molecule it binds to, and then checking if the probe binds to multiple sites on that molecule. If so, it updates the "DoesProbeBindSite2" variable to only indicate the site where the probe has the highest binding affinity.
-% 
-% Specifically, for each molecule where a probe binds, the code first finds the indices where the "DoesProbeBindSite2" variable is equal to 1 (i.e., where the probe binds to that molecule). It then identifies any discontinuities in these indices, which correspond to locations where the probe binds to multiple sites on the molecule. Finally, it updates the "DoesProbeBindSite2" variable to set all but the highest-affinity binding site to 0.
-% 
-% This is done to ensure that the analysis only considers the highest-affinity binding site for each probe on each molecule. Without this step, the results could be skewed by probes that bind to multiple sites on a single molecule.
-
-%molecule, only one of them is kept. This happens because the code uses the diff function to find the locations of the binding events and keep only the first one. As a result, if the binding events occur sequentially and do not overlap, the code will keep only the first event and discard the rest, leading to an incorrect result.

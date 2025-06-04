@@ -6,7 +6,8 @@ RNASpecificity_Score = zeros(1,size(DoesProbeBindSite,1));RNAOFF_Score = zeros(1
 DNASpecificity_Score = zeros(1,size(DoesProbeBindSite,1));DNAOFF_Score = zeros(1,size(DoesProbeBindSite,1));
 NumRNAOffTargetOptions = [];Probes_WithNRNAOFF = [];
 NumDNAOffTargetOptions = [];Probes_WithNDNAOFF = [];
-isRNA = targetTypes(1);isDNA = targetTypes(2);
+isRNA = targetTypes(1);
+isDNA = targetTypes(2);
 AllowableProbes = 1:size(DoesProbeBindSite,1);
 Cout = cell(1,2);
 Cout{1} = cell(1,7);

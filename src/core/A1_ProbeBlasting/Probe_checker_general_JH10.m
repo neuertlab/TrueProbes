@@ -25,7 +25,6 @@ batchSize = settings.BLASTbatchSize;
 simultaneous = settings.BLASTsimultaneousParsingOverSequentialParsing;
 runDNA = settings.BLASTdna;
 runRNA = settings.BLASTrna;
-outfmt = settings.BlastParameters.outfmt;
 reward = settings.BlastParameters.reward;
 penalty = settings.BlastParameters.penalty;
 word_size = settings.BlastParameters.wordsize;
@@ -74,14 +73,6 @@ fail_nums = zeros(size(probes,1));
 FolderRootName = settings.FolderRootName;
 designerName = settings.designerName;
 MaxProbeSize = settings.MaxProbeSize;
-
-if (ispc)
-    BLASTpath = settings.BLASTpath_Windows;
-elseif (ismac)
-    BLASTpath = settings.BLASTpath_Mac;
-elseif (isunix)
-    BLASTpath = settings.BLASTpath_Linux;
-end
 
 % generate batches of probes to blast
 N_Probes = size(probes,1);
@@ -219,14 +210,9 @@ for i = 1:N_Batches
     % BatchMaxLen(i) = max(cellfun(@length,probes(Batch{i},2)));
 end
 
-
-
-
-
 N_Batches
 batch_nums_to_check1
 MinHomologySize_Constant = parallel.pool.Constant(settings.MinHomologySearchTargetSize);
-
 %if no database can make database
 %how to check if 
 parfor v = 1:length(batch_nums_to_check1)
@@ -541,12 +527,6 @@ save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_fai
 for i = 1:N_Batches
     if exist([settings.FolderRootName filesep TranscriptName settings.designerName '_gene_hits_table_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
         delete([settings.FolderRootName filesep TranscriptName settings.designerName '_gene_hits_table_batch' num2str(i) '.mat'])
-    end
-    if exist([settings.FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) 'resultsDNA_matched.txt'],'file')        %delete temp mat file if already exists
-        delete([settings.FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) 'resultsDNA_matched.txt'])
-    end
-    if exist([settings.FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) 'resultsRNA_matched.txt'],'file')        %delete temp mat file if already exists
-        delete([settings.FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) 'resultsRNA_matched.txt'])
     end
 end
 

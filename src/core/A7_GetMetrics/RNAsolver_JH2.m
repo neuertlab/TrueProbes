@@ -52,8 +52,11 @@ transcript_Expression_Average_acrossSample = mean(ExpressionMatrix_nTPM,2)';
 ExpressionMatrix_nTPM(:,NumNonUniformConditions+1) = transcript_Expression_Equal_acrossSample;
 ExpressionMatrix_nTPM(:,NumNonUniformConditions+2) = transcript_Expression_Average_acrossSample;
 nExpressionMatrix = ndSparse(ExpressionMatrix_nTPM/(V_Cell(Rcell)*6.022*10^23));
-Cvec = [1:size(nExpressionMatrix,2)];%main expression cell-lines?, and main expr tissue?
-
+if (settings.ExpressionReferenceForDesigningProbes==0)
+Cvec = [size(nExpressionMatrix,2)-1 size(nExpressionMatrix,2)];
+else
+Cvec = [settings.ExpressionReferenceForDesigningProbes size(nExpressionMatrix,2)-1 size(nExpressionMatrix,2)];
+end
 
 GeneName = settings.GeneName;
 GeneTarget = settings.transcript_IDs;
