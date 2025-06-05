@@ -18,36 +18,58 @@ HumanSCTracks = settings.HumanSpecific.SCTracks;
 %CellTypeID = settings.CellType_ExprID;
 %expValType = settings.expressionValType;% 1-4 (expCounts,expValues,mean(CellTypeExpValues),one cell types CellTypeExpValues)
 gene_table = sortrows(gene_table,[7 6],'ascend');
-gene_table2 = gene_table(gene_table.Match>=15,:);
-MinusStrandedHits = find(contains(gene_table2.Strand,'Minus'));
-RNA_IDs_1 = find(contains(gene_table2.Name,'NM_'));
-RNA_IDs_2 = find(contains(gene_table2.Name,'NR_'));
-RNA_IDs_3 = find(contains(gene_table2.Name,'XM_'));
-RNA_IDs_4 = find(contains(gene_table2.Name,'XR_'));
+gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
+MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
+if (strcmp(settings.referenceType,'RefSeq'))
+RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
+RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
+RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
+RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
 contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+RNA_IDs_1 = find(contains(gene_table.Name,'EN'));
+RNA_IDs_2 = find(contains(gene_table.Name,'EN'));
+RNA_IDs_3 = find(contains(gene_table.Name,'EN'));
+RNA_IDs_4 = find(contains(gene_table.Name,'EN'));
+contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+else
+    ss = 1;
+% RNA_IDs_1 = find(contains(gene_table.Name,'EN'));
+% RNA_IDs_2 = find(contains(gene_table.Name,'EN'));
+% RNA_IDs_3 = find(contains(gene_table.Name,'EN'));
+% RNA_IDs_4 = find(contains(gene_table.Name,'EN'));
+% contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+end
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
-gene_table2 = gene_table2(setdiff(1:size(gene_table2,1),RNA_MissedFilteredHits),:);
-gene_table2.Ax = min(gene_table2.SubjectIndices,[],2);
-gene_table2.Bx = max(gene_table2.SubjectIndices,[],2);
-gene_table3 = sortrows(gene_table2,[7 13],'ascend');
-Names = unique(gene_table3.Name);
+gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
+gene_table.Ax = min(gene_table.SubjectIndices,[],2);
+gene_table.Bx = max(gene_table.SubjectIndices,[],2);
+gene_table = sortrows(gene_table,[7 13],'ascend');
+Names = unique(gene_table.Name);
 Names = convertCharsToStrings(Names);
 uniNames = extractBefore(Names,'.');
-clear gene_table gene_table2 gene_table3
-
+if (sum(ismissing(uniNames))>0)
+uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+end
+if (strcmp(settings.referenceType,'RefSeq'))
 DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
 DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
 DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
-DNA_IDs =union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3);
 NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
 NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
 NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%
-NonDNA_IDs = intersect(intersect(NonDNA_IDs_1,NonDNA_IDs_2),NonDNA_IDs_3);
-
-%ncRNA_IDs = [find(contains(uniNames,'NR_')); find(contains(uniNames,'XR_'))];
-
+else
+ss = 1;
+DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
+DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
+DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
+NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
+NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
+NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%
+end
+DNA_IDs =union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3).';
+NonDNA_IDs = intersect(intersect(NonDNA_IDs_1,NonDNA_IDs_2),NonDNA_IDs_3).';
 %% Load version of databases     
-
     if (strcmp(Organism,'Yeast'))
         optsTabulaYeast = detectImportOptions(settings.YeastExpressionFile,'FileType','delimitedtext');
         optsTabulaYeast.VariableNames = settings.ExpressionVariableNames;

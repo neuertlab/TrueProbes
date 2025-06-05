@@ -2,7 +2,7 @@ function [Nvec_RNAmulti,RNAOFF_Score,RNASpecificity_Score,NumRNAOffTargetOptions
 % This function determine the metrics and statistics used for selecting RNA-FISH probes.
 
 
-RNASpecificity_Score = zeros(1,size(DoesProbeBindSite,1));RNAOFF_Score = zeros(1,size(DoesProbeBindSite,1));  
+RNASpecificity_Score = zeros(1,size(DoesProbeBindSite,1));RNAOFF_Score = zeros(1,size(DoesProbeBindSite,1));
 DNASpecificity_Score = zeros(1,size(DoesProbeBindSite,1));DNAOFF_Score = zeros(1,size(DoesProbeBindSite,1));
 NumRNAOffTargetOptions = [];Probes_WithNRNAOFF = [];
 NumDNAOffTargetOptions = [];Probes_WithNDNAOFF = [];
@@ -43,31 +43,18 @@ NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%
 
 DNA_IDs =union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3).';
 NonDNA_IDs = intersect(intersect(NonDNA_IDs_1,NonDNA_IDs_2),NonDNA_IDs_3).';
-if (settings.SingleOrMulti==1&&settings.AllIsoforms == 0)%One Gene/One Isoform
-    GeneName = settings.GeneName;
-    GeneTarget = settings.rootName;
-    ON_RNAIDs = find(strcmp(uniNames,extractBefore(GeneTarget,'.')));
-    OFF_RNAIDs = setdiff(NonDNA_IDs,ON_RNAIDs);
-    ON_RNAIDs_Isos = find(contains(Names,GeneName));
-    Desired_Isoforms = find(contains(uniNames,extractBefore(GeneTarget,'.')));
-    UnDesired_Isoforms = setdiff(ON_RNAIDs_Isos,Desired_Isoforms);
-    OFF_RNAIDs_minusIsos = setdiff(OFF_RNAIDs,UnDesired_Isoforms);
-    if (removeUndesiredIsos)   
-        ON_RNAIDs = ON_RNAIDs_Isos;
-        OFF_RNAIDs = OFF_RNAIDs_minusIsos;   
-    end
-else%One Gene/All Isoform or Multi Gene/One Isoform or Multi Gene/All Isoform      
-    All_RefSeqIDs = cellfun(@(x) extractBefore(x,' '),Names,'Un',0);
-    ON_RefSeqIDs= cellfun(@(x) extractAfter(x,'_'),FoldName,'Un',0);
-    ON_Names = unique(cellfun(@(x) extractBefore(x,'_'),FoldName,'Un',0));  
-    ON_RNAIDs = cell2mat(cellfun(@(x) find(strcmp(All_RefSeqIDs',x)),ON_RefSeqIDs,'Un',0));
-    OFF_RNAIDs = setdiff(NonDNA_IDs,ON_RNAIDs);
-    ON_RNAIDs_Isos = cell2mat(cellfun(@(x) find(contains(Names,x))',ON_Names,'Un',0));  
-    OFF_RNAIDs_minusIsos =  setdiff(OFF_RNAIDs,ON_RNAIDs_Isos);
-    if (removeUndesiredIsos)   
-        ON_RNAIDs = ON_RNAIDs_Isos;
-        OFF_RNAIDs = OFF_RNAIDs_minusIsos;   
-    end
+
+GeneName = settings.GeneName;
+GeneTarget = settings.rootName;
+ON_RNAIDs = find(strcmp(uniNames,extractBefore(GeneTarget,'.')));
+OFF_RNAIDs = setdiff(NonDNA_IDs,ON_RNAIDs);
+ON_RNAIDs_Isos = find(contains(Names,GeneName));
+Desired_Isoforms = find(contains(uniNames,extractBefore(GeneTarget,'.')));
+UnDesired_Isoforms = setdiff(ON_RNAIDs_Isos,Desired_Isoforms);
+OFF_RNAIDs_minusIsos = setdiff(OFF_RNAIDs,UnDesired_Isoforms);
+if (removeUndesiredIsos)
+    ON_RNAIDs = ON_RNAIDs_Isos;
+    OFF_RNAIDs = OFF_RNAIDs_minusIsos;
 end
 %Finds Off-targets and off-target binding sites
 Js = @(x) find(sum(squeeze(sum(DoesProbeBindSite(x,:,:),1)),2)>0);
@@ -80,8 +67,6 @@ Js_OFFRNA = @(x)OFF_RNAIDs(ismember(OFF_RNAIDs,Js(x)));
 Js_OFFRNAi = @(x,y)OFF_RNAIDs(find(cumsum(ismember(OFF_RNAIDs,Js(x)))==y,1));
 Js_OFFDNA = @(x)DNA_IDs(ismember(DNA_IDs,Js(x)));
 Js_OFFDNAi = @(x,y)DNA_IDs(find(cumsum(ismember(DNA_IDs,Js(x)))==y,1));
-
-
 % finds list of each off-target both number, site and location, as well as Koff and Kon equilibrium constants
 if (isRNA)
     TPvec_RNA0 = cell(1,size(DoesProbeBindSite,1));
@@ -99,90 +84,69 @@ if (isRNA)
     TPvec_logKOFF_RNA = cell(1,length(OFF_RNAIDs));
     TPvec_logKOFFdivON_RNA = cell(1,length(OFF_RNAIDs));
     TPvec_logKONdivOFF_RNA = cell(1,length(OFF_RNAIDs));
-
-    % if (~isfile([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_BasicStats_RNA_ByProbe_Info' settings.designerName '.mat']))%check if temp file exists
-    %     N_Batches = size(DoesProbeBindSite,1);
-    %     ResultsExist = zeros(1,size(DoesProbeBindSite,1));
-    %     ResultsSize = zeros(1,size(DoesProbeBindSite,1));
-    %     ResultsDate = cell(1,size(DoesProbeBindSite,1));
-    %     for i = 1:N_Batches
-    %         if (isfile([settings.FolderRootName filesep TranscriptName  settings.designerName '_basicStatsRNA_Info_probebatch' num2str(i) '.mat']))%check if temp file exists
-    %             d = dir([settings.FolderRootName filesep TranscriptName settings.designerName '_basicStatsRNA_Info_probebatch' num2str(i) '.mat']);
-    %             if (d.bytes>0)%check size greater than zero
-    %                 ResultsExist(i) = 1;
-    %             end
-    %             ResultsSize(i) = d.bytes;
-    %             ResultsDate{i} = datetime(d.date);
-    %             clear d
-    %         end
-    %     end
-    %     Results_NotMade = find(ResultsExist==0);
-    %     Results_Made = find(ResultsExist==1);
-    %     %Sort get most 8 recent ResultsMade GeneHitsMade and GeneHitsTable Made and
-    %     %add to probe_check_list
-    %     if (length(Results_Made)<=8)
-    %         results_check1 = Results_Made;
-    %     else
-    %         Results_RecentMade_Dates(:,1) = ResultsDate(Results_Made);
-    %         Results_RecentMade_Dates(:,2) = num2cell(Results_Made);
-    %         Results_RecentMade_Dates = table2timetable(cell2table(Results_RecentMade_Dates));
-    %         Results_RecentMade_Dates = sortrows(Results_RecentMade_Dates,1,'descend');
-    %         Results_RecentMade_Dates.Properties.VariableNames = {'ID'};
-    %         results_check1 = Results_RecentMade_Dates.ID(1:8).';
-    %         clear Results_RecentMade_Dates
-    %     end
-    %     batch_nums_to_check = union(Results_NotMade,results_check1);
-
-        for p = 1:size(DoesProbeBindSite,1)
-            Nvec_RNAsingle(p) = length(Js_OFFRNA(p));
-            Nvec_RNAmulti(p) = sum(cellfun(@length,Sx(p,Js_OFFRNA(p))));
-            Svec_RNA{p} = cell2mat(Sx(p,Js_OFFRNA(p)));
-            Tvec_RNA{p} = cell2mat(arrayfun(@(x) repmat(Js_OFFRNAi(p,x),[1 length(Sx(p,Js_OFFRNAi(p,x)))]),1:length(Js_OFFRNA(p)),'Un',0));
-            Tvec_logKOFF_RNA{p} = log10(diag(full(squeeze(Kb(p,Tvec_RNA{p},Svec_RNA{p}))))');
-            Tvec_logKOFFdivON_RNA{p} = log10(diag(full(squeeze(Kb(p,Tvec_RNA{p},Svec_RNA{p}))))'/Kon(p));
-            Tvec_logKONdivOFF_RNA{p} = log10(Kon(p)./diag(full(squeeze(Kb(p,Tvec_RNA{p},Svec_RNA{p}))))');
-
-        end
-
-
-
-   
-
-
-
-    for t = 1:length(OFF_RNAIDs) 
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Generating RNA target statistics by probe")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(size(DoesProbeBindSite,1),'Title', 'Computing');
+    for p = 1:size(DoesProbeBindSite,1)
+        Nvec_RNAsingle(p) = length(Js_OFFRNA(p));
+        Nvec_RNAmulti(p) = sum(cellfun(@length,Sx(p,Js_OFFRNA(p))));
+        Svec_RNA{p} = cell2mat(Sx(p,Js_OFFRNA(p)));
+        Tvec_RNA{p} = cell2mat(arrayfun(@(x) repmat(Js_OFFRNAi(p,x),[1 length(Sx(p,Js_OFFRNAi(p,x)))]),1:length(Js_OFFRNA(p)),'Un',0));
+        Tvec_logKOFF_RNA{p} = log10(diag(full(squeeze(Kb(p,Tvec_RNA{p},Svec_RNA{p}))))');
+        Tvec_logKOFFdivON_RNA{p} = log10(diag(full(squeeze(Kb(p,Tvec_RNA{p},Svec_RNA{p}))))'/Kon(p));
+        Tvec_logKONdivOFF_RNA{p} = log10(Kon(p)./diag(full(squeeze(Kb(p,Tvec_RNA{p},Svec_RNA{p}))))');
+        progBar([],[],[]);
+    end
+    progBar.release();
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Generating probe statistics by RNA off-targets")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(length(OFF_RNAIDs),'Title', 'Computing');
+    for t = 1:length(OFF_RNAIDs)
         TPvec_RNA0{t} = Tp(OFF_RNAIDs(t));%does not have multiplicity
         temp_RNAV1b = Tx(OFF_RNAIDs(t),TPvec_RNA0{t});
         temp_RNAV2b = cellfun(@length,temp_RNAV1b);
         NTPvec_RNAsingle(t) = length(TPvec_RNA0{t});
         NTPvec_RNAmulti(t) = sum(temp_RNAV2b);
         TPvec_RNA{t} = cell2mat(arrayfun(@(x) repmat(TPvec_RNA0{t}(x),[1 temp_RNAV2b(x)]),1:length(TPvec_RNA0{t}),'Un',0));
-        TSvec_RNA{t} = cell2mat(temp_RNAV1b);%site locations 
+        TSvec_RNA{t} = cell2mat(temp_RNAV1b);%site locations
         TPvec_logKOFF_RNA{t} = log10(diag(full(squeeze(Kb(TPvec_RNA{t},OFF_RNAIDs(t),TSvec_RNA{t}))))');
         TPvec_logKOFFdivON_RNA{t} = log10(diag(full(squeeze(Kb(TPvec_RNA{t},OFF_RNAIDs(t),TSvec_RNA{t}))))'./Kon(TPvec_RNA{t}));
         TPvec_logKONdivOFF_RNA{t} = log10(Kon(TPvec_RNA{t})./diag(full(squeeze(Kb(TPvec_RNA{t},OFF_RNAIDs(t),TSvec_RNA{t}))))');
-    end 
-   Cout{1}{1} = Tvec_RNA;
-   Cout{1}{2} = Svec_RNA;
-   Cout{1}{3} = TPvec_RNA;
-   Cout{1}{4} = TSvec_RNA;
-   Cout{1}{5} = TPvec_logKOFF_RNA;
-   Cout{1}{6} = TPvec_logKOFFdivON_RNA;
-   Cout{1}{7} = TPvec_logKONdivOFF_RNA; 
-   Probes_With_RNAOFF = AllowableProbes(Nvec_RNAmulti(AllowableProbes)>0);
-   NumRNAOffTargetOptions = unique(Nvec_RNAmulti(AllowableProbes));
-   Probes_WithNRNAOFF = arrayfun(@(i) AllowableProbes(Nvec_RNAmulti(AllowableProbes)==NumRNAOffTargetOptions(i)),1:length(NumRNAOffTargetOptions),'Un',0); 
-   for v = 1:length(Probes_With_RNAOFF)
+        progBar([],[],[]);
+    end
+    progBar.release();
+    Cout{1}{1} = Tvec_RNA;
+    Cout{1}{2} = Svec_RNA;
+    Cout{1}{3} = TPvec_RNA;
+    Cout{1}{4} = TSvec_RNA;
+    Cout{1}{5} = TPvec_logKOFF_RNA;
+    Cout{1}{6} = TPvec_logKOFFdivON_RNA;
+    Cout{1}{7} = TPvec_logKONdivOFF_RNA;
+    Probes_With_RNAOFF = AllowableProbes(Nvec_RNAmulti(AllowableProbes)>0);
+    NumRNAOffTargetOptions = unique(Nvec_RNAmulti(AllowableProbes));
+    Probes_WithNRNAOFF = arrayfun(@(i) AllowableProbes(Nvec_RNAmulti(AllowableProbes)==NumRNAOffTargetOptions(i)),1:length(NumRNAOffTargetOptions),'Un',0);
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Converting RNA Statistics into Probe Specificity and OFF-target Scores")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(length(Probes_With_RNAOFF));
+    for v = 1:length(Probes_With_RNAOFF)
         temp_T = Tvec_RNA{Probes_With_RNAOFF(v)};
         temp_KOFF = Tvec_logKOFF_RNA{Probes_With_RNAOFF(v)};
         temp_KOFFdivON = Tvec_logKOFFdivON_RNA{Probes_With_RNAOFF(v)};
-        RNASpecificity_Score(Probes_With_RNAOFF(v)) = dot(EKernel(temp_T)',temp_KOFFdivON); 
-        RNAOFF_Score(Probes_With_RNAOFF(v)) = dot(EKernel(temp_T)',temp_KOFF);  
-   end  
+        RNASpecificity_Score(Probes_With_RNAOFF(v)) = dot(EKernel(temp_T)',temp_KOFFdivON);
+        RNAOFF_Score(Probes_With_RNAOFF(v)) = dot(EKernel(temp_T)',temp_KOFF);
+        progBar([],[],[]);
+    end
+    progBar.release();
 end
-
-
-
 if (isDNA)
     TPvec_DNA0 = cell(1,size(DoesProbeBindSite,1));
     Tvec_DNA = cell(1,size(DoesProbeBindSite,1));
@@ -203,6 +167,12 @@ if (isDNA)
     TPvec_logKONdivOFF_DNA = cell(1,length(DNA_IDs));
     TPvec_logKOFFdivCOMP_DNA = cell(1,length(DNA_IDs));
     TPvec_logKCOMPdivOFF_DNA = cell(1,length(DNA_IDs));
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Generating DNA target statistics by probe")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(size(DoesProbeBindSite,1),'Title', 'Computing');
     for p = 1:size(DoesProbeBindSite,1)
         Nvec_DNAsingle(p) = length(Js_OFFDNA(p));
         Nvec_DNAmulti(p) = sum(cellfun(@length,Sx(p,Js_OFFDNA(p))));
@@ -213,7 +183,15 @@ if (isDNA)
         Tvec_logKONdivOFF_DNA{p} = log10(Kon(p)./diag(full(squeeze(Kb(p,Tvec_DNA{p},Svec_DNA{p}))))');
         Tvec_logKOFFdivCOMP_DNA{p} = log10(diag(full(squeeze(Kb(p,Tvec_DNA{p},Svec_DNA{p}))))'./diag(full(squeeze(Kb_Complement(Tvec_DNA{p},Svec_DNA{p}))))');
         Tvec_logKCOMPdivOFF_DNA{p} = log10(diag(full(squeeze(Kb_Complement(Tvec_DNA{p},Svec_DNA{p}))))'./diag(full(squeeze(Kb(p,Tvec_DNA{p},Svec_DNA{p}))))');
+        progBar([],[],[]);
     end
+    progBar.release();
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Generating probe statistics by DNA off-targets")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(length(DNA_IDs),'Title', 'Computing');
     for t = 1:length(DNA_IDs)
         TPvec_DNA0{t} = Tp(DNA_IDs(t))';
         temp_DNAV1b = Tx2(DNA_IDs(t),TPvec_DNA0{t});
@@ -221,36 +199,41 @@ if (isDNA)
         NTPvec_DNAsingle(t) = length(TPvec_DNA0{t});
         NTPvec_DNAmulti(t) = sum(temp_DNAV2b);
         TPvec_DNA{t} = cell2mat(arrayfun(@(x) repmat(TPvec_DNA0{t}(x),[1 temp_DNAV2b(x)]),1:length(TPvec_DNA0{t}),'Un',0));
-        TSvec_DNA{t} = cell2mat(temp_DNAV1b);%site locations 
+        TSvec_DNA{t} = cell2mat(temp_DNAV1b);%site locations
         TPvec_logKOFF_DNA{t} = log10(diag(full(squeeze(Kb(TPvec_DNA{t},DNA_IDs(t),TSvec_DNA{t}))))');
         TPvec_logKOFFdivON_DNA{t} = log10(diag(full(squeeze(Kb(TPvec_DNA{t},DNA_IDs(t),TSvec_DNA{t}))))'./Kon(TPvec_DNA{t}));
         TPvec_logKONdivOFF_DNA{t} = log10(Kon(TPvec_DNA{t})./diag(full(squeeze(Kb(TPvec_DNA{t},DNA_IDs(t),TSvec_DNA{t}))))');
         TPvec_logKOFFdivCOMP_DNA{t} = log10(diag(full(squeeze(Kb(TPvec_DNA{t},DNA_IDs(t),TSvec_DNA{t}))))'./full(Kb_Complement(DNA_IDs(t),TSvec_DNA{t})));
         TPvec_logKCOMPdivOFF_DNA{t} = log10(full(Kb_Complement(DNA_IDs(t),TSvec_DNA{t}))./diag(full(squeeze(Kb(TPvec_DNA{t},DNA_IDs(t),TSvec_DNA{t}))))');
+        progBar([],[],[]);
     end
-
+    progBar.release();
     Cout{2}{1} = Tvec_DNA;
     Cout{2}{2} = Svec_DNA;
     Cout{2}{3} = TPvec_DNA;
     Cout{2}{4} = TSvec_DNA;
     Cout{2}{5} = TPvec_logKOFF_DNA;
     Cout{2}{6} = TPvec_logKOFFdivON_DNA;
-    Cout{2}{7} = TPvec_logKONdivOFF_DNA; 
+    Cout{2}{7} = TPvec_logKONdivOFF_DNA;
     Cout{2}{8} = TPvec_logKOFFdivCOMP_DNA;
-    Cout{2}{9} = TPvec_logKCOMPdivOFF_DNA; 
+    Cout{2}{9} = TPvec_logKCOMPdivOFF_DNA;
     Probes_With_DNAOFF = AllowableProbes(Nvec_DNAmulti(AllowableProbes)>0);
     NumDNAOffTargetOptions = unique(Nvec_DNAmulti(AllowableProbes));
     Probes_WithNDNAOFF = arrayfun(@(i) AllowableProbes(Nvec_DNAmulti(AllowableProbes)==NumDNAOffTargetOptions(i)),1:length(NumDNAOffTargetOptions),'Un',0);
-
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Converting DNA Statistics into Probe Specificity and OFF-target Scores")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(length(Probes_With_DNAOFF));
     for v = 1:length(Probes_With_DNAOFF)
         temp_T = Tvec_DNA{Probes_With_DNAOFF(v)};
         temp_KOFF = Tvec_logKOFF_DNA{Probes_With_DNAOFF(v)};
         temp_KOFFdivON = Tvec_logKOFFdivON_DNA{Probes_With_DNAOFF(v)};
-        DNASpecificity_Score(Probes_With_DNAOFF(v)) = dot(EKernel(temp_T)',temp_KOFFdivON); 
-        DNAOFF_Score(Probes_With_DNAOFF(v)) = dot(EKernel(temp_T)',temp_KOFF);  
+        DNASpecificity_Score(Probes_With_DNAOFF(v)) = dot(EKernel(temp_T)',temp_KOFFdivON);
+        DNAOFF_Score(Probes_With_DNAOFF(v)) = dot(EKernel(temp_T)',temp_KOFF);
+        progBar([],[],[]);
     end
-
-
+    progBar.release();
 end
-
 end

@@ -192,6 +192,73 @@ probes = [];
 startup
 settings.BUILD_STRING = '2025.06.04.00';
 settings.VERSION_STRING = 'v1.1.1';
+
+cellPreset = 1;
+switch cellPreset
+    case 1%Average Tissue
+        settings.expressionValType = 1;% 1-4 (expCounts,expValues,mean(CellTypeExpValues),one cell types CellTypeExpValues)
+        settings.HumanSpecific.Ontology = 'Normal';%Cancer or Normal
+        settings.HumanSpecific.TissueOrTissueAndCellType = 0; % 0 (TissueOnly) 1 (Tissue/Cell Type)
+        settings.HumanSpecific.SCOutputTrack = 1;
+        settings.HumanSpecific.SCTracks = 1;
+        settings.CellType_ExprID = 1;
+    case 2%Jurkat/T lymphocyte (NK cells, CD4 T cells, B cells, white blood cell)
+        settings.expressionValType = 1;
+        settings.HumanSpecific.Ontology = 'Normal';%Cancer or Normal
+        settings.HumanSpecific.TissueOrTissueAndCellType = 1; % 0 (TissueOnly) 1 (Tissue/Cell Type)
+        settings.HumanSpecific.SCOutputTrack = 13;%13 Kidney, 4 PBMC
+        settings.HumanSpecific.SCTracks = 13;
+        settings.CellType_ExprID = 3;%3 CD4 T cell, 2 PBMC CD4 T cell
+    case 3%THP1 Kidney
+        settings.expressionValType = 1;
+        settings.HumanSpecific.Ontology = 'Normal';%Cancer or Normal
+        settings.HumanSpecific.TissueOrTissueAndCellType = 1; % 0 (TissueOnly) 1 (Tissue/Cell Type)
+        settings.HumanSpecific.SCOutputTrack = 13;%13 Kidney, 4 PBMC
+        settings.HumanSpecific.SCTracks = 13;
+        settings.CellType_ExprID = 11;%11 kidney mononuclear phagocyte, 5 PBMC monocyte
+    case 4%PBMC
+        settings.expressionValType = 4;
+        settings.HumanSpecific.Ontology = 'Normal';%Cancer or Normal
+        settings.HumanSpecific.TissueOrTissueAndCellType = 1; % 0 (TissueOnly) 1 (Tissue/Cell Type)
+        settings.HumanSpecific.SCOutputTrack = 4;
+        settings.HumanSpecific.SCTracks = 4;
+        %settings.CellType_ExprID = 1;
+    case 5%Normal Colon 
+        settings.expressionValType = 4;
+        settings.HumanSpecific.Ontology = 'Normal';%Cancer or Normal
+        settings.HumanSpecific.TissueOrTissueAndCellType = 1; % 0 (TissueOnly) 1 (Tissue/Cell Type)
+        settings.HumanSpecific.SCOutputTrack = 1;
+        settings.HumanSpecific.SCTracks = 1;
+        %settings.CellType_ExprID = 1;
+    case 6%Colon Cancer Cells
+        settings.expressionValType = 4;
+        settings.HumanSpecific.Ontology = 'Cancer';%Cancer or Normal
+        settings.CellType_ExprID = 8;
+        %settings.HumanSpecific.TissueOrTissueAndCellType = 0; % 0 (TissueOnly) 1 (Tissue/Cell Type)
+        %settings.HumanSpecific.SCOutputTrack = 8;
+        %settings.HumanSpecific.SCTracks = 8;
+    case 7%Pancreatic Islet Alpha Cell
+        settings.expressionValType = 4;
+        settings.HumanSpecific.Ontology = 'Normal';%Cancer or Normal
+        settings.HumanSpecific.TissueOrTissueAndCellType = 1; % 0 (TissueOnly) 1 (Tissue/Cell Type)
+        settings.HumanSpecific.SCOutputTrack = 22;
+        settings.HumanSpecific.SCTracks = 22;
+        settings.CellType_ExprID = 3;
+    case 8%Pancreatic Islet Beta Cell
+        settings.expressionValType = 4;
+        settings.HumanSpecific.Ontology = 'Normal';%Cancer or Normal
+        settings.HumanSpecific.TissueOrTissueAndCellType = 1; % 0 (TissueOnly) 1 (Tissue/Cell Type)
+        settings.HumanSpecific.SCOutputTrack = 22;
+        settings.HumanSpecific.SCTracks = 22;
+        settings.CellType_ExprID = 4;
+    case 9%Pancreatic Islet Delta Cell
+        settings.expressionValType = 4;
+        settings.HumanSpecific.Ontology = 'Normal';%Cancer or Normal
+        settings.HumanSpecific.TissueOrTissueAndCellType = 1; % 0 (TissueOnly) 1 (Tissue/Cell Type)
+        settings.HumanSpecific.SCOutputTrack = 22;
+        settings.HumanSpecific.SCTracks = 22;
+        settings.CellType_ExprID = 5;
+end
 %% Settings Specification
 if (strcmp(inputs1{gene_num,4},'Yeast'))
     DoAllGenesHaveSameExpression = 1;%same expr.
@@ -203,6 +270,7 @@ elseif (strcmp(refInfo,'EN'))
     settings.referenceType = 'ENSEMBL';
 else
 end
+
 %% Update Location of Databases & Needed Files (You usually will not change)
 if (strcmp(settings.referenceType,'RefSeq'))
     settings.hLocRoot = 'data/DatabaseData/Blast_Databases/Human/NCBI_RefSeq/';
@@ -235,6 +303,7 @@ elseif (strcmp(settings.referenceType,'Gencode'))
     settings.yLoc =  'data/DatabaseData/Blast_Databases/Yeast/YGD/Yeast_SGD_genomic';
     settings.yLoc2 =  'data/DatabaseData/Blast_Databases/Yeast/YGD/Yeast_SGD_transcript';
 end
+
 %% GTF and GFF Databases (You usually will not change)
 if (strcmp(settings.referenceType,'RefSeq'))
     settings.hLocGTF = 'data/DatabaseData/GTF_Databases/Human/NCBI_RefSeq/GCF_000001405.40_GRCh38.p14_genomic.gtf';
@@ -258,12 +327,14 @@ elseif (strcmp(settings.referenceType,'Gencode'))
     settings.yLocGTF =  'data/DatabaseData/GTF_Databases/Yeast/YGD/saccharomyces_cerevisiae.20240529.gtf';
     settings.yLocGFF =  'data/DatabaseData/GFF3_Databases/Yeast/saccharomyces_cerevisiae.20240529.gff';
 end
-%Save Settings
+
+%% Save Settings
 settings.FolderRootName = strcat(saveRoot,inputs1{gene_num,5},'_',strjoin(inputs1{gene_num,1},'_'));
 settings.rootName = strjoin(inputs1{gene_num,1},'_');
 settings.designerName = designerName;
 settings.saveRoot = saveRoot;
-%Design Target Info
+
+%% Design Target Info
 settings.Organism = inputs1{gene_num,4};
 settings.GeneName = inputs1{gene_num,5};
 settings.ChrNum = inputs1{gene_num,7};
@@ -291,7 +362,8 @@ settings.MaxProbeSize = maxProbeSize;
 settings.MinHomologySearchTargetSize = MinHomologySearchTargetSize;
 settings.N_model = Nmodel;
 settings.ExpressionReferenceForDesigningProbes = ExpressionReferenceForDesigningProbes;
-%Gene Expression Parameters
+
+%% Gene Expression Parameters
 settings.DoAllGenesHaveSameExpression = DoAllGenesHaveSameExpression;
 settings.HumanSpecific.HumanExpGeneOrTransc = UseGeneOverTranscLevelExpression; % 1 (Gene/EMBL GENEID) , 0 (Transcript/EMBL Transcript ID)
 settings.UseRegularDNAExpression = UseRegularDNAExpression;%0 use DNA expression from gene expression track in expression data, 1 set expression to 2 for DNA.
@@ -300,16 +372,13 @@ settings.DNAPloidy = nullDNAcopynumber;
 settings.otherBlastDatabase = customBlastDatabase_DNA;
 settings.otherBlastDatabase2 = customBlastDatabase_RNA;
 
-%Cluster Parameters
+%% Cluster Parameters
 settings.clusterStatus = cluster;
 settings.isOffline = RunOffline;
-%Selecting Probes Specifications
+
+%% Selecting Probes Specifications
 settings.maxProbes = max_probes;
 settings.RemoveProbesWithRibosomalHits = RemoveRibosomalHits;
-
-
-
-
 
 settings.MouseExpressionFile = 'data/DatabaseData/tabulamuris_barChart.bed';
 settings.ExpressionVariableNames = {'chrom','chromStart','chromEnd','name',...
@@ -359,12 +428,12 @@ settings.Custom_Y_ChromNumber = 1;
 settings.Custom_MT_ChromNumber = 1;
 settings.scTracks = {'colonWangCellType','tabulasapiens_tissue_cell_type'};
 
-%Save Settings
+%% Save Settings
 settings.FolderRootName = strcat(saveRoot,inputs1{gene_num,5},'_',strjoin(inputs1{gene_num,1},'_'));
 settings.rootName = strjoin(inputs1{gene_num,1},'_');
 settings.designerName = designerName;
 
-%Selecting Probes Specifications
+%% Selecting Probes Specifications
 settings.maxProbes = max_probes;
 settings.RemoveProbesWithRibosomalHits = RemoveRibosomalHits;
 
@@ -469,9 +538,11 @@ catch
         fprintf(1,'There was an error! The message was:\n%s',e.message);
     end
 end
+
 %% BLAST Probes
 fprintf('\n')
 fprintf('\n')
+ProgressBar.deleteAllTimers();
 try
     load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_hits_table' designerName '.mat'],'gene_table')
     fprintf("Loading probe BLAST results table")
@@ -488,6 +559,7 @@ catch
         fprintf(1,'There was an error! The message was:\n%s',e.message);
     end
 end
+
 %% Get Gene Expression Information
 fprintf('\n')
 fprintf('\n')
@@ -496,6 +568,8 @@ try
     fprintf("Loading BLAST hits gene expression information")
 catch
     fprintf("Getting BLAST hits gene expression information")
+    fprintf('\n')
+    fprintf('\n')
     try
         tic
         [ExpressionMatrix,get_expression_time] = A_JH_GetExpressionInfo_V2(gene_table,settings);
@@ -521,6 +595,8 @@ try
     fprintf("Loading probe target thermodynamic information")
 catch
     fprintf("Computing probe target thermodynamic information")
+    fprintf('\n')
+    fprintf('\n')
     try
         tic
         [Kb_Match,Kon,Koff,dHeq_Match,dSeq_Match,dHf_Match,dSf_Match,dHr_Match,dSr_Match,dCpeq_Match,dHon_eq,dSon_eq,dHon_f,dSon_f,dHon_r,dSon_r,dCpon_eq,Tm_on,Tm_Match] = ...
@@ -538,6 +614,7 @@ catch
         fprintf(1,'There was an error! The message was:\n%s',e.message);
     end
 end
+
 %% Get Binding Site Mapping and Energy
 fprintf('\n')
 fprintf('\n')
@@ -575,6 +652,7 @@ end
 Kon = squeeze(Kon(:,Nmodel));
 Kb_mod = squeeze(Kb_mod(:,:,:,Nmodel));
 DoesProbeBindSite = DoesProbeBindSite2;
+FoldName = [];
 if (settings.BLASTdna)
     Kb_Complement = squeeze(Kb_Complement(:,:,Nmodel));
 else

@@ -337,6 +337,7 @@ for m_unique_loci = 1:length(m_unique_loc)
                 param_struct_vector{nn} = TrueSpotDefaultThParameters;
                 param_struct_vector{nn}.sample_spot_table = [[1:length(Filtered_SpotCountCurves{nn})]' Filtered_SpotCountCurves{nn}'];
             end
+            
             scThresholdSuggestions = arrayfun(@(nn) RNAThreshold.scoreThresholdSuggestions(RNAThreshold.estimateThreshold(param_struct_vector{nn})),1:length(Cvec),'Un',0);
             scThresholdSuggestions =  [scThresholdSuggestions{:}];
             subfield_groups = {'pool','thstats'};

@@ -28,54 +28,54 @@ Organism = settings.Organism;
 %% Identify location of on-target DNA and RNA molecules in list of DNA/RNA molecules
 %generate ID vector to identify molecules that count as on-target hits
 if (strcmp(settings.referenceType,'RefSeq'))
-if (strcmp(Organism,'Human'))
-    S8 = readtable(settings.HumanGenomeAssemblyReportFile);
-    AN_Chr = S8.RefSeq_Accn(1:639);%%chromosomes 1-22, X (23), Y(24), patchs/scaffolds 25-638, chrM MT (639)
-    if (strcmpi(ChrNum,'X'))
-        AN_ON_Chr = AN_Chr{23};
-    elseif (strcmpi(ChrNum,'Y'))
-        AN_ON_Chr = AN_Chr{24};
-    elseif (strcmpi(ChrNum,'M'))
-        AN_ON_Chr = 'NC_012920.1';
+    if (strcmp(Organism,'Human'))
+        S8 = readtable(settings.HumanGenomeAssemblyReportFile);
+        AN_Chr = S8.RefSeq_Accn(1:639);%%chromosomes 1-22, X (23), Y(24), patchs/scaffolds 25-638, chrM MT (639)
+        if (strcmpi(ChrNum,'X'))
+            AN_ON_Chr = AN_Chr{23};
+        elseif (strcmpi(ChrNum,'Y'))
+            AN_ON_Chr = AN_Chr{24};
+        elseif (strcmpi(ChrNum,'M'))
+            AN_ON_Chr = 'NC_012920.1';
+        else
+            AN_ON_Chr = AN_Chr{str2double(ChrNum)};
+        end
+    elseif strcmp(Organism,'Mouse')
+        S16 = readtable(settings.MouseGenomeAssemblyReportFile);
+        AN_Chr = S16.RefSeq_Accn;%chromosomes 1-19, X (20), Y(21), patche scaffolds 22-60, chrM MT (61)
+        if (strcmpi(ChrNum,'X'))
+            AN_ON_Chr = AN_Chr{20};
+        elseif (strcmpi(ChrNum,'Y'))
+            AN_ON_Chr = AN_Chr{21};
+        elseif (strcmpi(GeneChr,'MT'))
+            AN_ON_Chr = 'NC_005089.1';
+        else
+            AN_ON_Chr = AN_Chr{str2double(ChrNum)};
+        end
+    elseif strcmp(Organism,'Yeast')
+        S21 = readtable(settings.YeastGenomeAssemblyReportFile);
+        AN_Chr = S21.RefSeq_Accn;%chromosome 1-16, chromosome M (Mitocondria) (17)
+        if (strcmpi(GeneChr,'MT'))
+            AN_ON_Chr = AN_Chr{17};
+        else
+            AN_ON_Chr = AN_Chr{roman2num(GeneChr)};
+        end
     else
-        AN_ON_Chr = AN_Chr{str2double(ChrNum)};
+        S22 = readtable(settings.CustomGenomeAssemblyReportFile);
+        AN_Chr = S22.RefSeq_Accn;%chromosome 1-16, chromosome M (Mitocondria) (17)
+        if (strcmpi(ChrNum,'X'))
+            AN_ON_Chr = AN_Chr{settings.Custom_X_ChromNumber};
+        elseif (strcmpi(ChrNum,'Y'))
+            AN_ON_Chr = AN_Chr{settings.Custom_Y_ChromNumber};
+        elseif (strcmpi(GeneChr,'MT'))
+            AN_ON_Chr = AN_Chr{settings.Custom_MT_ChromNumber};
+        else
+            AN_ON_Chr = AN_Chr{str2double(ChrNum)};
+        end
     end
-elseif strcmp(Organism,'Mouse')
-    S16 = readtable(settings.MouseGenomeAssemblyReportFile);
-    AN_Chr = S16.RefSeq_Accn;%chromosomes 1-19, X (20), Y(21), patche scaffolds 22-60, chrM MT (61)
-    if (strcmpi(ChrNum,'X'))
-        AN_ON_Chr = AN_Chr{20};
-    elseif (strcmpi(ChrNum,'Y'))
-        AN_ON_Chr = AN_Chr{21};
-    elseif (strcmpi(GeneChr,'MT'))
-        AN_ON_Chr = 'NC_005089.1';
-    else
-        AN_ON_Chr = AN_Chr{str2double(ChrNum)};
-    end
-elseif strcmp(Organism,'Yeast')
-    S21 = readtable(settings.YeastGenomeAssemblyReportFile);
-    AN_Chr = S21.RefSeq_Accn;%chromosome 1-16, chromosome M (Mitocondria) (17)
-    if (strcmpi(GeneChr,'MT'))
-        AN_ON_Chr = AN_Chr{17};
-    else
-        AN_ON_Chr = AN_Chr{roman2num(GeneChr)};
-    end
+    AN_ON_Chr = extractBefore(AN_ON_Chr,'.');
 else
-    S22 = readtable(settings.CustomGenomeAssemblyReportFile);
-    AN_Chr = S22.RefSeq_Accn;%chromosome 1-16, chromosome M (Mitocondria) (17)
-    if (strcmpi(ChrNum,'X'))
-        AN_ON_Chr = AN_Chr{settings.Custom_X_ChromNumber};
-    elseif (strcmpi(ChrNum,'Y'))
-        AN_ON_Chr = AN_Chr{settings.Custom_Y_ChromNumber};
-    elseif (strcmpi(GeneChr,'MT'))
-        AN_ON_Chr = AN_Chr{settings.Custom_MT_ChromNumber};
-    else
-        AN_ON_Chr = AN_Chr{str2double(ChrNum)};
-    end
-end
-AN_ON_Chr = extractBefore(AN_ON_Chr,'.');
-else
-ss=1;
+    ss=1;
 end
 if (strcmp(Organism,'Human'))
     S8 = readtable(settings.HumanGenomeAssemblyReportFile);
@@ -154,24 +154,24 @@ gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
 
 if (strcmp(settings.referenceType,'RefSeq'))
-RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
-RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
-RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
-RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
-contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+    RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
+    RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
+    RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
+    RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
+    contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
 elseif (strcmp(settings.referenceType,'ENSEMBL'))
-RNA_IDs_1 = find(contains(gene_table.Name,'EN'));
-RNA_IDs_2 = find(contains(gene_table.Name,'EN'));
-RNA_IDs_3 = find(contains(gene_table.Name,'EN'));
-RNA_IDs_4 = find(contains(gene_table.Name,'EN'));
-contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+    RNA_IDs_1 = find(contains(gene_table.Name,'EN'));
+    RNA_IDs_2 = find(contains(gene_table.Name,'EN'));
+    RNA_IDs_3 = find(contains(gene_table.Name,'EN'));
+    RNA_IDs_4 = find(contains(gene_table.Name,'EN'));
+    contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
 else
     ss = 1;
-% RNA_IDs_1 = find(contains(gene_table.Name,'EN'));
-% RNA_IDs_2 = find(contains(gene_table.Name,'EN'));
-% RNA_IDs_3 = find(contains(gene_table.Name,'EN'));
-% RNA_IDs_4 = find(contains(gene_table.Name,'EN'));
-% contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+    % RNA_IDs_1 = find(contains(gene_table.Name,'EN'));
+    % RNA_IDs_2 = find(contains(gene_table.Name,'EN'));
+    % RNA_IDs_3 = find(contains(gene_table.Name,'EN'));
+    % RNA_IDs_4 = find(contains(gene_table.Name,'EN'));
+    % contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
 end
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
 
@@ -185,9 +185,8 @@ Names = unique(gene_table.Name);
 Names = convertCharsToStrings(Names);
 uniNames = extractBefore(Names,'.');
 if (sum(ismissing(uniNames))>0)
-uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+    uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
 end
-
 % Check if output file already exists
 try
     if (settings.clusterStatus == 1)
@@ -200,16 +199,17 @@ try
         sleepRate = sum(1:task_ID);
         pause(5*sleepRate)
     end
-    load([settings.FolderRootName filesep gene_name1 '_Tm' num2str(T_hybrid) '_RM' num2str(RemoveMisMatches) '_OnOffThermoInfo' settings.designerName '.mat'],'Kon','Koff','Kb_Match')
+catch
+end
+if (isfile([settings.FolderRootName filesep gene_name1 '_Tm' num2str(T_hybrid) '_RM' num2str(RemoveMisMatches) '_OnOffThermoInfo' settings.designerName '.mat']))
     calcOnOff = 0;
-catch ME
-    disp(ME.message)
+else
     calcOnOff = 1;
 end
-
-
-
 if (calcOnOff)
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Get List of Unique Probe and Target Alignment Sequences")
     %gets sequences of probe and target in blast records
     targetMatch = arrayfun(@(x) strrep(gene_table.Alignment{x}(3,:),'-','N'),1:size(gene_table,1),'UniformOutput',false);%slow not so slow
     probeMatch = arrayfun(@(x) seqrcomplement(strrep(gene_table.Alignment{x}(1,:),'-','N')),1:size(gene_table,1),'UniformOutput',false);%slow
@@ -258,7 +258,16 @@ if (calcOnOff)
         %p = parpool;
         %p.IdleTimeout = Inf;
     end
+
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Compute On-Target Binding Affinity for All Probes")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(size(probes,1),'IsParallel', true,'WorkerDirectory', pwd(),'Title', 'Computing');
+    progBar.setup([],[],[]);
     parfor i=1:size(probes,1)
+        pause(0.1);
         [temp_dHeq{i}, temp_dSeq{i}, temp_dGeq{i}, ...
             temp_dHf{i}, temp_dSf{i}, ~, ...
             temp_dHr{i}, temp_dSr{i}, ~,temp_dCpeq{i},temp_Tm{i}] = F_DeltaGibson_V3(lower(pi_seq{i}),seqrcomplement(lower(pi_seq{i})),SaltConcentration,T_hybrid);
@@ -280,10 +289,11 @@ if (calcOnOff)
         temp_dSr{i} = [];
         temp_dCpeq{i} = [];
         temp_Tm{i} = [];
+        updateParallel([],pwd);
     end
+    progBar.release();
     clear temp_dHeq temp_dSeq temp_dGeq temp_dHf temp_dSf temp_dHr temp_dSr temp_dCpeq temp_Tm
-    baseFolder = pwd;
-    addpath(genpath(baseFolder));
+
     %compute binding thermodynamic/kinetic information for on-target hits parallelized
     if (~isfile([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_dCpInfo' settings.designerName '.mat']))%check if temp file exists
         N_uniqueCalcPairsBatches = ceil(size(uniqueCalcPairs,1)/targetBatchSize);
@@ -338,47 +348,65 @@ if (calcOnOff)
 
         %PARTIALLY SAVE, figure out which to compute
         %compute binding thermodynamic/kinetic information for unique off-target hit sequences parallelized
-        targetMatch_Unique_Constant = parallel.pool.Constant(targetMatch_Unique);
-        probeMatch_Unique_Constant = parallel.pool.Constant(probeMatch_Unique);
-        Batch_uniqueCalcPairs_Constant = parallel.pool.Constant(Batch_uniqueCalcPairs);
-        parfor v = 1:length(batch_nums_to_check)
-            uniquePair_temp_dHeq{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            uniquePair_temp_dSeq{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            uniquePair_temp_dGeq{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            uniquePair_temp_dHf{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            uniquePair_temp_dSf{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            uniquePair_temp_dHr{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            uniquePair_temp_dSr{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            uniquePair_temp_dCpeq{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            uniquePair_temp_Tm{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            temp_indx{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            temp_GibsonInfo{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
-            for w = 1:length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)})
-                %i = Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w);
-                [uniquePair_temp_dHeq{v}{w}, uniquePair_temp_dSeq{v}{w}, uniquePair_temp_dGeq{v}{w}, ...
-                    uniquePair_temp_dHf{v}{w}, uniquePair_temp_dSf{v}{w}, ~, ...
-                    uniquePair_temp_dHr{v}{w}, uniquePair_temp_dSr{v}{w}, ~,uniquePair_temp_dCpeq{v}{w},uniquePair_temp_Tm{v}{w}] = ...
-                    F_DeltaGibson_V3(targetMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},probeMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},SaltConcentration,T_hybrid);
-                temp_indx{v}{w}= find(strcmpi(targetMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},targetMatch).*strcmpi(probeMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},probeMatch));
-                temp_GibsonInfo{v}{w} = {temp_indx{v}{w};uniquePair_temp_dGeq{v}{w};uniquePair_temp_dHeq{v}{w}';uniquePair_temp_dSeq{v}{w}';...
-                    uniquePair_temp_dHf{v}{w}';uniquePair_temp_dSf{v}{w}';...
-                    uniquePair_temp_dHr{v}{w}';uniquePair_temp_dSr{v}{w}';...
-                    uniquePair_temp_Tm{v}{w}';uniquePair_temp_dCpeq{v}{w}'};
+        if (~isempty(batch_nums_to_check))
+            targetMatch_Unique_Constant = parallel.pool.Constant(targetMatch_Unique);
+            probeMatch_Unique_Constant = parallel.pool.Constant(probeMatch_Unique);
+            Batch_uniqueCalcPairs_Constant = parallel.pool.Constant(Batch_uniqueCalcPairs);
+            fprintf('\n')
+            fprintf('\n')
+            fprintf("Computing Binding Affinity for Batches of Unique Probe Target Sequence Pairs")
+            fprintf('\n')
+            fprintf('\n')
+            progBar = ProgressBar(length(batch_nums_to_check),'IsParallel', true,'WorkerDirectory', pwd(),'Title', 'Computing');
+            progBar.setup([],[],[]);
+            parfor v = 1:length(batch_nums_to_check)
+                pause(0.1)
+                uniquePair_temp_dHeq{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                uniquePair_temp_dSeq{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                uniquePair_temp_dGeq{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                uniquePair_temp_dHf{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                uniquePair_temp_dSf{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                uniquePair_temp_dHr{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                uniquePair_temp_dSr{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                uniquePair_temp_dCpeq{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                uniquePair_temp_Tm{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                temp_indx{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                temp_GibsonInfo{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
+                for w = 1:length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)})
+                    %i = Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w);
+                    [uniquePair_temp_dHeq{v}{w}, uniquePair_temp_dSeq{v}{w}, uniquePair_temp_dGeq{v}{w}, ...
+                        uniquePair_temp_dHf{v}{w}, uniquePair_temp_dSf{v}{w}, ~, ...
+                        uniquePair_temp_dHr{v}{w}, uniquePair_temp_dSr{v}{w}, ~,uniquePair_temp_dCpeq{v}{w},uniquePair_temp_Tm{v}{w}] = ...
+                        F_DeltaGibson_V3(targetMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},probeMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},SaltConcentration,T_hybrid);
+                    temp_indx{v}{w}= find(strcmpi(targetMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},targetMatch).*strcmpi(probeMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},probeMatch));
+                    temp_GibsonInfo{v}{w} = {temp_indx{v}{w};uniquePair_temp_dGeq{v}{w};uniquePair_temp_dHeq{v}{w}';uniquePair_temp_dSeq{v}{w}';...
+                        uniquePair_temp_dHf{v}{w}';uniquePair_temp_dSf{v}{w}';...
+                        uniquePair_temp_dHr{v}{w}';uniquePair_temp_dSr{v}{w}';...
+                        uniquePair_temp_Tm{v}{w}';uniquePair_temp_dCpeq{v}{w}'};
+                end
+                parsave_partial_delta_gibson([FolderRootName filesep TranscriptName designerName '_deltaGibsonInfo_batch' num2str(batch_nums_to_check(v)) '.mat'],temp_GibsonInfo{v})
+                temp_indx{v} = [];
+                uniquePair_temp_dHeq{v} = [];
+                uniquePair_temp_dSeq{v} = [];
+                uniquePair_temp_dGeq{v} = [];
+                uniquePair_temp_dHf{v} = [];
+                uniquePair_temp_dSf{v} = [];
+                uniquePair_temp_dHr{v} = [];
+                uniquePair_temp_dSr{v} = [];
+                uniquePair_temp_dCpeq{v} = [];
+                uniquePair_temp_Tm{v} = [];
+                updateParallel([],pwd);
             end
-            parsave_partial_delta_gibson([FolderRootName filesep TranscriptName designerName '_deltaGibsonInfo_batch' num2str(batch_nums_to_check(v)) '.mat'],temp_GibsonInfo{v})
-            temp_indx{v} = [];
-            uniquePair_temp_dHeq{v} = [];
-            uniquePair_temp_dSeq{v} = [];
-            uniquePair_temp_dGeq{v} = [];
-            uniquePair_temp_dHf{v} = [];
-            uniquePair_temp_dSf{v} = [];
-            uniquePair_temp_dHr{v} = [];
-            uniquePair_temp_dSr{v} = [];
-            uniquePair_temp_dCpeq{v} = [];
-            uniquePair_temp_Tm{v} = [];
+            progBar.release();
         end
-        baseFolder = pwd;
-        addpath(genpath(baseFolder));
+
+        fprintf('\n')
+        fprintf('\n')
+        fprintf("Aggregating probe target batch thermodynamic information")
+        fprintf('\n')
+        fprintf('\n')
+        tic
+        progBar = ProgressBar(N_Batches);
         for v = 1:N_uniqueCalcPairsBatches
             if isfile([settings.FolderRootName filesep TranscriptName designerName '_deltaGibsonInfo_batch' num2str(v) '.mat'])
                 load([settings.FolderRootName filesep TranscriptName designerName '_deltaGibsonInfo_batch' num2str(v) '.mat'],'partial_delta_gibson_tmp');
@@ -395,19 +423,27 @@ if (calcOnOff)
                 end
                 clear partial_delta_gibson_tmp
             end
+            progBar([],[],[]);
         end
+        progBar.release();
         save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_dHInfo' settings.designerName '.mat'],'dHon_f','dHon_r','dHon_eq','dHeq_Match','dHf_Match','dHr_Match','-v7.3');
         save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_dSInfo' settings.designerName '.mat'],'dSon_f','dSon_r','dSon_eq','dSeq_Match','dSf_Match','dSr_Match','-v7.3');
         save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_TmInfo' settings.designerName '.mat'],'Tm_on','Tm_Match','-v7.3');
         save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_dCpInfo' settings.designerName '.mat'],'dCpon_eq','dCpeq_Match','-v7.3');
         save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_dKbInfo' settings.designerName '.mat'],'Kb_Match','-v7.3');
-        baseFolder = pwd;
-        addpath(genpath(baseFolder));
+        fprintf('\n')
+        fprintf('\n')
+        fprintf("Deleting temporary gibbs energy files")
+        fprintf('\n')
+        fprintf('\n')
+        progBar = ProgressBar(N_Batches);
         for i = 1:N_uniqueCalcPairsBatches
             if exist([settings.FolderRootName filesep TranscriptName settings.designerName '_deltaGibsonInfo_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
                 delete([settings.FolderRootName filesep TranscriptName settings.designerName '_deltaGibsonInfo_batch' num2str(i) '.mat'])
             end
+            progBar([],[],[]);
         end
+        progBar.release();
     else
     end
     load([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_dKbInfo' settings.designerName '.mat'],'Kb_Match');
@@ -415,14 +451,22 @@ if (calcOnOff)
     Koff = ndSparse.build([size(probes,1),length(Names),N_methods],0);
     indices = 1:length(uniNames);
     idMap2 = dictionary(uniNames',indices);
-    L = size(probes,1);
     uniNamesZ = extractBefore(NamesZ,'.');
+    if (sum(ismissing(uniNamesZ))>0)
+        uniNamesZ(ismissing(uniNamesZ)) = extractBefore(NamesZ(ismissing(uniNamesZ)),' ');
+    end
     %Might be better efficent to combine old Event way of getting Koff with new
     %part for calculating energies minimally with deal
     if (~isfile([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_OnOffInfo' settings.designerName '.mat']))%check if temp file exists
         ResultsExist_OnOff_1D = zeros(1,N_Batches);
         ResultsSize_OnOff_1D = zeros(1,N_Batches);
         ResultsDate_OnOff_1D = cell(1,N_Batches);
+        fprintf('\n')
+        fprintf('\n')
+        fprintf("Check if on/off-target thermo batch files exist")
+        fprintf('\n')
+        fprintf('\n')
+        progBar = ProgressBar(length(batch_nums));
         for i = batch_nums
             if (isfile([settings.FolderRootName filesep TranscriptName  settings.designerName '_OnOffInfo_batch' num2str(i) '.mat']))%check if temp file exists
                 d = dir([settings.FolderRootName filesep TranscriptName settings.designerName '_OnOffInfo_batch' num2str(i) '.mat']);
@@ -433,7 +477,9 @@ if (calcOnOff)
                 ResultsDate_OnOff_1D{i} = datetime(d.date);
                 clear d
             end
+            progBar([],[],[]);
         end
+        progBar.release();
         Results_NotMade_OnOff_1D = find(ResultsExist_OnOff_1D ==0);
         Results_Made_OnOff_1D = find(ResultsExist_OnOff_1D ==1);
         %Sort get most 8 recent ResultsMade GeneHitsMade and GeneHitsTable Made and
@@ -456,9 +502,6 @@ if (calcOnOff)
             clear Results_RecentMade_Dates_OnOff_1D
         end
         batch_nums_to_check_OnOff_1D = union(Results_NotMade_OnOff_1D,results_check1_OnOff_1D);
-
-
-
         probes_List = parallel.pool.Constant(probes);
         idMap2_List = parallel.pool.Constant(idMap2);
         uniNames_List = parallel.pool.Constant(uniNames);
@@ -466,7 +509,15 @@ if (calcOnOff)
         NamesZ_List = parallel.pool.Constant(NamesZ);
         Batch_List = parallel.pool.Constant(Batch);
         %build structure with on/off-target binding by each target in blast results.
+        fprintf('\n')
+        fprintf('\n')
+        fprintf("Computing 1D Probe Batch On/Off-Target affinity index values")
+        fprintf('\n')
+        fprintf('\n')
+        progBar = ProgressBar(length(batch_nums_to_check_OnOff_1D),'IsParallel', true,'WorkerDirectory', pwd(),'Title', 'Computing');
+        progBar.setup([],[],[]);
         parfor v=1:length(batch_nums_to_check_OnOff_1D)
+            pause(0.1);
             temp_on_off{v} = cell(1,length(Batch_List.Value{batch_nums_to_check_OnOff_1D(v)}));
             for w = 1:length(Batch_List.Value{batch_nums_to_check_OnOff_1D(v)})
                 %p = Batch_List.Value{batch_nums_to_check_OnOff_1D(v)}(w);
@@ -499,11 +550,17 @@ if (calcOnOff)
             end
             parsave_partial_on_off([FolderRootName filesep TranscriptName designerName '_OnOffInfo_batch' num2str(batch_nums_to_check_OnOff_1D(v)) '.mat'],temp_on_off{v});
             temp_on_off{v} = [];
+            updateParallel([],pwd);
         end
+        progBar.release();
     end
-
-    baseFolder = pwd;
-    addpath(genpath(baseFolder));
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Aggregating 1D On/Off-Target Simple affinity index values")
+    fprintf('\n')
+    fprintf('\n')
+    % delete temporary files generated for each batches blast report
+    progBar = ProgressBar(N_Batches);
     for v=1:N_Batches
         if isfile([settings.FolderRootName filesep TranscriptName designerName '_OnOffInfo_batch' num2str(v) '.mat'])
             load([settings.FolderRootName filesep TranscriptName designerName '_OnOffInfo_batch' num2str(v) '.mat'],'partial_on_off_tmp');
@@ -540,13 +597,22 @@ if (calcOnOff)
             end
             clear partial_on_off_tmp
         end
+        progBar([],[],[]);
     end
+    progBar.release();
     save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_Tm' num2str(settings.HybridizationTemperature) '_OnOffThermoInfo' settings.designerName '.mat'],'Kon','Koff','Kb_Match','-v7.3');
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Deleting temporary 1D On/Off-Target Simple affinity index value files")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(N_Batches);
     for i = 1:N_Batches
         if exist([settings.FolderRootName filesep TranscriptName settings.designerName '_OnOffInfo_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
             delete([settings.FolderRootName filesep TranscriptName settings.designerName '_OnOffInfo_batch' num2str(i) '.mat'])
         end
+        progBar([],[],[]);
     end
+    progBar.release();
 end
-
 end

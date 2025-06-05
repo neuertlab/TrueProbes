@@ -2,6 +2,7 @@ function [Kb_mod,Kb_Complement,DoesProbeBindSite2,Num_of_Molecule_Sites,MolProbe
 N_methods = 8;
 N_methods2 = 3;
 N_methods3 = 9;
+nascentInfo = [];
 kb = 0.001987204259;%boltzman constant
 %Jason Hughes code to parsing gene_table to get sites where probes bind
 %For RNA, DNA, and complementary binding for double stranded DNA
@@ -171,6 +172,7 @@ if (calcSiteMap > 0)
     ResultsExist = zeros(1,N_siteMappingBatches);
     ResultsSize = zeros(1,N_siteMappingBatches);
     ResultsDate = cell(1,N_siteMappingBatches);
+
     for i = 1:N_siteMappingBatches
         if (isfile([settings.FolderRootName filesep TranscriptName  settings.designerName '_BindingSiteMapInfo_batch' num2str(i) '.mat']))%check if temp file exists
             d = dir([settings.FolderRootName filesep TranscriptName settings.designerName '_BindingSiteMapInfo_batch' num2str(i) '.mat']);
@@ -261,8 +263,16 @@ if (calcSiteMap > 0)
     Tm_Match_List = parallel.pool.Constant(Tm_Match);
     dCpeq_Match_List = parallel.pool.Constant(dCpeq_Match);
     Batch_siteMapping_Constant = parallel.pool.Constant(Batch_siteMapping);
-
+    if (~isempty(batch_nums_to_check))
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Generating probe target binding site map in batches:")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(length(batch_nums_to_check),'IsParallel',true,'WorkerDirectory', pwd(),'Title', 'Mapping');
+    progBar.setup([],[],[]);
     parfor w =1:length(batch_nums_to_check)
+        pause(0.1);
         P_ic_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
         MolProbesAtEvents{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
         MolN_ProbesAtEvents{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
@@ -376,11 +386,22 @@ if (calcSiteMap > 0)
         dSr_In_Site_at_Target{w}=[];
         Tm_In_Site_at_Target{w}=[];
         dCp_In_Site_at_Target{w}=[];
+            updateParallel([],pwd);
+    end
+progBar.release();
     end
 
+        fprintf('\n')
+    fprintf('\n')
+    fprintf("Aggregating probe target binding site map batches")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(N_siteMappingBatches,'Title', 'Combining');
     for w = 1:N_siteMappingBatches
         if isfile([FolderRootName filesep TranscriptName designerName '_BindingSiteMapInfo_batch' num2str(w) '.mat'])
             load([settings.FolderRootName filesep TranscriptName designerName '_BindingSiteMapInfo_batch' num2str(w) '.mat'],'partial_binding_site_map_info_tmp');
+           %nested bar
+            
             for w_sub = 1:length(Batch_siteMapping{w})
                 u = Batch_siteMapping{w}(w_sub);
                 Sx = partial_binding_site_map_info_tmp{w_sub}{1};
@@ -434,8 +455,9 @@ if (calcSiteMap > 0)
             end
             clear partial_binding_site_map_info_tmp
         end
+                progBar([],[],[]);
     end
-
+progBar.release();
     %MolN_SitesBoundaryMax{u} = InInterval_Cmax(nonSubset);
         %MolN_SitesBoundaryMin{u} = InInterval_Cmin(nonSubset);
         %Num_of_Molecule_Sites(u) = length(Sx);
@@ -447,8 +469,6 @@ if (calcSiteMap > 0)
             %finding first one then second.
             %overlap of Cmin and Cmax
     %  (P's, Specific Target, S's)
-    
-    
     %needs to be careful and not losen restrictions on sites that cannot
     %both be bound (if probes at distant regions used in the same probe set
     %appear close to each other on off-target within site mapping)/
@@ -462,22 +482,16 @@ if (calcSiteMap > 0)
 %An = [1 6 12 17 22 34 41 51].'; Bn = [9 14 20 25 30 40 49 60].'; 12 23 34 45 6 7 8
 %An = [1 2 3 4 5 6 8 11 15 17].'; Bn = [7 9 10 12 13 14 16 17 18 19].';%123456 234567 45678 789 8910
 %An = [1 2 3 4 5 6 8 12 15 17].'; Bn = [7 9 10 11 13 14 16 17 18 19].';%123456 234567 5678 789 8910
-
-    %Check Sites On Target Have Multiplicity with Probes Given
-    %Pset
-    
     fprintf('\n')
     fprintf('\n')
     fprintf("Filtering Binding Site Map to be non-overlapping in adjacent binding site regions between probes on individual targets.")
+    fprintf('\n')
+    fprintf('\n')
     %Cmin  Cmax 
     DoesProbeBindSite2 = DoesProbeBindSite;
+    progBar = ProgressBar(size(probes,1));
     for p=1:size(probes,1)
         for i=find(sum(DoesProbeBindSite2(p,:,:),3)>0)%molecules where probe hits
-            %check for overlap j>i
-            %for j=i
-            %    (MolN_SitesBoundaryMax{u}(i)-MolN_SitesBoundaryMin{u}(j))*DoesProbeBindSite2(p,u,i)
-            %end
-            %Iz = find(diff(full(reshape(DoesProbeBindSite2(p,i,:),[1 size(DoesProbeBindSite2,3)])))>0)+1;
             Iz = find(diff([0 full(reshape(DoesProbeBindSite2(p,i,:),[1 size(DoesProbeBindSite2,3)])) 0])>0);
             if (~isempty(Iz))
                DoesProbeBindSite2(p,i,setdiff(1:size(DoesProbeBindSite2,3),Iz)) = 0;
@@ -489,22 +503,26 @@ if (calcSiteMap > 0)
         %but if multiple probes bind site then grouped ordering of sites
         %turning to zero.        
         %P_S
+           progBar([],[],[]);
     end
-    
-    
-    
+    progBar.release();
     %DoesProbeBindSite2
     save([settings.FolderRootName filesep settings.GeneName '_binding_hits_map' settings.designerName '.mat'],'DoesProbeBindSite','DoesProbeBindSite2','MolN_ProbesAtEvents','Num_of_Molecule_Sites','Mol_ProbesAtEventsID','MolProbesAtEvents','-v7.3')  
     save([settings.FolderRootName filesep settings.GeneName  '_Tm' num2str(T_hybrid) '_BindingEnergyMatrix' settings.designerName '.mat'],'Kb_mod','-v7.3') 
     save([settings.FolderRootName filesep settings.GeneName '_BindingMatrices' settings.designerName '.mat'],'dHeq_mod','dSeq_mod','dHf_mod','dSf_mod','dHr_mod','dSr_mod','Tm_mod','dCp_mod','-v7.3')
-
-
+ fprintf('\n')
+    fprintf('\n')
+    fprintf("Deleting temporary probe-target batch binding site map files")
+    fprintf('\n')
+    fprintf('\n')
+     progBar = ProgressBar(N_siteMappingBatches);
 for i = 1:N_siteMappingBatches
     if exist([settings.FolderRootName filesep TranscriptName settings.designerName '_BindingSiteMapInfo_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
         delete([settings.FolderRootName filesep TranscriptName settings.designerName '_BindingSiteMapInfo_batch' num2str(i) '.mat'])
     end
+     progBar([],[],[]);
 end
-
+progBar.release();
 end
 
 %MolProbesAtEvents tells you probes at each event on target for each site;=
@@ -538,6 +556,12 @@ if (calcEnergyMatrix2)
     dSr_Complement = ndSparse.build([size(probes,1),length(Names),size(probes,1)-Lpmin+1,N_methods2],0);
     targetMatch = arrayfun(@(x) strrep(gene_table.Alignment{x}(3,:),'-','N'),1:size(gene_table,1),'UniformOutput',false);%slow not so slow
     if (settings.BLASTdna)
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Getting binding affinity of DNA probe targets complementary reactions")
+    fprintf('\n')
+    fprintf('\n')
+    progBar = ProgressBar(length(DNA_IDs));
     for i=DNA_IDs
         for site=1:length(MolN_ProbesAtEvents{i})
             for l=1:MolN_ProbesAtEvents{i}(site)
@@ -556,7 +580,9 @@ if (calcEnergyMatrix2)
                 Kb_Complement(PI,i,site,:) = exp(-full(POGmod_Complement(PI,i,site,:))/(kb*(T_hybrid+273.15)));
             end
         end
+        progBar([],[],[]);
     end
+     progBar.release();
     end
     Kb_Complement = squeeze(max(Kb_Complement,[],1));
     dHeq_Complement = squeeze(max(dHeq_Complement,[],1));

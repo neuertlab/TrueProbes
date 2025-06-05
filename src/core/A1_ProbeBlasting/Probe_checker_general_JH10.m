@@ -110,7 +110,14 @@ GeneHitsTableExist = zeros(1,N_Batches);
 GeneHitsTableSize = zeros(1,N_Batches);
 GeneHitsTableDate = cell(1,N_Batches);
 %sort on size and date time (remove last 8 in time) if any exist
-for i = batch_nums
+
+fprintf('\n')
+fprintf('\n')
+fprintf("Check if probe batch BLAST report xml files exist")
+fprintf('\n')
+fprintf('\n')
+progBar = ProgressBar(N_Batches);
+for i = 1:N_Batches
     if (isfile([FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) 'resultsDNA.xml']))%check if XML file exists
         d = dir([FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) 'resultsDNA.xml']);
         if (d.bytes>0)%check size greater than zero
@@ -138,14 +145,16 @@ for i = batch_nums
         GeneHitsTableDate{i} = datetime(d.date);
         clear d
     end
+    progBar([],[],[]);
 end
+progBar.release();
+
 Results_NotMade = find(ResultsExist==0);
 Results_Made = find(ResultsExist==1);
 Results_NotMade2 = find(ResultsExist2==0);
 Results_Made2 = find(ResultsExist2==1);
 GeneHitsTable_NotMade = find(GeneHitsTableExist==0);
 GeneHitsTable_Made = find(GeneHitsTableExist==1);
-
 probes_to_check1 = union(Results_NotMade,Results_NotMade2);
 probes_to_check2 = GeneHitsTable_NotMade;
 %Sort get most 8 recent ResultsMade GeneHitsMade and GeneHitsTable Made and
@@ -196,6 +205,12 @@ batch_nums_to_check1 = union(probes_to_check1,probes_to_check3);
 batch_nums_to_check2 = union(probes_to_check2,probes_to_check4);
 
 %BatchMaxLen = zeros(1,N_Batches);
+fprintf('\n')
+fprintf('\n')
+fprintf("Generating probe batch fasta files")
+fprintf('\n')
+fprintf('\n')
+progBar = ProgressBar(N_Batches);
 for i = 1:N_Batches
     data = [];
     %% For local blast on server
@@ -208,14 +223,25 @@ for i = 1:N_Batches
     end
     fastawrite([FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) '.fa'],data);
     % BatchMaxLen(i) = max(cellfun(@length,probes(Batch{i},2)));
+    progBar([],[],[]);
 end
+progBar.release();
 
 N_Batches
 batch_nums_to_check1
 MinHomologySize_Constant = parallel.pool.Constant(settings.MinHomologySearchTargetSize);
 %if no database can make database
-%how to check if 
+%how to check if
+if (~isempty(batch_nums_to_check1))
+fprintf('\n')
+fprintf('\n')
+fprintf("blasting probe batch fasta files")
+fprintf('\n')
+fprintf('\n')
+progBar = ProgressBar(length(batch_nums_to_check1),'IsParallel', true,'WorkerDirectory', pwd(),'Title', 'Blasting');
+progBar.setup([],[],[]);
 parfor v = 1:length(batch_nums_to_check1)
+    pause(0.1);
     i = batch_nums_to_check1(v);
     if (runDNA)
         sequence_data = [FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa'];
@@ -241,20 +267,27 @@ parfor v = 1:length(batch_nums_to_check1)
         bnopts_RNA.ReportFormat = "BLASTXML";
         blastplus("blastn",sequence_data,database_RNA,outputfile_RNA,bnopts_RNA)
     end
+    updateParallel([],pwd);
 end
-pause(600);
+progBar.release();
+end
 
 % process each batch blast report into structure needed for downstream usage in probe design and evaluation
 % concantenate each batches results together into a single output file
+if (~isempty(batch_nums_to_check2))
+Batch_List = parallel.pool.Constant(Batch);
 fprintf('\n')
 fprintf('\n')
 fprintf("Generating MATLAB tables from probe BLAST batch results")
-Batch_List = parallel.pool.Constant(Batch);
+fprintf('\n')
+fprintf('\n')
+progBar = ProgressBar(length(batch_nums_to_check2),'IsParallel',true,'WorkerDirectory', pwd(),'Title', 'Converting');
+progBar.setup([],[],[]);
 parfor y = 1:length(batch_nums_to_check2)
+    pause(0.1);
     i = batch_nums_to_check2(y);
     total_temp_hits_subnode = [];    %Will store the gene hits information for storage
     %% For local blast on server
-    i
     pSeq = fastaread([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa']);
     if (runDNA)
         if (simultaneous)%If All at Once
@@ -500,13 +533,19 @@ parfor y = 1:length(batch_nums_to_check2)
     if exist([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
         delete([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa'])
     end
+    updateParallel([],pwd);
 end
-
+progBar.release();
+end
 %% Load all files and clear
 fprintf('\n')
 fprintf('\n')
 fprintf("Aggregating probe BLAST batch MATLAB tables into a single MATLAB BLAST gene hits table")
+fprintf('\n')
+fprintf('\n')
 % delete temporary files generated for each batches blast report
+tic
+progBar = ProgressBar(N_Batches);
 for i = 1:N_Batches
     if isfile([FolderRootName filesep TranscriptName designerName '_gene_hits_table_batch' num2str(i) '.mat'])
         load([FolderRootName filesep TranscriptName designerName '_gene_hits_table_batch' num2str(i) '.mat'],'gene_hits_table_tmp');
@@ -521,15 +560,26 @@ for i = 1:N_Batches
         clear gene_hits_table_tmp
     catch
     end
+        progBar([],[],[]);
 end
+progBar.release();
 save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_hits_table' settings.designerName '.mat'],'gene_table','-v7.3')
 save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_fail_nums' settings.designerName '.mat'],'fail_nums','-v7.3')
+tEnd = toc;fprintf('\n')
+fprintf("Time elapsed to aggregate BLAST result batch tables %g seconds",round(tEnd,3,"significant"))
+fprintf('\n')
+fprintf('\n')
+fprintf("Deleting temporary probe BLAST batch gene hits tables")
+fprintf('\n')
+fprintf('\n')
+progBar = ProgressBar(N_Batches);
 for i = 1:N_Batches
     if exist([settings.FolderRootName filesep TranscriptName settings.designerName '_gene_hits_table_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
         delete([settings.FolderRootName filesep TranscriptName settings.designerName '_gene_hits_table_batch' num2str(i) '.mat'])
     end
+    progBar([],[],[]);
 end
-
+progBar.release();
 end
 function o = strplaceStrand(vec)
 if (prod(vec)>0)
