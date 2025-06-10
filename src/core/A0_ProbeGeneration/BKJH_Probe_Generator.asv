@@ -58,27 +58,28 @@ for i=1:Lh-Ll+1
                     clear isInBioIFobj cObj
                 else
                     fprintf('\n')
-                    fprintf("BioKey not found in reference genomes or transcriptomes.")
-                    fprintf('\n')
-                    fprintf(strcat("Trying to search for matches to ",extractBefore(AccessionNumbers{Acc_Num},'.')))
+                    fprintf("BioKey not found in reference genomes/transcriptomes.")
+                    fprintf('n')
+                    fprint("trying removing version update number find match")
                     %BioKey version not found
                       isInBioIFobj = zeros(1,length(BioIFobj));
                       isInBioIFobj_loc = zeros(1,length(BioIFobj));
                       for k=1:length(BioIFobj)
                             with_dot = find(contains(BioKeys{k}{:},'.'));
-                            if (sum(strcmp(extractBefore(BioKeys{k}{1}(with_dot),'.'),extractBefore(AccessionNumbers{Acc_Num},'.')))>0)
+                            
                             isInBioIFobj_loc(k) = with_dot(find(strcmp(extractBefore(BioKeys{k}{1}(with_dot),'.'),extractBefore(AccessionNumbers{Acc_Num},'.'))));
+                            if (isInBioIFobj_loc(k)~=0)
                             isInBioIFobj(k) = 1;
                             end
                       end
                        cObj = find(isInBioIFobj>0,1); 
                        if (~isempty(cObj))
-                             Data = read(BioIFobj{cObj},BioKeys{cObj}{1}{isInBioIFobj_loc(cObj)});
-                             clear isInBioIFobj cObj isInBioIFobj_loc
+
                        else
                            msg = 'Error. Target Inclusion Accession Number not in reference genome or transcriptome';
                            error(msg)
                        end      
+                    clear isInBioIFobj cObj
                 end
             else
                 Data = getgenbank(AccessionNumbers{Acc_Num});    %Retrieve accession number information

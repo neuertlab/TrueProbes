@@ -19,8 +19,10 @@ function [probes,gene_table] = Probe_checker_general_JH10(probes,Organism,Transc
 
 % probes = PossibleRepAprobes;            %Set this equal to the imported file name
 % save([TranscriptName '_probes'],'probes')
+
 db1 = [];
 db2 = [];
+most_recent_num_local = settings.num_parpool_local;
 batchSize = settings.BLASTbatchSize;
 simultaneous = settings.BLASTsimultaneousParsingOverSequentialParsing;
 runDNA = settings.BLASTdna;
@@ -33,54 +35,42 @@ gapextend = settings.BlastParameters.gapextend;
 evalue = settings.BlastParameters.evalue;
 num_alignments = settings.BlastParameters.num_alignments;
 dust = settings.BlastParameters.dust;
-runDNA
-runRNA
-if strcmp(Organism,'Mouse')
+if (settings.clusterStatus)
+    most_recent_num = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
+else
+    most_recent_num = most_recent_num_local;
+end
+A1_MakeBlastDB_JH(settings)
+if (isKey(settings.LocRoot_FASTA,Organism))
     if (runDNA)
-        db1 = settings.mLoc;
+        db1 = char(settings.LocBLASTDB_DNA(Organism));
     end
     if (runRNA)
-        db2 = settings.mLoc2;
-    end
-elseif strcmp(Organism, 'Human')
-    if (runDNA)
-        db1 = settings.hLoc;
-    end
-    if (runRNA)
-        db2 = settings.hLoc2;
-    end
-elseif strcmp(Organism, 'Yeast')
-    if (runDNA)
-        db1 = settings.yLoc;
-    end
-    if (runRNA)
-        db2 = settings.yLoc2;
+        db2 = char(settings.LocBLASTDB_RNA(Organism));
     end
 else
     if (runDNA)
-        db1 = settings.specificBlastDatabase;
+        db1 = char(settings.specificBlastDatabase);
     end
     if (runRNA)
-        db2 = settings.specificBlastDatabase2;
+        db2 = char(settings.specificBlastDatabase2);
     end
 end
-
-
+fprintf(strcat("BLAST DNA = ",num2str(runDNA)))
+fprintf('\n')
+fprintf(strcat("BLAST RNA = ",num2str(runRNA)))
+fprintf('\n')
 %probe_nums = 1:size(probes,1);
 % each row is information for a probe, then within the cell array in the second column, rows are genes, columns are number of hits
-first_loaded = 0;
 fail_nums = zeros(size(probes,1));
 FolderRootName = settings.FolderRootName;
 designerName = settings.designerName;
 MaxProbeSize = settings.MaxProbeSize;
-
 % generate batches of probes to blast
 N_Probes = size(probes,1);
 N_Batches = ceil(N_Probes/batchSize);
-batch_nums = 1:N_Batches;
 R = mod(N_Probes,batchSize);
 Batch = cell(1,N_Batches);
-
 if (R==0)
     for k = 1:N_Batches
         Batch{k} = [batchSize*(k-1)+1:batchSize*k];
@@ -91,15 +81,6 @@ else
     end
     Batch{N_Batches} = [batchSize*(N_Batches-1)+1:batchSize*(N_Batches-1)+R];
 end
-try
-    pc = parcluster('local');
-    %pc.JobStorageLocation = strcat(getenv('SCRATCH'),filesep,getenv('SLURM_JOB_ID'));
-    parpool(pc,str2num(getenv('SLURM_JOB_CPUS_PER_NODE')));
-    spmd
-        warning('off','all')
-    end
-catch
-end
 ResultsExist = zeros(1,N_Batches);
 ResultsSize = zeros(1,N_Batches);
 ResultsDate = cell(1,N_Batches);
@@ -109,17 +90,15 @@ ResultsDate2 = cell(1,N_Batches);
 GeneHitsTableExist = zeros(1,N_Batches);
 GeneHitsTableSize = zeros(1,N_Batches);
 GeneHitsTableDate = cell(1,N_Batches);
-%sort on size and date time (remove last 8 in time) if any exist
-
 fprintf('\n')
 fprintf('\n')
-fprintf("Check if probe batch BLAST report xml files exist")
+fprintf("Checking if probe batch BLAST report xml or gene hit table files exist")
 fprintf('\n')
 fprintf('\n')
-progBar = ProgressBar(N_Batches);
+progBar = ProgressBar(N_Batches,'WorkerDirectory', strcat(pwd,filesep,FolderRootName));
 for i = 1:N_Batches
-    if (isfile([FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) 'resultsDNA.xml']))%check if XML file exists
-        d = dir([FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) 'resultsDNA.xml']);
+    if (isfile([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) 'resultsDNA.xml']))%check if XML file exists
+        d = dir([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) 'resultsDNA.xml']);
         if (d.bytes>0)%check size greater than zero
             ResultsExist(i) = 1;
         end
@@ -127,8 +106,8 @@ for i = 1:N_Batches
         ResultsDate{i} = datetime(d.date);
         clear d
     end
-    if (isfile([FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) 'resultsRNA.xml']))%check if XML file exists
-        d = dir([FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) 'resultsRNA.xml']);
+    if (isfile([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) 'resultsRNA.xml']))%check if XML file exists
+        d = dir([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) 'resultsRNA.xml']);
         if (d.bytes>0)%check size greater than zero
             ResultsExist2(i) = 1;
         end
@@ -136,8 +115,8 @@ for i = 1:N_Batches
         ResultsDate2{i} = datetime(d.date);
         clear d
     end
-    if (isfile([FolderRootName filesep TranscriptName settings.designerName 'gene_hits_table_batch' num2str(i) '.mat']))%check if temp file exists
-        d = dir([FolderRootName filesep TranscriptName settings.designerName 'gene_hits_table_batch' num2str(i) '.mat']);
+    if (isfile([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'gene_hits_table_batch' num2str(i) '.mat']))%check if temp file exists
+        d = dir([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'gene_hits_table_batch' num2str(i) '.mat']);
         if (d.bytes>0)%check size greater than zero
             GeneHitsTableExist(i) = 1;
         end
@@ -148,23 +127,21 @@ for i = 1:N_Batches
     progBar([],[],[]);
 end
 progBar.release();
-
 Results_NotMade = find(ResultsExist==0);
 Results_Made = find(ResultsExist==1);
 Results_NotMade2 = find(ResultsExist2==0);
 Results_Made2 = find(ResultsExist2==1);
 GeneHitsTable_NotMade = find(GeneHitsTableExist==0);
 GeneHitsTable_Made = find(GeneHitsTableExist==1);
+if (and(runDNA,runRNA))
 probes_to_check1 = union(Results_NotMade,Results_NotMade2);
-probes_to_check2 = GeneHitsTable_NotMade;
-%Sort get most 8 recent ResultsMade GeneHitsMade and GeneHitsTable Made and
-%add to probe_check_list
-if (settings.clusterStatus)
-    most_recent_num = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
-else
-    most_recent_num = 8;
+elseif (runRNA)
+probes_to_check1 = Results_NotMade2;
+elseif (runDNA)
+probes_to_check1 = Results_NotMade;
 end
-
+probes_to_check2 = GeneHitsTable_NotMade;
+%Sort get most recent ResultsMade GeneHitsMade and GeneHitsTable Made and add to probe_check_list
 if (length(Results_Made)<=most_recent_num)
     results_check1 = Results_Made;
 else
@@ -198,100 +175,153 @@ else
     results_check4 = GeneHitsTable_RecentMade_Dates.ID(1:most_recent_num).';
     clear GeneHitsTable_RecentMade_Dates
 end
-
 probes_to_check3 = union(results_check1,results_check2);
 probes_to_check4 = results_check4;
 batch_nums_to_check1 = union(probes_to_check1,probes_to_check3);
 batch_nums_to_check2 = union(probes_to_check2,probes_to_check4);
-
-%BatchMaxLen = zeros(1,N_Batches);
 fprintf('\n')
 fprintf('\n')
 fprintf("Generating probe batch fasta files")
 fprintf('\n')
 fprintf('\n')
-progBar = ProgressBar(N_Batches);
+progBar = ProgressBar(N_Batches,'WorkerDirectory', strcat(pwd,filesep,FolderRootName));
 for i = 1:N_Batches
     data = [];
     %% For local blast on server
-    if exist([FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
-        delete([FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) '.fa'])
+    if exist([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
+        delete([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) '.fa'])
     end
     for v = 1:length(Batch{i})
         data(v).Sequence = probes{Batch{i}(v),2};  %gets the sequence
         data(v).Header = ['p' num2str(Batch{i}(v))];
     end
-    fastawrite([FolderRootName filesep TranscriptName settings.designerName 'probebatch' num2str(i) '.fa'],data);
+    fastawrite([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) '.fa'],data);
     % BatchMaxLen(i) = max(cellfun(@length,probes(Batch{i},2)));
     progBar([],[],[]);
 end
 progBar.release();
-
-N_Batches
-batch_nums_to_check1
+if (or(~isempty(batch_nums_to_check1),~isempty(batch_nums_to_check2)))
+    try
+        pc = parcluster('local');
+        %pc.JobStorageLocation = strcat(getenv('SCRATCH'),filesep,getenv('SLURM_JOB_ID'));
+        parpool(pc,str2num(getenv('SLURM_JOB_CPUS_PER_NODE')));
+        spmd
+            warning('off','all')
+        end
+    catch
+    end
+end
+fprintf(strcat("Number of Probe Batches: ",string(N_Batches)))
+fprintf('\n')
+fprintf('\n')
+fprintf("Batches to BLAST: ")
+fprintf(num2str(batch_nums_to_check1))
+fprintf('\n')
+fprintf('\n')
 MinHomologySize_Constant = parallel.pool.Constant(settings.MinHomologySearchTargetSize);
 %if no database can make database
 %how to check if
 if (~isempty(batch_nums_to_check1))
-fprintf('\n')
-fprintf('\n')
-fprintf("blasting probe batch fasta files")
-fprintf('\n')
-fprintf('\n')
-progBar = ProgressBar(length(batch_nums_to_check1),'IsParallel', true,'WorkerDirectory', pwd(),'Title', 'Blasting');
-progBar.setup([],[],[]);
-parfor v = 1:length(batch_nums_to_check1)
-    pause(0.1);
-    i = batch_nums_to_check1(v);
-    if (runDNA)
-        sequence_data = [FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa'];
-        outputfile_DNA = [FolderRootName  filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsDNA.xml'];
-        database_DNA = db1;
-        per_id = 100*MinHomologySize_Constant.Value/MaxProbeSize;
-        strand = 'both';
-        bnopts_DNA = blastplusoptions("blastn",strcat(" -num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
-            " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)))
-        bnopts_DNA.Task = "blastn";
-        bnopts_DNA.ReportFormat = "BLASTXML";
-        blastplus("blastn",sequence_data,database_DNA ,outputfile_DNA,bnopts_DNA)
+    blastpath = settings.blastpath;
+    addpath(blastpath)
+    if (ismac)
+    setenv("PATH",strcat(pwd,filesep,blastpath,":",getenv("PATH")));
+    system('ulimit -n 65536');
+    else
+    setenv("PATH",strcat(pwd,filesep,blastpath,";",getenv("PATH")));
     end
-    if (runRNA)
-        sequence_data = [FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa'];
-        outputfile_RNA = [FolderRootName  filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsRNA.xml'];
-        database_RNA = db2;
-        per_id = 100*MinHomologySize_Constant.Value/MaxProbeSize;
-        strand = 'plus';
-        bnopts_RNA = blastplusoptions("blastn",strcat(" -num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
-            " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)))
-        bnopts_RNA.Task = "blastn";
-        bnopts_RNA.ReportFormat = "BLASTXML";
-        blastplus("blastn",sequence_data,database_RNA,outputfile_RNA,bnopts_RNA)
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("blasting probe batch fasta files")
+    fprintf('\n')
+    fprintf('\n')
+    strcat(pwd,filesep,FolderRootName)
+    progBar = ProgressBar(length(batch_nums_to_check1),'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Blasting');
+    progBar.setup([],[],[]);
+    parfor v = 1:length(batch_nums_to_check1)
+        pause(0.1);
+        i = batch_nums_to_check1(v);
+        if (runDNA)
+            sequence_data = [FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'];
+            outputfile_DNA = [FolderRootName  filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'];
+            database_DNA = db1;
+            per_id = 100*MinHomologySize_Constant.Value/MaxProbeSize;
+            strand = 'both';
+            bnopts_DNA = blastplusoptions("blastn",strcat(" -num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
+                " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)));
+            bnopts_DNA.Task = "blastn";
+            bnopts_DNA.ReportFormat = "BLASTXML";
+            optionsCmd = bnopts_DNA.getCommand();
+            if isempty(dir(database_DNA + ".*"))
+                error(message('bioinfo:blastplus:blastplus:InvalidDatabase', database_DNA));
+            end
+            if (~ismac)
+            blastn_args_DNA = sprintf('%s -query %s -db %s -out %s %s', strcat(blastpath,filesep,"blastn"), sequence_data, database_DNA, outputfile_DNA, optionsCmd);
+            else
+            blastn_args_DNA = sprintf('%s -query %s -db %s -out %s %s', strcat(blastpath,filesep,"blastn"), strcat(char(39),sequence_data,char(39)), database_DNA, strcat(char(39),outputfile_DNA,char(39)), optionsCmd);   
+            end
+            [status, result] = system(blastn_args_DNA);
+            if status
+                error(message('bioinfo:blastplus:blastplus:NativeErrorOrWarning',"blastn", result));
+            end
+        end
+        if (runRNA)
+            sequence_data = [FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'];
+            outputfile_RNA = [FolderRootName  filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'];
+            database_RNA = db2;
+            per_id = 100*MinHomologySize_Constant.Value/MaxProbeSize;
+            strand = 'plus';
+            bnopts_RNA = blastplusoptions("blastn",strcat(" -num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
+                " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)));
+            bnopts_RNA.Task = "blastn";
+            bnopts_RNA.ReportFormat = "BLASTXML"; 
+            optionsCmd = bnopts_RNA.getCommand();
+            if isempty(dir(database_RNA + ".*"))
+                error(message('bioinfo:blastplus:blastplus:InvalidDatabase', database_RNA));
+            end
+            if (~ismac)
+            blastn_args_RNA = sprintf('%s -query %s -db %s -out %s %s', strcat(blastpath,filesep,"blastn"), sequence_data, database_RNA, outputfile_RNA, optionsCmd);
+            else
+            blastn_args_RNA = sprintf('%s -query %s -db %s -out %s %s', strcat(blastpath,filesep,"blastn"), strcat(char(39),sequence_data,char(39)), database_RNA, strcat(char(39),outputfile_RNA,char(39)), optionsCmd);    
+            end
+            [status, result] = system(blastn_args_RNA);
+            if status
+                error(message('bioinfo:blastplus:blastplus:NativeErrorOrWarning',"blastn", result));
+            end
+        end
+        updateParallel([],strcat(pwd,filesep,FolderRootName));
     end
-    updateParallel([],pwd);
+    progBar.release();
 end
-progBar.release();
-end
-
 % process each batch blast report into structure needed for downstream usage in probe design and evaluation
 % concantenate each batches results together into a single output file
-if (~isempty(batch_nums_to_check2))
-Batch_List = parallel.pool.Constant(Batch);
 fprintf('\n')
 fprintf('\n')
 fprintf("Generating MATLAB tables from probe BLAST batch results")
 fprintf('\n')
 fprintf('\n')
-progBar = ProgressBar(length(batch_nums_to_check2),'IsParallel',true,'WorkerDirectory', pwd(),'Title', 'Converting');
+fprintf("Batche BLAST XML Files to Convert: ")
+fprintf(num2str(batch_nums_to_check2))
+fprintf('\n')
+fprintf('\n')
+if (~isempty(batch_nums_to_check2))
+Batch_List = parallel.pool.Constant(Batch);
+    fprintf('\n')
+    fprintf('\n')
+    fprintf("Converting probe batch report xml files into matlab tables")
+    fprintf('\n')
+    fprintf('\n')
+progBar = ProgressBar(length(batch_nums_to_check2),'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Converting');
 progBar.setup([],[],[]);
 parfor y = 1:length(batch_nums_to_check2)
     pause(0.1);
     i = batch_nums_to_check2(y);
     total_temp_hits_subnode = [];    %Will store the gene hits information for storage
     %% For local blast on server
-    pSeq = fastaread([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa']);
+    pSeq = fastaread([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa']);
     if (runDNA)
         if (simultaneous)%If All at Once
-            temp_hits_subnode = readstruct([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsDNA.xml'],...
+            temp_hits_subnode = readstruct([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'],...
                 "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations)'));
             temp_hits_subnode = struct2cell(temp_hits_subnode.Iteration(:));
             probe_szs = cellfun(@(x) length(x.Hit),temp_hits_subnode(5,:));
@@ -347,7 +377,7 @@ parfor y = 1:length(batch_nums_to_check2)
             total_temp_hits_subnode = [total_temp_hits_subnode temp_hits_subnode];
         else%If Individual Probes Sequentially
             for w = 1:length(Batch_List.Value{i})
-                temp_hits_subnode = readstruct([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsDNA.xml'],...
+                temp_hits_subnode = readstruct([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'],...
                     "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations//Iteration[',num2str(w),']//Iteration_hits)'));
                 sub_neststruc = squeeze(struct2cell([temp_hits_subnode.Hit(:).Hit_hsps]));
                 for v = 1:length(sub_neststruc)
@@ -397,7 +427,7 @@ parfor y = 1:length(batch_nums_to_check2)
     end
     if (runRNA)
         if (simultaneous)%If All at Once
-            temp_hits_subnode = readstruct([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsRNA.xml'],...
+            temp_hits_subnode = readstruct([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'],...
                 "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations)'));
             temp_hits_subnode = struct2cell(temp_hits_subnode.Iteration(:));
             probe_szs = cellfun(@(x) length(x.Hit),temp_hits_subnode(5,:));
@@ -453,7 +483,7 @@ parfor y = 1:length(batch_nums_to_check2)
             total_temp_hits_subnode = [total_temp_hits_subnode temp_hits_subnode];
         else%If Individual Probes Sequentially
             for w = 1:length(Batch_List.Value{i})
-                temp_hits_subnode = readstruct([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsRNA.xml'],...
+                temp_hits_subnode = readstruct([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'],...
                     "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations//Iteration[',num2str(w),']//Iteration_hits)'));
                 sub_neststruc = squeeze(struct2cell([temp_hits_subnode.Hit(:).Hit_hsps]));
                 for v = 1:length(sub_neststruc)
@@ -505,35 +535,28 @@ parfor y = 1:length(batch_nums_to_check2)
     total_temp_hits_subnode = total_temp_hits_subnode(:,{'Score' 'Expect' 'Strand' 'Alignment' 'QueryIndices' 'SubjectIndices' 'Name' 'ProbeSequence' 'ProbeNum' 'Match' 'Possible' 'Percent'});
     total_temp_hits_subnode = sortrows(total_temp_hits_subnode,10,'descend');%Check is Match
     %filter out hits to Bacterial Artifical Chromosomes, and first on-target match.
-    loc_TranscriptName = find(contains(total_temp_hits_subnode.Name,TranscriptName));
-    loc_TranscriptName2 = find(contains(total_temp_hits_subnode.Name,TranscriptName2));
     loc_BAC = find(contains(total_temp_hits_subnode.Name,'BAC clone'));
-    loc_Chromosome = find(contains(total_temp_hits_subnode.Name,['chromosome ' Chromosome]));%only k<=2 kept, so remove first entry
-    loc_ORF = find(contains(total_temp_hits_subnode.Name,['open reading frame' Chromosome]));%only k<=2 kept, so remove first entry
-    loc_DNA = union(loc_Chromosome,loc_ORF);
+    %loc_Chromosome = find(contains(total_temp_hits_subnode.Name,['chromosome ' Chromosome]));%only k<=2 kept, so remove first entry
+    %loc_ORF = find(contains(total_temp_hits_subnode.Name,['open reading frame' Chromosome]));%only k<=2 kept, so remove first entry
+    %loc_DNA = union(loc_Chromosome,loc_ORF);
     columns_All = 1:size(total_temp_hits_subnode,1);
     columns_Remaining1 = setdiff(columns_All,loc_BAC);
-    if (length(loc_DNA)>1)
-        columns_Remaining2 = setdiff(columns_All,union(loc_DNA(2:end),union(loc_BAC,union(loc_TranscriptName,loc_TranscriptName2))));
-    else
-        columns_Remaining2 = setdiff(columns_All,union(loc_BAC,union(loc_TranscriptName,loc_TranscriptName2)));
-    end
     temp2 = total_temp_hits_subnode(columns_Remaining1,:);
-    parsave_gene_hits_table([FolderRootName filesep TranscriptName designerName '_gene_hits_table_batch' num2str(i) '.mat'],temp2)
+    parsave_gene_hits_table([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat'],temp2)
     if (runDNA)
-        if exist([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsDNA.xml'],'file')        %delete xml if already exists
-            delete([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsDNA.xml'])
+        if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'],'file')        %delete xml if already exists
+            delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'])
         end
     end
     if (runRNA)
-        if exist([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsRNA.xml'],'file')        %delete xml if already exists
-            delete([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) 'resultsRNA.xml'])
+        if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'],'file')        %delete xml if already exists
+            delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'])
         end
     end
-    if exist([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
-        delete([FolderRootName filesep TranscriptName designerName 'probebatch' num2str(i) '.fa'])
+    if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
+        delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'])
     end
-    updateParallel([],pwd);
+    updateParallel([],strcat(pwd,filesep,FolderRootName));
 end
 progBar.release();
 end
@@ -545,26 +568,19 @@ fprintf('\n')
 fprintf('\n')
 % delete temporary files generated for each batches blast report
 tic
-progBar = ProgressBar(N_Batches);
-for i = 1:N_Batches
-    if isfile([FolderRootName filesep TranscriptName designerName '_gene_hits_table_batch' num2str(i) '.mat'])
-        load([FolderRootName filesep TranscriptName designerName '_gene_hits_table_batch' num2str(i) '.mat'],'gene_hits_table_tmp');
+gene_table = cell(1,N_Batches);
+progBar = ProgressBar(N_Batches,'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Loading Batches');
+progBar.setup([],[],[]);
+parfor i = 1:N_Batches
+    if isfile([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat'])
+        gene_table{i} = load([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat']).gene_hits_table_tmp;
     end
-    try
-        if (first_loaded == 1)
-            gene_table = vertcat(gene_table,gene_hits_table_tmp);
-        else
-            gene_table = gene_hits_table_tmp;
-            first_loaded = 1;
-        end
-        clear gene_hits_table_tmp
-    catch
-    end
-        progBar([],[],[]);
+    updateParallel([],strcat(pwd,filesep,FolderRootName));
 end
 progBar.release();
-save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_hits_table' settings.designerName '.mat'],'gene_table','-v7.3')
-save([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_fail_nums' settings.designerName '.mat'],'fail_nums','-v7.3')
+gene_table = vertcat(gene_table{:});
+save([settings.FolderRootName filesep '(' TranscriptName ')' '_' settings.rootName '_hits_table' settings.designerName '.mat'],'gene_table','-v7.3')
+save([settings.FolderRootName filesep '(' TranscriptName ')' '_' settings.rootName '_fail_nums' settings.designerName '.mat'],'fail_nums','-v7.3')
 tEnd = toc;fprintf('\n')
 fprintf("Time elapsed to aggregate BLAST result batch tables %g seconds",round(tEnd,3,"significant"))
 fprintf('\n')
@@ -572,12 +588,12 @@ fprintf('\n')
 fprintf("Deleting temporary probe BLAST batch gene hits tables")
 fprintf('\n')
 fprintf('\n')
-progBar = ProgressBar(N_Batches);
-for i = 1:N_Batches
-    if exist([settings.FolderRootName filesep TranscriptName settings.designerName '_gene_hits_table_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
-        delete([settings.FolderRootName filesep TranscriptName settings.designerName '_gene_hits_table_batch' num2str(i) '.mat'])
+progBar = ProgressBar(N_Batches,'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Deleting Batches');
+parfor i = 1:N_Batches
+    if exist([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
+        delete([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat'])
     end
-    progBar([],[],[]);
+    updateParallel([],strcat(pwd,filesep,FolderRootName));
 end
 progBar.release();
 end
