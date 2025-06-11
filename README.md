@@ -9,8 +9,9 @@ Quantitative RNA-FISH Probe Design Software
 [MATLAB Bioinformatics Toolbox](https://www.mathworks.com/products/bioinfo.html)
 [MATLAB Symbolic Math Toolbox](https://www.mathworks.com/products/symbolic.html)
 [MATLAB Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html)
+[MATLAB Signal Processing Toolbox](https://www.mathworks.com/products/signal.html)
 [MATLAB Curve Fitting Toolbox](https://www.mathworks.com/products/curvefitting.html)
-[BLAST+ Support Package for Bioinformatics Toolbox](https://www.mathworks.com/products/curvefitting.html)
+[BLAST+ Support Package for Bioinformatics Toolbox](https://www.mathworks.com/matlabcentral/fileexchange/156414-blast-support-package-for-bioinformatics-toolbox)
 
 ### Project Directories:
 

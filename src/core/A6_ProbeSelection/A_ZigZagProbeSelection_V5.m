@@ -48,16 +48,16 @@ DNA_IDs = find(~contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
 NonDNA_IDs = find(contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
 end
 
+
 ON_RNAIDs = find(strcmp(uniNames,extractBefore(GeneTarget,'.')));
 OFF_RNAIDs = setdiff(NonDNA_IDs,ON_RNAIDs);
 ON_RNAIDs_Isos = find(contains(Names,GeneName));
 Desired_Isoforms = find(contains(uniNames,extractBefore(GeneTarget,'.')));
 UnDesired_Isoforms = setdiff(ON_RNAIDs_Isos,Desired_Isoforms);
-
-
 OFF_RNAIDs_minusIsos = setdiff(OFF_RNAIDs,UnDesired_Isoforms);
 ON_RNAIDs = ON_RNAIDs_Isos;
 OFF_RNAIDs = OFF_RNAIDs_minusIsos;
+
 
 
 fprintf('\n')
@@ -68,8 +68,9 @@ fprintf('\n')
 % NumRibosomalHits = zeros(1,size(probes,1)); 
 if (settings.RemoveProbesWithRibosomalHits)
     if (strcmp(settings.referenceType,'RefSeq'))
-        Iz = find(endsWith(gene_table.Name,', ribosomal RNA'));
+        Iz = find(ismember(uniNames,extractBefore(settings.ribosomal_IDs,'.')));
     else
+        Iz = find(ismember(uniNames,settings.ribosomal_IDs));
     end
     ProbesWithRibosomalHits = unique(gene_table.ProbeNum(Iz));
 else

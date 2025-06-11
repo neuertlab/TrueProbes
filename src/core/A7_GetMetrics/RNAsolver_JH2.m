@@ -5,7 +5,7 @@ function ModelMetrics = RNAsolver_JH2(Pset,settings,probes,gene_table,Expression
 % temperature, expression, probe concentration, etc.
 % The distribution of probes bound targets is computed and is
 % used to generate confusion matrix metrics, of probe performance.
-
+load('data/TS_DefaultParams.mat','TrueSpotDefaultThParameters')
 %% Handle Functions
 H2_func = @(z,x) heaviside(z-x');
 plus_Random = @(x,y) conv(x,y)/sum(conv(x,y));
@@ -34,14 +34,19 @@ PC0 = settings.SimulationConfiguration.ProbeConcentration;
 errThreshold = settings.SimulationConfiguration.errThreshold;
 MaxIter = settings.SimulationConfiguration.MaxIter;
 Diameter_vals = Mean_Diameter;
-load('data/TS_DefaultParams.mat','TrueSpotDefaultThParameters')
-SI = 0:0.1:3000;%only works if SI
-SI_SignalMinusBackgd_I = -max(SI):0.1:1*max(SI);
-SI_Signal_wAuto_I = 0:0.1:2*max(SI);
+SI_StepSize = settings.SimulationConfiguration.Signal_StepSize;
+SI_MaxSignal = settings.SimulationConfiguration.Signal_MaxValue;
+logRatioTrim = settings.TMM.logRatioTrim;
+sumTrim = settings.TMM.sumTrim;
+Acutoff = settings.TMM.Acutoff;
+doWeighting = settings.TMM.doWeighting;
+SI = 0:SI_StepSize:SI_MaxSignal;%only works if SI
+SI_SignalMinusBackgd_I = -max(SI):SI_StepSize:1*max(SI);
+SI_Signal_wAuto_I = 0:SI_StepSize:2*max(SI);
 IntensityPerProbe = SpotIntensity_Mean/NumReferenceProbes;
 Pr_Auto_I = pIntensity(SI,AutoBackground_Mean,AutoBackground_STD);%I over SI
 NumNonUniformConditions = size(ExpressionMatrix,2);
-[~, ExpressionMatrix_nTPM] = tmm(ExpressionMatrix,0.3,0.05,-1e10,1);
+[~, ExpressionMatrix_nTPM] = tmm(ExpressionMatrix,logRatioTrim,sumTrim,Acutoff,doWeighting);
 transcript_Expression_Equal_acrossSample = mean(ExpressionMatrix_nTPM(:));
 transcript_Expression_Average_acrossSample = mean(ExpressionMatrix_nTPM,2)';
 ExpressionMatrix_nTPM(:,NumNonUniformConditions+1) = transcript_Expression_Equal_acrossSample;

@@ -414,10 +414,7 @@ settings.Custom_X_ChromNumber = 1;
 settings.Custom_Y_ChromNumber = 1;
 settings.Custom_MT_ChromNumber = 1;
 settings.scTracks = {'colonWangCellType','tabulasapiens_tissue_cell_type'};
-settings.TMM.logRatioTrim = logRatioTrim;
-settings.TMM.sumTrim = sumTrim;
-settings.TMM.Acutoff = Acutoff;
-settings.TMM.doWeighting = doWeighting;
+
 
 %% Load Annotation File
 fprintf('\n')
@@ -483,21 +480,57 @@ end
 tEnd = toc;
 fprintf('\n')
 fprintf("Time elapsed to load annotation files %g seconds",round(tEnd,3,"significant"))
+ids_gtf = GTFobj.Transcript(strcmp(GTFobj.Feature,'transcript'));
+btypes = extractBetween(string(regexp(GTFobj.Attributes(strcmp(GTFobj.Feature,'transcript')),'(?<=transcript_biotype )"\w*"(?=;)','match')),'"','"');
+Ribosomal_IDs = unique(ids_gtf(contains(btypes,'rRNA')));
 if (strcmp(settings.referenceType,'RefSeq'))
     geneInfo = getGenes(GTFobj,"Transcript",IncludeAccessionNumbers);
     geneNames = geneInfo.GeneID{:};
-    geneChrNum = char(extractBefore(extractAfter(char(geneInfo.Reference),'NC_0000'),'.'));
+    ids_gff_loc = find(strcmp(GFFobj.Feature,'region').*contains(GFFobj.Attributes,'NC'));
+    chr_list = regexp(GFFobj.Attributes(ids_gff_loc),'(?<=Name=)\w*(?=;)','match');
+    chrom_list = string(convertCharsToStrings(chr_list));
+    ref_list = regexp(GFFobj.Attributes(ids_gff_loc),'(?<=ID=)\w*(?=.)','match');
+    reference_list = string(convertCharsToStrings(ref_list));
+    ChromosomeToReference = dictionary(reference_list,chrom_list);
+    ReferenceToChromosome = dictionary(reference_list,chrom_list);
+    geneChrNum = ReferenceToChromosome(extractBefore(string(geneInfo.Reference),'.'));
+    geneReference_ID = extractBefore(string(geneInfo.Reference),'.');
 elseif (strcmp(settings.referenceType,'ENSEMBL'))
     geneInfo = getGenes(GTFobj,"Transcript",extractBefore(IncludeAccessionNumbers,'.'));
     geneNames = geneInfo.GeneName{:};
-    geneChrNum = char(geneInfo.Reference);
+    ids_gff_loc = find(strcmp(GFFobj.Feature,'chromosome'));
+    chr_list = regexp(GFFobj.Attributes(ids_gff_loc),'(?<=chromosome:).*(?=;)','match');
+    chrom_list = string(convertCharsToStrings(chr_list));
+    ref_list = regexp(GFFobj.Attributes(ids_gff_loc),'(?<=Alias=).*(?=,)','match');
+    reference_list = string(convertCharsToStrings(ref_list));
+    refparts = split(reference_list,',');
+    paired_ID_chrom = sort(refparts,2);
+    ReferenceToChromosome = dictionary(paired_ID_chrom(:,1),chrom_list);
+    ChromosomeToReference = dictionary(chrom_list,paired_ID_chrom(:,1));
+    geneChrNum = string(geneInfo.Reference);
+    geneReference_ID = extractBefore(ChromosomeToReference(string(geneInfo.Reference)),'.');
 end
-ids = GTFobj.Transcript(strcmp(GTFobj.Feature,'transcript'));
-btypes = extractBetween(string(regexp(GTFobj.Attributes(strcmp(GTFobj.Feature,'transcript')),'(?<=transcript_biotype )"\w*"(?=;)','match')),'"','"');
-Ribosomal_IDs = unique(ids(contains(btypes,'rRNA')));
-
-% name 
-%getTranscripts(GTFobj,"Gene",geneInfo.GeneID)
+if (strcmp(settings.referenceType,'RefSeq'))
+geneInfo_Table = getGenes(GTFobj,"Transcript",IncludeAccessionNumbers);
+transcriptInfo_Table = getTranscripts(GTFobj,"Transcript",IncludeAccessionNumbers);
+all_isoform_transcriptInfo_Table= getTranscripts(GTFobj,"Gene",getGenes(GTFobj,"Transcript",IncludeAccessionNumbers).GeneID);
+Transcript_All_Isoform_IDs = cellfun(@(x) all_isoform_transcriptInfo_Table.Transcript(strcmp(all_isoform_transcriptInfo_Table.GeneID,x)), transcriptInfo_Table.GeneID,'Un',0); 
+Transcript_UnDesired_Isoform_IDs = arrayfun(@(x) setdiff(Transcript_All_Isoform_IDs{x},IncludeAccessionNumbers{x}),1:length(IncludeAccessionNumbers),'Un',0);
+Transcript_Joint_UnDesired_Isoforms_IDs = setdiff(all_isoform_transcriptInfo_Table.Transcript,transcriptInfo_Table.Transcript);
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+geneInfo_Table = getGenes(GTFobj,"Transcript",extractBefore(IncludeAccessionNumbers,'.'));
+transcriptInfo_Table = getTranscripts(GTFobj,"Transcript",extractBefore(IncludeAccessionNumbers,'.'));
+all_isoform_transcriptInfo_Table= getTranscripts(GTFobj,"Gene",getGenes(GTFobj,"Transcript",extractBefore(IncludeAccessionNumbers,'.')).GeneID);
+Transcript_All_Isoform_IDs = cellfun(@(x) all_isoform_transcriptInfo_Table.Transcript(strcmp(all_isoform_transcriptInfo_Table.GeneID,x)), transcriptInfo_Table.GeneID,'Un',0); 
+Transcript_UnDesired_Isoform_IDs = arrayfun(@(x) setdiff(Transcript_All_Isoform_IDs{x},extractBefore(IncludeAccessionNumbers{x},'.')),1:length(IncludeAccessionNumbers),'Un',0);
+Transcript_Joint_UnDesired_Isoforms_IDs = setdiff(all_isoform_transcriptInfo_Table.Transcript,transcriptInfo_Table.Transcript);    
+end
+% for individual_transcripts = 1:length(IncludeAccessionNumbers)
+%     exonInfo_Table{individual_transcripts} = getExons(GTFobj,"Transcript",IncludeAccessionNumbers{individual_transcripts});
+%     segmentInfo_Table{individual_transcripts} = getSegments(GTFobj,"Transcript",IncludeAccessionNumbers{individual_transcripts});
+%     all_isoform_exonInfo_Table{individual_transcripts} = getExons(GTFobj,"Gene",getGenes(GTFobj,"Transcript",IncludeAccessionNumbers{individual_transcripts}).GeneID{1});
+%     all_isoform_segmentInfo_Table{individual_transcripts}  = getSegments(GTFobj,"Gene",getGenes(GTFobj,"Transcript",IncludeAccessionNumbers{individual_transcripts}).GeneID{1});
+% end
 
 %% Save Settings
 settings.FolderRootName = strcat(saveRoot,'(',geneNames,')','_',strjoin(IncludeAccessionNumbers,'_'));
@@ -513,7 +546,9 @@ settings.GeneChr = strcat('chr',geneChrNum);
 settings.chromosome_IDs = {char(geneInfo.Reference)};
 settings.transcript_IDs = IncludeAccessionNumbers;
 settings.ribosomal_IDs = Ribosomal_IDs;
-
+settings.transcript_IDs_desired = Transcript_All_Isoform_IDs;
+settings.transcript_IDs_undesired = Transcript_UnDesired_Isoform_IDs;
+settings.transcript_IDs_joint_undesired = Transcript_Joint_UnDesired_Isoforms_IDs ;
 settings.ProbeSpacing = minProbeSpacing;
 settings.RemoveMisMatches = RemoveMisMatches;
 settings.SaltConcentration = SaltConcentration;
@@ -537,7 +572,10 @@ settings.MaxProbeSize = maxProbeSize;
 settings.MinHomologySearchTargetSize = MinHomologySearchTargetSize;
 settings.N_model = Gibbs_Model;
 settings.ExpressionReferenceForDesigningProbes = ExpressionReferenceForProbeDesign;
-
+settings.TMM.logRatioTrim = logRatioTrim;
+settings.TMM.sumTrim = sumTrim;
+settings.TMM.Acutoff = Acutoff;
+settings.TMM.doWeighting = doWeighting;
 %% Gene Expression Parameters
 settings.DoAllGenesHaveSameExpression = DoAllGenesHaveSameExpression;
 settings.HumanSpecific.HumanExpGeneOrTransc = UseGeneOverTranscLevelExpression; % 1 (Gene/EMBL GENEID) , 0 (Transcript/EMBL Transcript ID)
@@ -583,10 +621,8 @@ settings.FolderRootName = strcat(saveRoot,geneNames,'_',strjoin(IncludeAccession
 settings.rootName = strjoin(IncludeAccessionNumbers,'_');
 settings.designerName = designerName;
 
-%% Selecting Probes Specifications
-settings.maxProbes = maxNumberOfProbes;
-settings.RemoveProbesWithRibosomalHits = RemoveProbesBindingRibosomalHits;
-settings.RibosomalTranscripts = rRNA_ids;
+
+
 
 T_hybrid = HybridizationTemperatureCelsius;
 Lmin = minProbeSize; Lmax = maxProbeSize;

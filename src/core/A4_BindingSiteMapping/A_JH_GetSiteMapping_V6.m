@@ -19,13 +19,11 @@ TranscriptName = settings.GeneName;
 designerName = settings.designerName;
 FolderRootName = settings.FolderRootName;
 targetBatchSize = settings.TargetBatchSize;
-
     if (settings.clusterStatus)
         most_recent_num = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
     else
         most_recent_num = most_recent_num_local;
     end
-
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
