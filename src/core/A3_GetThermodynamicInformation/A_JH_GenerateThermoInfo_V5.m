@@ -66,7 +66,7 @@ end
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
-if (strcmp(settings.referenceType,'RefSeq'))gi
+if (strcmp(settings.referenceType,'RefSeq'))
     RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
     RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
     RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
