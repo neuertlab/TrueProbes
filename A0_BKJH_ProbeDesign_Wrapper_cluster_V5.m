@@ -225,7 +225,7 @@ if (~strcmp(pwd,extractBefore(mfilePath,strcat(filesep,'A0'))))
     msg = 'Error. The script must be run in the TrueProbes main folder for the code to work properly';
    error(msg) 
 end
-% disp(mfilePath);
+
 
 
 
@@ -306,11 +306,6 @@ switch cellPreset
         settings.HumanSpecific.SCTracks = 22;
         settings.CellType_ExprID = 5;
 end
-%% Settings Specification
-
-
-
-
 %% Update Location of Databases & Needed Files (You usually will not change)
 if (ispc)
     settings.blastpath = strcat('src',filesep,'blast',filesep,'ncbi-blast-2.16.0+-x64-win64',filesep,'ncbi-blast-2.16.0+',filesep,'bin');
@@ -370,6 +365,9 @@ if (isKey(settings.LocRoot_FASTA,Organism))
 else
     settings.SEQdbRoot = char(settings.otherLocRoot);
 end
+
+
+
 settings.MouseExpressionFile = 'data/DatabaseData/tabulamuris_barChart.bed';
 settings.ExpressionVariableNames = {'chrom','chromStart','chromEnd','name',...
     'score','strand','name2','expCount','expScores','dataOffset','dataLen'};
@@ -613,23 +611,8 @@ settings.SimulationConfiguration.MaxIter = MaxIter;
 settings.SimulationConfiguration.Signal_StepSize = Signal_StepSize;
 settings.SimulationConfiguration.Signal_MaxValue = Signal_MaxValue;
 
-
-
-
-%% Save Settings
-settings.FolderRootName = strcat(saveRoot,geneNames,'_',strjoin(IncludeAccessionNumbers,'_'));
-settings.rootName = strjoin(IncludeAccessionNumbers,'_');
-settings.designerName = designerName;
-
-
-
-
 T_hybrid = HybridizationTemperatureCelsius;
 Lmin = minProbeSize; Lmax = maxProbeSize;
-
-
-
-
 
 %% Generate Folder
 if (not(isfolder([saveRoot])))
