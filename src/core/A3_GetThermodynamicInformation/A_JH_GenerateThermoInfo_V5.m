@@ -3,13 +3,13 @@ function [Kb_Match,Kon,Koff,dHeq_Match,dSeq_Match,dHf_Match,dSf_Match,dHr_Match,
 % and computes binding energy and rates associated with off-target and on-targets
 N_methods = 8;
 N_methods2 = 3;
-most_recent_num_local = 8;
 kb = 0.001987204259;%boltzman constant
 T_hybrid = settings.HybridizationTemperature;
 SaltConcentration = settings.SaltConcentration;
 RemoveMisMatches = settings.RemoveMisMatches;
 chromosome_ID = settings.chromosome_IDs;
 transcript_ID = settings.transcript_IDs;
+most_recent_num_local = settings.num_parpool_local;
 designerName = settings.designerName;
 FolderRootName = settings.FolderRootName;
 probeBatchSize = settings.BLASTbatchSize;
@@ -66,7 +66,7 @@ end
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
-if (strcmp(settings.referenceType,'RefSeq'))
+if (strcmp(settings.referenceType,'RefSeq'))gi
     RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
     RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
     RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));

@@ -15,14 +15,13 @@ gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
 if (strcmp(settings.referenceType,'RefSeq'))
-RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
-RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
-RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
-RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
-contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
-
-else
-
+    RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
+    RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
+    RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
+    RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
+    contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+    contains_RNA = find(contains(gene_table.Name,settings.EMBL_RNAparser(Organism)));
 end
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
 gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
@@ -32,18 +31,23 @@ gene_table = sortrows(gene_table,[7 13],'ascend');
 Names = unique(gene_table.Name);
 Names = convertCharsToStrings(Names);
 uniNames = extractBefore(Names,'.');
-
-
+if (sum(ismissing(uniNames))>0)
+    uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+end
+if (strcmp(settings.referenceType,'RefSeq'))
 DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
 DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
 DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
 NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
 NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
-NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%
-
-
+NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%IDs
 DNA_IDs =union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3).';
 NonDNA_IDs = intersect(intersect(NonDNA_IDs_1,NonDNA_IDs_2),NonDNA_IDs_3).';
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+DNA_IDs = find(~contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
+NonDNA_IDs = find(contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
+end
+
 ON_RNAIDs = find(strcmp(uniNames,extractBefore(GeneTarget,'.')));
 OFF_RNAIDs = setdiff(NonDNA_IDs,ON_RNAIDs);
 ON_RNAIDs_Isos = find(contains(Names,GeneName));
@@ -56,15 +60,25 @@ ON_RNAIDs = ON_RNAIDs_Isos;
 OFF_RNAIDs = OFF_RNAIDs_minusIsos;
 
 
-
+fprintf('\n')
+fprintf('\n')
+fprintf("Generating matrix of allowed probe combinations given spacing")
+fprintf('\n')
+fprintf('\n')
 % NumRibosomalHits = zeros(1,size(probes,1)); 
-Iz = find(endsWith(gene_table.Name,', ribosomal RNA'));
-ProbesWithRibosomalHits = unique(gene_table.ProbeNum(Iz));
+if (settings.RemoveProbesWithRibosomalHits)
+    if (strcmp(settings.referenceType,'RefSeq'))
+        Iz = find(endsWith(gene_table.Name,', ribosomal RNA'));
+    else
+    end
+    ProbesWithRibosomalHits = unique(gene_table.ProbeNum(Iz));
+else
+    ProbesWithRibosomalHits = [];
+end
+
 % RiboHits = gene_table3.ProbeNum(Iz);
-% NumRibosomalHits(ProbesWithRibosomalHits) = cell2mat(arrayfun(@(x)sum(ismember(RiboHits,x)),ProbesWithRibosomalHits,'Un',0));
-%Allow Matrix
+%% Allow Matrix
 spacing = settings.ProbeSpacing;
-ProbesWithoutRibosomalHits = setdiff(1:size(probes,1),ProbesWithRibosomalHits);
 AllowableProbes = setdiff(1:size(probes,1),ProbesWithRibosomalHits);
 AllowMatrix = zeros(length(AllowableProbes),length(AllowableProbes));
 for u1 = 1:length(AllowableProbes)
@@ -248,7 +262,11 @@ end
 %probes fewer off-target binding affinity, use instead
 
 %Avoid List
-
+fprintf('\n')
+fprintf('\n')
+fprintf("Selecting probes without off-targets")
+fprintf('\n')
+fprintf('\n')
 %dont be strict on ranks as some ranks have 1 or 2 probes only.
 if (~isempty(Probes_WithNo_RNAOFF))
     Intersection_NoRNAOFF=AllowMatrix(ismember(AllowableProbes,Probes_WithNo_RNAOFF),ismember(AllowableProbes,Probes_WithNo_RNAOFF));
@@ -452,7 +470,11 @@ if (~isempty(Probes_WithNo_RNAOFF))
     end
 end   
 
-
+fprintf('\n')
+fprintf('\n')
+fprintf("Selecting probes with off-targets with or without gene expression")
+fprintf('\n')
+fprintf('\n')
 %expression and affinity discounting
   %% Stage 2 [Pick Probes With OFF-Targets]
 for vsk = 1:length(NumOffTargetOptions)

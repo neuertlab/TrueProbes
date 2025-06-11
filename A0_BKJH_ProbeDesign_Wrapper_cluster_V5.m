@@ -1,4 +1,6 @@
 function A0_BKJH_ProbeDesign_Wrapper_cluster_V5(id,cluster)
+input_file = 'TrueProbes_DesignTargets.csv';
+input_parameters = 'TrueProbes_ParameterSettings.xml';
 % Main FIle for designing TrueProbes RNA-FISH probes
 % Input Argument 1: id
 % id is an integer and is the row of the input design table at the top of the script to run and design probes against. 
@@ -11,161 +13,158 @@ function A0_BKJH_ProbeDesign_Wrapper_cluster_V5(id,cluster)
 % Inputs1 Table
 % Table describing all the targets to design probes against. Each row is a different desired target design. 
 % Input table columns:
-% 	1. Included target Accession IDs. Designs probes shared across all target accession number(s)
-% 	2. Text Sequence Files to Include (files). Default is Empty
-% 	3. Text Sequence Files to Exclude (files). Default is Empty
-% 	4. Organism you are trying to design probes in.
-% 	5. Gene Name 1. First name of gene in parenthesis
-%     6. Gene Name 2. Second potential gene name to use instead of the first  in parenthesis
-% 	7. Chromosome. The chromosome number or letter symbol
-% 	8. Excluded target accession IDs. Removes probes in any exclusion accession number(s). Default is Empty
-%    9. Strand. Which strand to design probes against for RNA default is  plus .
+% 	1. Organism you are trying to design probes in.
+% 	2. Included target Accession IDs. Designs probes shared across all target accession number(s)
+% 	3. Excluded target accession IDs. Removes probes in any exclusion accession number(s). Default is Empty
+% 	4. Text Sequence Files to Include (files). Default is Empty
+% 	5. Text Sequence Files to Exclude (files). Default is Empty
+
+%% Clean up if necessary
+try ProgressBar.deleteAllTimers(); end;
 
 %% Genes To Design Probes For
-inputs1 = {...
-    {'NM_001660.4'},{},{}, 'Human','(ARF4)','(ARF4)','3',{},1 ;... %
-    {'NM_181604.2'},{},{}, 'Human','(KRTAP6-2)','(KRTAP6-2)','21',{},1 ;...           %ENST00000277480.7 ,  820bp, 2-Isos
-    {'NM_181602.2'},{},{}, 'Human','(KRTAP6-1)','(KRTAP6-1)','21',{},1 ;...           %ENST00000277480.7 ,  820bp, 2-Isos
-    {'NR_002844.2'},{},{}, 'Mouse','(TSIX)','(TSIX)','X',{},1 ;... %4306
-    {'NM_001179952.1'},{},{}, 'Yeast','(HSP12)','(HSP12)','VI',{},1 ;...           %ENST00000368087.8 , 1447bp, 4-Isos
-    {'ENST00000818900.1'},{},{}, 'Human','(MNX1-AS1)','(MNX1-AS1)','7',{},1 ;...     %N/A               , 1559bp, 3-Isos closest match ENST00000632538.1
-    {'ENSMUST00000181020.10'},{},{}, 'Mouse','(JPX)','(JPX)','X',{},1 ;...    %N/A               , 1571bp, 2-Isos
-    {''},{},{}, 'Yeast','()','()','12',{},1 ;...        %ENST00000312492.3 , 1611bp, 2-Isos
-    {''},{},{}, 'Human','()','()','7',{},1 ;...        %N/A               , 1619bp, 2-Isos
-    {''},{},{}, 'Mouse','()','()','3',{},1 ;...     %ENST00000237696.10, 1713bp, 3-Isos
-    {''},{},{}, 'Yeast','()','()','13',{},1 ;...     %N/A               , 1831bp, 4-Isos
-    {'ENST00000260386.7'},{},{}, 'Human','(ITPKA)','(ITPKA)','15',{},1 ;...        %ENST00000260386.7 , 1825bp, 2-Isos
-    {'NM_001357731.1'},{},{}, 'Human','(EIF2S3B)','(EIF2S3B)','12',{},1 ;... %N/A               , 1866bp, 2-Isos
-    {'NM_001375593.1'},{},{}, 'Human','(PRR7)','(PRR7)','5',{},1 ;...        %N/A               , 1897bp, 5-Isos
-    {'NM_013357.2'},{},{}, 'Human','(PURG)','(PURG)','8',{},1 ;...           %N/A               , 1972bp, 4-Isos
-    {'NM_001099773.2'},{},{}, 'Human','(CYP11A1)','(CYP11A1)','15',{},1 ;... %N/A               , 1986bp, 2-Isos
-    {'NM_019065.3'},{},{}, 'Human','(NECAB2)','(NECAB2)','16',{},1 ;...      %ENST00000305202.9 , 1996bp, 4-Isos
-    {'ENST00000305202.9'},{},{}, 'Human','(NECAB2)','(NECAB2)','16',{},1 ;...
-    {'NR_028380.1'},{},{}, 'Mice','(FTX)','(FTX)','X',{},1 ;... %4387 ENSMUST has 35 isoforms
-    {'NR_028381.1'},{},{}, 'Mice','(FTX)','(FTX)','X',{},1 ;... %4272 ENSMUST00000130063.8
-    {''},{},{}, 'Mice','(RNF12)','(RNF12)','',{},1 ;...
-    {'NR_002844.2'},{},{}, 'Mice','(TSIX)','(TSIX)','X',{},1 ;... %4306
-    {'NR_001570.2'},{},{}, 'Mice','(XIST)','(XIST)','X',{},1 ;... %12250
-    {'NR_001463.3'},{},{}, 'Mice','(XIST)','(XIST)','X',{},1 ;... %17918
-    {'NR_025508.3'},{},{}, 'Mice','(JPX)','(JPX)','X',{},1 ;...%3802  ENSMUST00000181020.10
-    {''},{},{}, 'Mice','(FTX3)','(FTX3)','',{},1 ;...
-    {'NM_173740.3'},{},{}, 'Mice','(MAOA)','(MAOA)','X',{},1 ;... %4161 ENSMUST00000026013.6
-    {'NR_038835.1'},{},{}, 'Human','(MNX1-AS1)','(MNX1-AS1)','7',{},1 ;... %992bp closest EMSEMBL 1041bp ENST00000480284.1
-    {'NR_147077.1'},{},{}, 'Human','(MNX1-AS2)','(MNX1-AS2)','7',{},1 ;... %362bp closest EMSEMBL 371bp ENST00000429228.1
-    {'NR_120385.1'},{},{}, 'Human','(GRTP1-AS1)','(GRTP1-AS1)','13',{},1 ;... % 608bp closest EMSEMBL 465  ENST00000423246.1
-    {'NR_046541.1'},{},{}, 'Human','(GRTP1-AS1)','(GRTP1-AS1)','13',{},1 ;... % 1564bp closest EMSEMBL 1171 ENST00000669000.1
-    {'NR_038915.1'},{},{}, 'Human','(PRR7-AS1)','(PRR7-AS1)','5',{},1 ;... % 1600bp closest EMSEMBL 741bp ENST00000425316.3
-    {'NR_038916.1'},{},{}, 'Human','(PRR7-AS1)','(PRR7-AS1)','5',{},1 ;... % 1401bp closest EMSEMBL	741bp ENST00000425316.3
-    {'NR_160935.1'},{},{}, 'Human','(FAM218A)','(TRIM61-AS1)','4',{},1 ;... % 2184bp closest EMSEMBL is 2175bp ENST00000648094.1
-    {'NR_132102.1'},{},{}, 'Human','(PRRX2-AS1)','(PRRX2-AS1)','9',{},1 ;... % 502bp closest EMSEMBL	429bp ENST00000440413.1
-    {'NR_047498.1'},{},{}, 'Human','(LINC00853)','(PDZK1IP1-AS1)','1',{},1 ;... % 669bp closest EMSEMBL	661bp ENST00000429328.2
-    {'NM_001318485.2'},{},{}, 'Human','(MRPL20)','(MRPL20)','1',{},1 ;... %
-    {'NM_002046.7'},{},{}, 'Human','(GAPDH)','(GAPDH)','12',{},1 ;... %
-    {'NM_001553.3'},{},{}, 'Human','(IGFBP7)','(IGFBP7)','4',{},1 ;... %
-    {'NM_015710.5'},{},{}, 'Human','(NOP53)','(NOP53)','19',{},1 ;... %
-    {'NM_014220.3'},{},{}, 'Human','(TM4SF1)','(TM4SF1)','3',{},1 ;... %
-    {'NM_001660.4'},{},{}, 'Human','(ARF4)','(ARF4)','3',{},1 ;... %
-    {'NM_004583.4'},{},{}, 'Human','(RAB5C)','(RAB5C)','17',{},1 ;... %
-    {'NM_004905.3'},{},{}, 'Human','(PRDX6)','(PRDX6)','1',{},1 ;... %
-    {'NM_003405.4'},{},{}, 'Human','(YWHAH)','(YWHAH)','22',{},1 ;... %
-    {'NM_201434.3'},{},{}, 'Human','(RAB5C)','(RAB5C)','17',{},1 ;... %
-    {'NM_001101.5'},{},{}, 'Human','(ACTB)','(ACTB)','7',{},1 ;... %
-    {'NM_001252039.2'},{},{}, 'Human','(RAB5C)','(RAB5C)','17',{},1 ;... %
-    {'NM_003380.5'},{},{}, 'Human','(VIM)','(VIM)','10',{},1 ;... %
-    {'NR_132370.1'},{},{}, 'Human','(ARF4-AS1)','(ARF4-AS1)','3',{},1 ;... %
-    {'NR_132382.1'},{},{}, 'Human','(NOP53-AS1)','(NOP53-AS1)','19',{},1 ;... %
-    {'NR_132369.1'},{},{}, 'Human','(ARF4-AS1)','(ARF4-AS1)','3',{},1 ;... %
-    {'NR_109810.1'},{},{}, 'Human','(TM4SF1-AS1)','(TM4SF1-AS1)','3',{},1 ;... %
-    {'NR_046650.1'},{},{}, 'Human','(TM4SF1-AS1)','(TM4SF1-AS1)','3',{},1 ;... %
-    {'NR_109809.1'},{},{}, 'Human','(TM4SF1-AS1)','(TM4SF1-AS1)','3',{},1 ;... %
-    {'NR_126507.1'},{},{}, 'Human','(YWHAH-AS1)','(YWHAH-AS1)','22',{},1 ;... %
-    {'NR_171018.1'},{},{}, 'Human','(YWHAH-AS1)','(YWHAH-AS1)','22',{},1 ;... %
-    {'NR_108060.1'},{},{}, 'Human','(VIM-AS1)','(VIM-AS1)','10',{},1 ;... %
-    {'NR_171020.1'},{},{}, 'Human','(YWHAH-AS1)','(YWHAH-AS1)','22',{},1 ;... %
-    {'NR_034081.1'},{},{}, 'Human','(IGFBP7-AS1)','(IGFBP7-AS1)','17',{},1 ;... %
-    {'NR_171019.1'},{},{}, 'Human','(YWHAH-AS1)','(YWHAH-AS1)','22',{},1 ;... %
-    {'XR_001752888.2'},{},{}, 'Human','(RAB5C-AS1)','(RAB5C-AS1)','17',{},1 ;... %
-    {'NR_015434.1'},{},{}, 'Human','(MRPL20-AS1)','(MRPL20-AS1)','1',{},1 ;... %
-    {'NR_125960.1'},{},{}, 'Human','(PRDX6-AS1)','(PRDX6-AS1)','1',{},1 ;... %
-    {'NR_108061.1'},{},{}, 'Human','(VIM-AS1)','(VIM-AS1)','10',{},1 ;... %
-    {'NM_001199893.2'},{},{}, 'Human','(ACTG2)','(ACTG2)','2',{},1 ;... %1372bp actin, gamma-enteric smooth muscle
-    {'NM_005159.5'},{},{}, 'Human','(ACTC1)','(ACTC1)','15',{},1 ;... %1382bp actin, alpha cardiac muscle 1
-    {'NM_001406485.1'},{},{}, 'Human','(ACTC1)','(ACTC1)','15',{},1 ;... %1410bp actin, alpha cardiac muscle 1
-    {'NM_001406482.1'},{},{}, 'Human','(ACTC1)','(ACTC1)','15',{},1 ;... %1416bp actin, alpha cardiac muscle 1
-    {'NM_001406484.1'},{},{}, 'Human','(ACTC1)','(ACTC1)','15',{},1 ;... %1463bp actin, alpha cardiac muscle 1
-    {'NM_001100.4'},{},{}, 'Human','(ACTA1)','(ACTA1)','1',{},1 ;... % 1491bp actin alpha 1, skeletal striated muscle
-    {'NM_001615.4'},{},{}, 'Human','(ACTG2)','(ACTG2)','2',{},1 ;... %1501bp actin, gamma-enteric smooth muscle
-    {'NM_001024675.2'},{},{}, 'Human','(ACTL10)','(ACTL10)','20',{},1 ;... %1583bp actin-like protein 10
-    {'NM_177989.4'},{},{}, 'Human','(ACTL6A)','(ACTL6A)','3',{},1 ;... %1710bp 	actin-like protein 6A
-    {'NM_001406483.1'},{},{}, 'Human','(ACTC1)','(ACTC1)','15',{},1 ;... %1730bp actin, alpha cardiac muscle 1
-    {'NR_037688.3'},{},{}, 'Human','(ACTG1)','(ACTG1)','17',{},1 ;... %1770bp    actin gamma 1 noncoding RNA
-    {'NM_004301.5'},{},{}, 'Human','(ACTL6A)','(ACTL6A)','3',{},1 ;... %1854bp 	actin-like protein 6A
-    {'NM_178042.4'},{},{}, 'Human','(ACTL6A)','(ACTL6A)','3',{},1 ;... %1902bp 	actin-like protein 6A
-    {'NM_001614.5'},{},{}, 'Human','(ACTG1)','(ACTG1)','17',{},1 ;... %1919bp    actin gamma 1, cytoplasmic 2
-    {'NM_001199954.3'},{},{}, 'Human','(ACTG1)','(ACTG1)','17',{},1 ;... %2038bp   actin gamma 1, cytoplasmic 2
-    {'NM_024855.4'},{},{}, 'Human','(ACTR5)','(ACTR5)','20',{},1 ;... %2547bp  ,actin-related protein 5, Arp5, Ino80M
-    {'NM_022899.5'},{},{}, 'Human','(ACTR8)','(ACTR8)','3',{},1 ;... %3579bp   	actin-related protein 8, ARP8, Ino80N
-    {'NM_001410774.1'},{},{}, 'Human','(ACTR8)','(ACTR8)','3',{},1 ;... %3579bp   	actin-related protein 8, ARP8, Ino80N
-    {'NM_001145442.1'},{},{}, 'Human','(POTEM)','(POTEM)','14',{},1 ;... %6666bp 	putative POTE ankyrin domain family member M
-    };
-baseFolder = pwd;
-addpath(genpath(baseFolder));
+core_folders = genpath(strcat(pwd,filesep,'src',filesep,'core'));
+modified_matlab_function_folders = genpath(strcat(pwd,filesep,'src',filesep,'modified_matlab_functions'));
+util_folders = genpath(strcat(pwd,filesep,'src',filesep,'util'));
+wrappers_folders = genpath(strcat(pwd,filesep,'src',filesep,'wrappers'));
+mtp_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'modified_thirdparty'));
+nd_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'ndSparse_G4_2025_01_19'));
+multiprod_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'Multiprod_2009'));
+xsum_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'XSum_2014_06_16'));
+xml_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'xml2struct-master'));
+trueSpot_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'TrueSpot-main'));
+prog_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'MatlabProgressBar'));
+addpath(core_folders);
+addpath(modified_matlab_function_folders);
+addpath(util_folders);
+addpath(wrappers_folders);
+addpath(nd_folders);
+addpath(mtp_folders);
+addpath(multiprod_folders);
+addpath(xsum_folders);
+addpath(xml_folders);
+addpath(trueSpot_folders);
+addpath(prog_folders);
 
-%% Main Probe Design Settings (Usually migt change)
-saveRoot = strcat('output',filesep); % Output file location
-customBlastDatabase_DNA = 'N/A'; % Location of custom DNA database
-customBlastDatabase_RNA = 'N/A'; % Location of custom RNA database
-max_probes = 96; % Max number of probes to design
-minProbeSize = 20;% Min Probe Size
-maxProbeSize = 20;% Max Probe Size
-MininumProbeSpacing = 3; %Minimum Spacing Between Adjacent Probes
-BLASTrna = 1; %Decides if you will BLAST the reference transcriptome (RNA targets)
-BLASTdna = 0; %Decides if you will BLAST the reference genome (DNA targets)
-HybridizationTemperature = 37; % Temperature for Evaluating Probe Design and Simulations
-ExpressionReferenceForDesigningProbes = 0; % which expression reference to use for designing probes, default 0 meaning equal expression.
 
-%% Secondary Parameters (You Usually will not change)
-Nmodel = 4; %Which Hybridization model to use for probe design and evaluation
-SaltConcentration = 0.05; %Concentration of Salt in thermodynamic calculations mol/L
-RemoveRibosomalHits = 1;% Filter out probes with targets hits to ribosomal proteins
-MinHomologySearchTargetSize = 15; % minimum off-target match size
-removeUndesiredIsos=1;%Removes other isoforms from the computation of probe statistics used in designing probes
-packOptimal = 1;%when designing probes without off-targets do optimal packing to get the most or normal selection not considering packing efficiency
-addSelfProb = 1;%when designing probes consider probe self-hybridization when ranking probes on binding affinity
-RemoveMisMatches = 1;%remove mismatches from nearest neighbor quantification of probe binding
+gene_num = id;
+saveRoot = strcat('output',filesep); 
+input_file_opts = detectImportOptions(input_file);
+inputs1 = readmatrix(input_file,input_file_opts);
+
+Organism = inputs1{gene_num,1};
+IncludeAccessionNumbers = split(inputs1{gene_num,2},',');
+ExcludeAccessionNumbers = split(inputs1{gene_num,3},',');
+InclusionSequenceFiles = split(inputs1{gene_num,4},',');
+ExcludeSequenceFiles = split(inputs1{gene_num,5},',');
+if (isempty(IncludeAccessionNumbers{:}))
+      IncludeAccessionNumbers = {};
+end
+if (isempty(ExcludeAccessionNumbers{:}))
+      ExcludeAccessionNumbers = {};
+end
+if (isempty(ExcludeSequenceFiles{:}))
+      ExcludeSequenceFiles = {};
+end
+if (isempty(InclusionSequenceFiles{:}))
+      InclusionSequenceFiles= {};
+end
 RunOffline = 1;%Is Design Run Offline using databases or looks online to get genbank record
 
+inputsParameterSettings = readstruct(input_parameters);
+settings.otherLocRoot =  inputsParameterSettings.customOrganism_Database_Location.customRoot_FASTA;
+settings.otherBlastDatabase = inputsParameterSettings.customOrganism_Database_Location.customBlastDatabase_DNA; % Location of custom DNA database
+settings.otherBlastDatabase2 = inputsParameterSettings.customOrganism_Database_Location.customBlastDatabase_RNA; % Location of custom RNA database
+settings.otherGFF =  inputsParameterSettings.customOrganism_Database_Location.custom_GFF;
+settings.otherGTF =  inputsParameterSettings.customOrganism_Database_Location.custom_GTF;
+
+%% Main Probe Design Settings (Usually might change)
+minProbeSize = inputsParameterSettings.MainProbe_Settings.minProbeSize;% Min Probe Size
+maxProbeSize = inputsParameterSettings.MainProbe_Settings.maxProbeSize;% Max Probe Size
+minProbeSpacing = inputsParameterSettings.MainProbe_Settings.minProbeSpacing; %Minimum Spacing Between Adjacent Probes
+maxNumberOfProbes = inputsParameterSettings.MainProbe_Settings.maxNumberOfProbes; % Max number of probes to design
+MinHomologySearchTargetSize =  inputsParameterSettings.MainProbe_Settings.MinHomologySearchTargetSize; % minimum off-target match size
+BLASTrna = inputsParameterSettings.MainProbe_Settings.BLAST_RNA; %Decides if you will BLAST the reference transcriptome (RNA targets)
+BLASTdna = inputsParameterSettings.MainProbe_Settings.BLAST_DNA; %Decides if you will BLAST the reference genome (DNA targets)
+ExpressionReferenceForProbeDesign = inputsParameterSettings.MainProbe_Settings.ExpressionReferenceForProbeDesign; % which expression reference to use for designing probes, default 0 meaning equal expression.
+targetStrand = inputsParameterSettings.MainProbe_Settings.targetStrand; %Target strand to design probes against. 1 for RNA
+
+%% Design Filtering Settings (You Usually will not change)
+RemoveProbesBindingRibosomalHits = inputsParameterSettings.DesignFiltering_Settings.RemoveProbesBindingRibosomalHits;% Filter out probes with targets hits to ribosomal proteins
+packOptimal_ProbesWithNoOffTargets = inputsParameterSettings.DesignFiltering_Settings.packOptimal_ProbesWithNoOffTargets;%when designing probes without off-targets do optimal packing to get the most or normal selection not considering packing efficiency
+IncludeSelfHybridizationInProbeSelection = inputsParameterSettings.DesignFiltering_Settings.IncludeSelfHybridizationInProbeSelection;%when designing probes consider probe self-hybridization when ranking probes on binding affinity
+
+%% Thermodynamic Settings
+Gibbs_Model = inputsParameterSettings.Thermodynamic_Settings.Gibbs_Model; %Which Hybridization model to use for probe design and evaluation
+SaltConcentration = inputsParameterSettings.Thermodynamic_Settings.SaltConcentration; %Concentration of Salt in thermodynamic calculations mol/L
+HybridizationTemperatureCelsius = inputsParameterSettings.Thermodynamic_Settings.HybridizationTemperature_Celsius; % Temperature for Evaluating Probe Design and Simulations
+Tref = inputsParameterSettings.Thermodynamic_Settings.HeatCapacityReferenceTemperature_Celsius;
+RemoveMisMatches = inputsParameterSettings.Thermodynamic_Settings.RemoveMisMatches;%remove mismatches from nearest neighbor quantification of probe binding
+
 %% Paralellization Parameters (You Usually will not change unless the gene is very long)
-Parallelization_probeBatchSize = 20;%batch size for parallelizing probe evaluations in probe design
-Parallelization_targetBatchSize = 200;%batch size for parallelizing target evaluations in probe design
-ParsingPreference = 1; % Sequentially Parse or Parallel parsing of blast hits together into hit table (1 sequentially, 0 parallel)
+Parallelization_probeBatchSize = inputsParameterSettings.Parallelization_Settings.Parallelization_probeBatchSize;%batch size for parallelizing probe evaluations in probe design
+Parallelization_targetBatchSize = inputsParameterSettings.Parallelization_Settings.Parallelization_targetBatchSize;%batch size for parallelizing target evaluations in probe design
+ParsingPreference = inputsParameterSettings.Parallelization_Settings.ParsingPreference; % Sequentially Parse or Parallel parsing of blast hits together into hit table (1 sequentially, 0 parallel)
 
 %% Gene Expression Parameters (You Usually will not change)
-DoAllGenesHaveSameExpression = 0;%do all genes have the same expression level when designing probes and evaluating probe set metrics
-UseGeneOverTranscLevelExpression = 0;%Use gene level over transcript level expression information when designing probes  % 1 (Gene/EMBL GENEID) , 0 (Transcript/EMBL Transcript ID)
-UseRegularDNAExpression = 1;%0 use DNA expression from gene expression track in expression data, 1 set expression to 2 for DNA.
-nullRNAcopynumber = 100;%average cell RNA copy number when evaluating probes without expression
-nullDNAcopynumber = 2;%average cell DNA copy number when evaluating probes without expression
+DoAllGenesHaveSameExpression =  inputsParameterSettings.GeneExpression_Settings.DoAllGenesHaveSameExpression;%do all genes have the same expression level when designing probes and evaluating probe set metrics
+UseGeneOverTranscLevelExpression = inputsParameterSettings.GeneExpression_Settings.UseGeneOverTranscLevelExpression;%Use gene level over transcript level expression information when designing probes  % 1 (Gene/EMBL GENEID) , 0 (Transcript/EMBL Transcript ID)
+UseRegularDNAExpression = inputsParameterSettings.GeneExpression_Settings.UseRegularDNAExpression;%0 use DNA expression from gene expression track in expression data, 1 set expression to 2 for DNA.
+nullRNAcopynumber = inputsParameterSettings.GeneExpression_Settings.nullRNAcopynumber;%average cell RNA copy number when evaluating probes without expression
+nullDNAcopynumber = inputsParameterSettings.GeneExpression_Settings.nullDNAcopynumber;%average cell DNA copy number when evaluating probes without expression
+logRatioTrim = inputsParameterSettings.GeneExpression_Settings.TMM_LogRatioTrim;
+sumTrim = inputsParameterSettings.GeneExpression_Settings.TMM_SumTrim;
+Acutoff = inputsParameterSettings.GeneExpression_Settings.TMM_Acutoff;
+doWeighting = inputsParameterSettings.GeneExpression_Settings.TMM_doWeighting;
 
 %% BLAST Parameters (You Usually will not change)
-evalue = 1000; %BLAST expectation value cutoff
-dust = 'no'; % filter BLAST query sequences with DUST
-gapextend = 2; %BLAST cost to extend a gap
-gapopen = 5; %BLAST cost to open a gap
-num_alignments = 1000; %Number of database sequneces to show num_alignments for
-penalty = -3; % BLAST penalty for nucleotide mismatch
-reward = 1; % BLAST reward for a nucleotide match
-word_size = 7; %BLAST word size for wordfinder algorithm 
+evalue =  inputsParameterSettings.BLASTN_Settings.evalue; %BLAST expectation value cutoff
+dust =  convertStringsToChars(inputsParameterSettings.BLASTN_Settings.dust); % filter BLAST query sequences with DUST
+gapextend = inputsParameterSettings.BLASTN_Settings.gapextend; %BLAST cost to extend a gap
+gapopen = inputsParameterSettings.BLASTN_Settings.gapopen; %BLAST cost to open a gap
+num_alignments = inputsParameterSettings.BLASTN_Settings.numAlignments; %Number of database sequneces to show num_alignments for
+penalty = inputsParameterSettings.BLASTN_Settings.penalty; % BLAST penalty for nucleotide mismatch
+reward = inputsParameterSettings.BLASTN_Settings.reward; % BLAST reward for a nucleotide match
+word_size = inputsParameterSettings.BLASTN_Settings.wordsize; %BLAST word size for wordfinder algorithm 
 
+%% Model Prediction Settings (You Usually will not change)
+removeUndesiredIsoformsFromPredictionOffTargets=inputsParameterSettings.ModelSimulation_Settings.removeUndesiredIsoformsFromPrediction;%Removes other isoforms from the computation of probe statistics used in designing probes
+AutoBackground_Mean = inputsParameterSettings.ModelSimulation_Settings.AutoFluoresenceBackground_MEAN;
+AutoBackground_STD = inputsParameterSettings.ModelSimulation_Settings.AutoFluoresenceBackground_STD;
+NumReferenceProbes = inputsParameterSettings.ModelSimulation_Settings.NumberOfProbesInReferenceSpots;
+SpotIntensity_Mean = inputsParameterSettings.ModelSimulation_Settings.ReferenceSpotIntensity_MEAN;
+SpotIntensity_STD = inputsParameterSettings.ModelSimulation_Settings.ReferenceSpotIntensity_STD;
+Rspot = inputsParameterSettings.ModelSimulation_Settings.SpotRadius_Pixels;
+Mean_Diameter = inputsParameterSettings.ModelSimulation_Settings.CellDiameter_Pixels;
+Nstacks = inputsParameterSettings.ModelSimulation_Settings.NumberOfReferenceZStacks;
+Rcell = inputsParameterSettings.ModelSimulation_Settings.CellRadius_Micron;%um to L
+errThreshold = inputsParameterSettings.ModelSimulation_Settings.SolutionErrorTolerance;
+MaxIter = inputsParameterSettings.ModelSimulation_Settings.MaxRecursiveEquilibriiumIterations;
+InitialGuessConc = inputsParameterSettings.ModelSimulation_Settings.InitialFreeSolutionGuessConcentration_MicroMolar;
+ProbeConcentration = inputsParameterSettings.ModelSimulation_Settings.ProbeConcentration_MicroMolar;%5uM
+Dilution_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector,','));
+Temperature_Celsius_Model_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector,','));
+Gibbs_Model_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Gibbs_Model_Vector ,','));
+Signal_StepSize = inputsParameterSettings.ModelSimulation_Settings.SignalStepSize;
+Signal_MaxValue = inputsParameterSettings.ModelSimulation_Settings.SignalMaxValue;
+
+if (isempty(Organism))
+    msg = 'Error. There must be a organism specified with the design in order to quantify target hits in the reference genome or transcriptome.';
+    error(msg)
+end
+if (isempty(IncludeAccessionNumbers)*isempty(InclusionSequenceFiles)==1)
+    msg = 'Error. Must include at least one target Accession Number or target inclusion sequence file.';
+    error(msg)
+end
 if (minProbeSize>maxProbeSize)
     msg = 'Error. Minimum probe size must be less than or equal to max probe size.';
     error(msg)
 end
-if (MininumProbeSpacing<0)
+if (minProbeSpacing<0)
     msg = 'Error. Minimum probe spacing must be greater than or equal to zero.';
     error(msg)
 end
-if (max_probes<0)
+if (maxNumberOfProbes<0)
     msg = 'Error. Maximum number of probes must be greater than zero.';
     error(msg)
 end
@@ -185,14 +184,62 @@ if (word_size<2)
     msg = 'Error. BLAST nucleotide match reward must be greater than or equal to two.';
     error(msg)
 end
+if (isMATLABReleaseOlderThan("R2024a"))
+    msg = 'Error. \n MATLAB must Be version 2024a or higher for blastplus to work.';
+    error(msg)
+end
+addons = matlab.addons.installedAddons;
+if (~ismember("Bioinformatics Toolbox",addons.Name))
+    msg = 'Error. You need to have the Bioinformatics Toolbox installed for the software to work properly (https://www.mathworks.com/products/bioinfo.html)';
+    error(msg)
+end
+if (~ismember("Curve Fitting Toolbox",addons.Name))
+    msg = 'Error. The Curve Fitting Toolbox must be installed for the software to work properly: (https://www.mathworks.com/products/curvefitting.html)';
+       error(msg)
+end
+if (~ismember("Parallel Computing Toolbox",addons.Name))
+    msg = 'Error. The Parallel Computing Toolbox must be installed for the software to work properly: (https://www.mathworks.com/products/parallel-computing.html)';
+     error(msg)
+end
+if (~ismember("Signal Processing Toolbox",addons.Name))
+    msg = 'Error. The Signal Processing Toolbox must be installed for the software to work properly: (https://www.mathworks.com/products/signal.html)';
+     error(msg)
+end
+if (~ismember("Statistics and Machine Learning Toolbox",addons.Name))
+    msg = 'Error. The Statistics and Machine Learning Toolbox must be installed for the software to work properly: (https://www.mathworks.com/products/statistics.html)';
+       error(msg)   
+end
+if (~ismember("Symbolic Math Toolbox",addons.Name))
+    msg = 'Error. The Symbolic Math Toolbox installed must be installed for the software to work properly: (https://www.mathworks.com/products/symbolic.html)';
+   error(msg)
+end
+if (~ismember("BLAST+ Support Package for Bioinformatics Toolbox",addons.Name))
+    msg = 'Error. The BLAST+ Support Package for Bioinformatics Toolbox must be installed for the software to work properly: (https://www.mathworks.com/matlabcentral/fileexchange/156414-blast-support-package-for-bioinformatics-toolbox)';
+   error(msg) 
+end
+mfilePath = mfilename('fullpath');
+if contains(mfilePath,'LiveEditorEvaluationHelper')
+    mfilePath = matlab.desktop.editor.getActiveFilename;
+end
+if (~strcmp(pwd,extractBefore(mfilePath,strcat(filesep,'A0'))))
+    msg = 'Error. The script must be run in the TrueProbes main folder for the code to work properly';
+   error(msg) 
+end
+% disp(mfilePath);
 
-gene_num = id;
+
+
 designerName = '_TrueProbes';
 probes = [];
-startup
+startup;
 settings.BUILD_STRING = '2025.06.04.00';
 settings.VERSION_STRING = 'v1.1.1';
-
+refInfo = IncludeAccessionNumbers{1}(1:2);
+if (ismember(refInfo,{'NR','XR','NM','XM'}))
+    settings.referenceType = 'RefSeq';
+else
+    settings.referenceType = 'ENSEMBL';
+end
 cellPreset = 1;
 switch cellPreset
     case 1%Average Tissue
@@ -260,126 +307,69 @@ switch cellPreset
         settings.CellType_ExprID = 5;
 end
 %% Settings Specification
-if (strcmp(inputs1{gene_num,4},'Yeast'))
-    DoAllGenesHaveSameExpression = 1;%same expr.
-end
-refInfo = inputs1{gene_num,1}{1}(1:2);
-if (ismember(refInfo,{'NR','XR','NM','XM'}))
-    settings.referenceType = 'RefSeq';
-elseif (strcmp(refInfo,'EN'))
-    settings.referenceType = 'ENSEMBL';
-else
-end
+
+
+
 
 %% Update Location of Databases & Needed Files (You usually will not change)
-if (strcmp(settings.referenceType,'RefSeq'))
-    settings.hLocRoot = 'data/DatabaseData/Blast_Databases/Human/NCBI_RefSeq/';
-    settings.hLoc = 'data/DatabaseData/Blast_Databases/Human/NCBI_RefSeq/Human_NCBI_genomic';
-    settings.hLoc2 = 'data/DatabaseData/Blast_Databases/Human/NCBI_RefSeq/Human_NCBI_transcript';
-    settings.mLocRoot =  'data/DatabaseData/Blast_Databases/Mouse/NCBI_RefSeq/';
-    settings.mLoc = 'data/DatabaseData/Blast_Databases/Mouse/NCBI_RefSeq/Mouse_NCBI_genomic';
-    settings.mLoc2 = 'data/DatabaseData/Blast_Databases/Mouse/NCBI_RefSeq/Mouse_NCBI_transcript';
-    settings.yLocRoot =  'data/DatabaseData/Blast_Databases/Yeast/NCBI_RefSeq/';
-    settings.yLoc =  'data/DatabaseData/Blast_Databases/Yeast/NCBI_RefSeq/Yeast_NCBI_genomic';
-    settings.yLoc2 =  'data/DatabaseData/Blast_Databases/Yeast/NCBI_RefSeq/Yeast_NCBI_transcript';
-elseif (strcmp(settings.referenceType,'ENSEMBL'))
-    settings.hLocRoot = 'data/DatabaseData/Blast_Databases/Human/EMBL_EBI/';
-    settings.hLoc = 'data/DatabaseData/Blast_Databases/Human/EMBL_EBI/Human_ENSEMBL_genomic';%chrom number, MT, X, Y and scaffold KI and GL
-    settings.hLoc2 = 'data/DatabaseData/Blast_Databases/Human/EMBL_EBI/Human_ENSEMBL_transcript';%cdna and ncrna
-    settings.mLocRoot =  'data/DatabaseData/Blast_Databases/EMBL_EBI/';
-    settings.mLoc = 'data/DatabaseData/Blast_Databases/Mouse/EMBL_EBI/Mouse_ENSEMBL_genomic';
-    settings.mLoc2 = 'data/DatabaseData/Blast_Databases/Mouse/EMBL_EBI/Mouse_ENSEMBL_transcript';%ENMUST, cdna and ncRNA
-    settings.yLocRoot =  'data/DatabaseData/Blast_Databases/Yeast/EBML_EBI/';%SGD
-    settings.yLoc =  'data/DatabaseData/Blast_Databases/Yeast/EMBL_EBI/Yeast_ENSEMBL_genomic';%chromsome roman numerals and Mito
-    settings.yLoc2 =  'data/DatabaseData/Blast_Databases/Yeast/EMBL_EBI/Yeast_ENSEMBL_transcript';%SGD cdna and ncRNA
-elseif (strcmp(settings.referenceType,'Gencode'))
-    settings.hLocRoot = 'data/DatabaseData/Blast_Databases/Human/GENCODE/';%
-    settings.hLoc = 'data/DatabaseData/Blast_Databases/Human/GENCODE/Human_GENCODE_genomic';%chrM chrX chrY
-    settings.hLoc2 = 'data/DatabaseData/Blast_Databases/Human/GENCODE/Human_GENCODE_transcript';%ENST and ENSG
-    settings.mLocRoot =  'data/DatabaseData/Blast_Databases/Mouse/GENCODE/';%ENSMUST... | ENSMUSG ....|OTTOMUST OTTOMUSG  |Name protein coding]
-    settings.mLoc = 'data/DatabaseData/Blast_Databases/Mouse/GENCODE/Mouse_GENCODE_genomic';%chr1,... chrX, chrY, chrM
-    settings.mLoc2 = 'data/DatabaseData/Blast_Databases/Mouse/GENCODE/Mouse_GENCODE_transcript';
-    settings.yLocRoot =  'data/DatabaseData/Blast_Databases/Yeast/YGD/';
-    settings.yLoc =  'data/DatabaseData/Blast_Databases/Yeast/YGD/Yeast_SGD_genomic';
-    settings.yLoc2 =  'data/DatabaseData/Blast_Databases/Yeast/YGD/Yeast_SGD_transcript';
+if (ispc)
+    settings.blastpath = strcat('src',filesep,'blast',filesep,'ncbi-blast-2.16.0+-x64-win64',filesep,'ncbi-blast-2.16.0+',filesep,'bin');
 end
-
-%% GTF and GFF Databases (You usually will not change)
-if (strcmp(settings.referenceType,'RefSeq'))
-    settings.hLocGTF = 'data/DatabaseData/GTF_Databases/Human/NCBI_RefSeq/GCF_000001405.40_GRCh38.p14_genomic.gtf';
-    settings.hLocGFF = 'data/DatabaseData/GFF3_Databases/Human/NCBI_RefSeq/GCF_000001405.40_GRCh38.p14_genomic.gff';
-    settings.mLocGTF = 'data/DatabaseData/GTF_Databases/Mouse/NCBI_RefSeq/GCF_000001635.27_GRCm39_genomic.gtf';
-    settings.mLocGFF = 'data/DatabaseData/GFF3_Databases/Mouse/NCBI_RefSeq/GCF_000001635.27_GRCm39_genomic.gff';
-    settings.yLocGTF =  'data/DatabaseData/GTF_Databases/Yeast/NCBI_RefSeq/GCF_000146045.2_R64_genomic.gtf';
-    settings.yLocGFF =  'data/DatabaseData/GFF3_Databases/Yeast/NCBI_RefSeq/GCF_000146045.2_R64_genomic.gff';
-elseif (strcmp(settings.referenceType,'ENSEMBL'))
-    settings.hLocGTF = 'data/DatabaseData/GTF_Databases/Human/EMBL_EBI/Homo_sapiens.GRCh38.114.gtf';%chrom number, MT, X, Y and scaffold KI and GL
-    settings.hLocGFF = 'data/DatabaseData/GFF3_Databases/Human/EMBL_EBI/Homo_sapiens.GRCh38.114.gff3';%cdna and ncrna
-    settings.mLocGTF = 'data/DatabaseData/GTF_Databases/Mouse/EMBL_EBI/Mus_musculus.GRCm39.114.gtf';
-    settings.mLocGFF = 'data/DatabaseData/GFF3_Databases/Mouse/EMBL_EBI/Mus_musculus.GRCm39.114.gff3';%ENMUST, cdna and ncRNA
-    settings.yLocGTF =  'data/DatabaseData/GTF_Databases/Yeast/EMBL_EBI/Saccharomyces_cerevisiae.R64-1-1.1.114.gtf';%chromsome roman numerals and Mito
-    settings.yLocGFF =  'data/DatabaseData/GFF3_Databases/Yeast/EMBL_EBI/Saccharomyces_cerevisiae.R64-1-1.1.114.gff3';%SGD cdna and ncRNA
-elseif (strcmp(settings.referenceType,'Gencode'))
-    settings.hLocGTF = 'data/DatabaseData/GTF_Databases/Human/GENCODE/gencode.v48.basic.annotation.gtf';%chrM chrX chrY
-    settings.hLocGFF = 'data/DatabaseData/GFF3_Databases/Human/GENCODE/gencode.v48.basic.annotation.gff3';%ENST and ENSG
-    settings.mLocGTF = 'data/DatabaseData/GTF_Databases/Mouse/GENCODE/gencode.vM37.basic.annotation.gtf';%chr1,... chrX, chrY, chrM
-    settings.mLocGFF = 'data/DatabaseData/GFF3_Databases/Mouse/GENCODE/gencode.vM37.basic.annotation.gff3';
-    settings.yLocGTF =  'data/DatabaseData/GTF_Databases/Yeast/YGD/saccharomyces_cerevisiae.20240529.gtf';
-    settings.yLocGFF =  'data/DatabaseData/GFF3_Databases/Yeast/saccharomyces_cerevisiae.20240529.gff';
+if (isunix)
+    settings.blastpath  = strcat('src',filesep,'blast',filesep,'ncbi-blast-2.16.0+-x64-linux',filesep,'ncbi-blast-2.16.0+',filesep,'bin');
 end
-
-%% Save Settings
-settings.FolderRootName = strcat(saveRoot,inputs1{gene_num,5},'_',strjoin(inputs1{gene_num,1},'_'));
-settings.rootName = strjoin(inputs1{gene_num,1},'_');
-settings.designerName = designerName;
-settings.saveRoot = saveRoot;
-
-%% Design Target Info
-settings.Organism = inputs1{gene_num,4};
-settings.GeneName = inputs1{gene_num,5};
-settings.ChrNum = inputs1{gene_num,7};
-settings.GeneChr = strcat('chr',inputs1{gene_num,7});
-settings.transcript_IDs = inputs1{gene_num,1};
-settings.ProbeSpacing = MininumProbeSpacing;
-settings.RemoveMisMatches = RemoveMisMatches;
-settings.SaltConcentration = SaltConcentration;
-settings.HybridizationTemperature = HybridizationTemperature;
-settings.BLASTdna = BLASTdna;
-settings.BLASTrna = BLASTrna;
-settings.BLASTbatchSize = Parallelization_probeBatchSize;
-settings.BLASTsimultaneousParsingOverSequentialParsing = ParsingPreference;
-settings.BlastParameters.reward = reward;
-settings.BlastParameters.penalty = penalty;
-settings.BlastParameters.wordsize = word_size;
-settings.BlastParameters.gapopen = gapopen;
-settings.BlastParameters.gapextend = gapextend;
-settings.BlastParameters.evalue = evalue;
-settings.BlastParameters.num_alignments = num_alignments;
-settings.BlastParameters.dust = dust;
-settings.TargetBatchSize = Parallelization_targetBatchSize;
-settings.MinProbeSize = minProbeSize;
-settings.MaxProbeSize = maxProbeSize;
-settings.MinHomologySearchTargetSize = MinHomologySearchTargetSize;
-settings.N_model = Nmodel;
-settings.ExpressionReferenceForDesigningProbes = ExpressionReferenceForDesigningProbes;
-
-%% Gene Expression Parameters
-settings.DoAllGenesHaveSameExpression = DoAllGenesHaveSameExpression;
-settings.HumanSpecific.HumanExpGeneOrTransc = UseGeneOverTranscLevelExpression; % 1 (Gene/EMBL GENEID) , 0 (Transcript/EMBL Transcript ID)
-settings.UseRegularDNAExpression = UseRegularDNAExpression;%0 use DNA expression from gene expression track in expression data, 1 set expression to 2 for DNA.
-settings.UniformRNAExpression = nullRNAcopynumber;%if assuming no differences in gene's expression sets level.
-settings.DNAPloidy = nullDNAcopynumber;
-settings.otherBlastDatabase = customBlastDatabase_DNA;
-settings.otherBlastDatabase2 = customBlastDatabase_RNA;
-
-%% Cluster Parameters
-settings.clusterStatus = cluster;
-settings.isOffline = RunOffline;
-
-%% Selecting Probes Specifications
-settings.maxProbes = max_probes;
-settings.RemoveProbesWithRibosomalHits = RemoveRibosomalHits;
-
+if (ismac)
+    settings.blastpath = strcat('src',filesep,'blast',filesep,'ncbi-blast-2.16.0+-universal-macosx',filesep,'ncbi-blast-2.16.0+',filesep,'bin');
+end
+OrganismList = {'Human';'Mouse';'Rat';'Zebrafish';'Fruitfly';'Worm';'Yeast'};
+DatabaseVars = {'Organism','Root_FASTA','BLASTDB_DNA','BLASTDB_RNA','GTF','GFF'};
+ENSEMBL_ParserRNA = {'ENST','ENSMUST','ENSRNOT','ENSDART','','',''};
+%DNA and NonDNA not works for non-ensembl format, need to use gtf to find strings in assembly as list to match
+if (strcmp(settings.referenceType,'RefSeq'))
+    LocDatabases = {'data/DatabaseData/Blast_Databases/Human/NCBI_RefSeq/','data/DatabaseData/Blast_Databases/Human/NCBI_RefSeq/Human_NCBI_genomic','data/DatabaseData/Blast_Databases/Human/NCBI_RefSeq/Human_NCBI_transcript',...
+                                'data/DatabaseData/GTF_Databases/Human/NCBI_RefSeq/GCF_000001405.40_GRCh38.p14_genomic.gtf','data/DatabaseData/GFF3_Databases/Human/NCBI_RefSeq/GCF_000001405.40_GRCh38.p14_genomic.gff';
+                                'data/DatabaseData/Blast_Databases/Mouse/NCBI_RefSeq/','data/DatabaseData/Blast_Databases/Mouse/NCBI_RefSeq/Mouse_NCBI_genomic','data/DatabaseData/Blast_Databases/Mouse/NCBI_RefSeq/Mouse_NCBI_transcript',...
+                                'data/DatabaseData/GTF_Databases/Mouse/NCBI_RefSeq/GCF_000001635.27_GRCm39_genomic.gtf','data/DatabaseData/GFF3_Databases/Mouse/NCBI_RefSeq/GCF_000001635.27_GRCm39_genomic.gff';...
+                                'data/DatabaseData/Blast_Databases/Rat/NCBI_RefSeq/','data/DatabaseData/Blast_Databases/Rat/NCBI_RefSeq/Rat_NCBI_genomic','data/DatabaseData/Blast_Databases/Rat/NCBI_RefSeq/Rat_NCBI_transcript',...
+                                'data/DatabaseData/GTF_Databases/Rat/NCBI_RefSeq/_genomic.gtf','data/DatabaseData/GFF3_Databases/Rat/NCBI_RefSeq/_genomic.gff';...
+                                'data/DatabaseData/Blast_Databases/Zebrafish/NCBI_RefSeq/','data/DatabaseData/Blast_Databases/Zebrafish/NCBI_RefSeq/Zebrafish_NCBI_genomic','data/DatabaseData/Blast_Databases/Zebrafish/NCBI_RefSeq/Zebrafish_NCBI_transcript',...
+                                'data/DatabaseData/GTF_Databases/Zebrafish/NCBI_RefSeq/GCF_049306965.1_GRCz12tu_genomic.gtf','data/DatabaseData/GFF3_Databases/Zebrafish/NCBI_RefSeq/GCF_049306965.1_GRCz12tu_genomic.gff';
+                                'data/DatabaseData/Blast_Databases/Fruitfly/NCBI_RefSeq/','data/DatabaseData/Blast_Databases/Fruitfly/NCBI_RefSeq/Fruitfly_NCBI_genomic','data/DatabaseData/Blast_Databases/Fruitfly/NCBI_RefSeq/Fruitfly_NCBI_transcript',...
+                                'data/DatabaseData/GTF_Databases/Fruitfly/NCBI_RefSeq/_genomic.gtf','data/DatabaseData/GFF3_Databases/Fruitfly/NCBI_RefSeq/_genomic.gff';...
+                                'data/DatabaseData/Blast_Databases/Worm/NCBI_RefSeq/','data/DatabaseData/Blast_Databases/Worm/NCBI_RefSeq/Worm_NCBI_genomic','data/DatabaseData/Blast_Databases/Worm/NCBI_RefSeq/Worm_NCBI_transcript',...
+                                'data/DatabaseData/GTF_Databases/Worm/NCBI_RefSeq/_genomic.gtf','data/DatabaseData/GFF3_Databases/Worm/NCBI_RefSeq/_genomic.gff';...
+                                'data/DatabaseData/Blast_Databases/Yeast/NCBI_RefSeq/','data/DatabaseData/Blast_Databases/Yeast/NCBI_RefSeq/Yeast_NCBI_genomic','data/DatabaseData/Blast_Databases/Yeast/NCBI_RefSeq/Yeast_NCBI_transcript',...
+                                'data/DatabaseData/GTF_Databases/Yeast/NCBI_RefSeq/GCF_000146045.2_R64_genomic.gtf','data/DatabaseData/GFF3_Databases/Yeast/NCBI_RefSeq/GCF_000146045.2_R64_genomic.gff';...
+                                };                
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+          LocDatabases = {'data/DatabaseData/Blast_Databases/Human/EMBL_EBI/','data/DatabaseData/Blast_Databases/Human/EMBL_EBI/Human_ENSEMBL_genomic','data/DatabaseData/Blast_Databases/Human/EMBL_EBI/Human_ENSEMBL_transcript',...
+                                'data/DatabaseData/GTF_Databases/Human/EMBL_EBI/Homo_sapiens.GRCh38.114.gtf','data/DatabaseData/GFF3_Databases/Human/EMBL_EBI/Homo_sapiens.GRCh38.114.gff3';
+                                'data/DatabaseData/Blast_Databases/Mouse/EMBL_EBI/','data/DatabaseData/Blast_Databases/Mouse/EMBL_EBI/Mouse_ENSEMBL_genomic','data/DatabaseData/Blast_Databases/Mouse/EMBL_EBI/Mouse_ENSEMBL_transcript',...
+                                'data/DatabaseData/GTF_Databases/Mouse/EMBL_EBI/Mus_musculus.GRCm39.114.gtf','data/DatabaseData/GFF3_Databases/Mouse/EMBL_EBI/Mus_musculus.GRCm39.114.gff3';...
+                                'data/DatabaseData/Blast_Databases/Rat/EMBL_EBI/','data/DatabaseData/Blast_Databases/Rat/EMBL_EBI/Rat_ENSEMBL_genomic','data/DatabaseData/Blast_Databases/Rat/EMBL_EBI/Rat_ENSEMBL_transcript',...
+                                'data/DatabaseData/GTF_Databases/Rat/EMBL_EBI/.114.gtf','data/DatabaseData/GFF3_Databases/Rat/EMBL_EBI/.114.gff3';...
+                                'data/DatabaseData/Blast_Databases/Zebrafish/EMBL_EBI/','data/DatabaseData/Blast_Databases/Zebrafish/EMBL_EBI/Zebrafish_ENSEMBL_genomic','data/DatabaseData/Blast_Databases/Zebrafish/EMBL_EBI/Zebrafish_ENSEMBL_transcript',...
+                                'data/DatabaseData/GTF_Databases/Zebrafish/EMBL_EBI/Danio_rerio.GRCz11.114.gtf','data/DatabaseData/GFF3_Databases/Zebrafish/EMBL_EBI/Danio_rerio.GRCz11.114.gff3'; 
+                                'data/DatabaseData/Blast_Databases/Fruitfly/EMBL_EBI/','data/DatabaseData/Blast_Databases/Fruitfly/EMBL_EBI/Fruitfly_ENSEMBL_genomic','data/DatabaseData/Blast_Databases/Fruitfly/EMBL_EBI/Fruitfly_ENSEMBL_transcript',...
+                                'data/DatabaseData/GTF_Databases/Fruitfly/EMBL_EBI/.114.gtf','data/DatabaseData/GFF3_Databases/Fruitfly/EMBL_EBI/.114.gff3';...
+                                'data/DatabaseData/Blast_Databases/Worm/EMBL_EBI/','data/DatabaseData/Blast_Databases/Worm/EMBL_EBI/Worm_ENSEMBL_genomic','data/DatabaseData/Blast_Databases/Worm/EMBL_EBI/Worm_ENSEMBL_transcript',...
+                                'data/DatabaseData/GTF_Databases/Worm/EMBL_EBI/.114.gtf','data/DatabaseData/GFF3_Databases/Worm/EMBL_EBI/.114.gff3';...
+                                'data/DatabaseData/Blast_Databases/Yeast/EBML_EBI/','data/DatabaseData/Blast_Databases/Yeast/EMBL_EBI/Yeast_ENSEMBL_genomic','data/DatabaseData/Blast_Databases/Yeast/EMBL_EBI/Yeast_ENSEMBL_transcript',...
+                                'data/DatabaseData/GTF_Databases/Yeast/EMBL_EBI/Saccharomyces_cerevisiae.R64-1-1.1.114.gtf','data/DatabaseData/GFF3_Databases/Yeast/EMBL_EBI/Saccharomyces_cerevisiae.R64-1-1.1.114.gff3';...
+                                };
+end
+DatabaseLocations = cell2table([OrganismList LocDatabases]);
+DatabaseLocations.Properties.VariableNames = DatabaseVars;
+for k = 2:length(DatabaseVars)
+settings.(strcat("Loc",DatabaseLocations.Properties.VariableNames{k})) = dictionary(convertCharsToStrings(DatabaseLocations.Organism),convertCharsToStrings(DatabaseLocations.(DatabaseLocations.Properties.VariableNames{k})));
+end
+settings.EMBL_RNAparser = dictionary(convertCharsToStrings(DatabaseLocations.Organism),convertCharsToStrings(ENSEMBL_ParserRNA)');
+%Set BLAST and Reference Genome/Transcriptome Location
+if (isKey(settings.LocRoot_FASTA,Organism))
+    settings.SEQdbRoot = char(settings.LocRoot_FASTA(Organism));
+else
+    settings.SEQdbRoot = char(settings.otherLocRoot);
+end
 settings.MouseExpressionFile = 'data/DatabaseData/tabulamuris_barChart.bed';
 settings.ExpressionVariableNames = {'chrom','chromStart','chromEnd','name',...
     'score','strand','name2','expCount','expScores','dataOffset','dataLen'};
@@ -419,117 +409,223 @@ settings.Yeast_GencodeRefSeqMetadataFile = 'N/A';
 settings.Yeast_wgEncodeGencodeAttributesFile = 'N/A';
 settings.Yeast_wgEncodeGencodeCompFile = 'N/A';
 settings.scTracksBedFiles = {'tabulasapiens_tissue_cell_type','colonWang_cell_type','ileumWang_cell_type','rectumWang_cell_type'};
-settings.HumanGenomeAssemblyReportFile = 'data/Metadata/Human/GCF_000001405.39_GRCh38.p13_assembly_report.txt';
-settings.MouseGenomeAssemblyReportFile = 'data/Metadata/Mouse/GCA_000001635.9_GRCm39_assembly_report.txt';
-settings.YeastGenomeAssemblyReportFile = 'data/Metadata/Yeast/S288C/GCF_000146045.2_R64_assembly_report.txt';
 settings.CustomGenomeAssemblyReportFile = 'N/A';
 settings.Custom_X_ChromNumber = 1;
 settings.Custom_Y_ChromNumber = 1;
 settings.Custom_MT_ChromNumber = 1;
 settings.scTracks = {'colonWangCellType','tabulasapiens_tissue_cell_type'};
+settings.TMM.logRatioTrim = logRatioTrim;
+settings.TMM.sumTrim = sumTrim;
+settings.TMM.Acutoff = Acutoff;
+settings.TMM.doWeighting = doWeighting;
+
+%% Load Annotation File
+fprintf('\n')
+fprintf("Loading genome and transcriptome annotation files")
+fprintf('\n')
+tic
+if (isKey(settings.LocRoot_FASTA,Organism))
+    if isfile([settings.LocGFF(Organism)])
+        GFFobj = GFFAnnotation(settings.LocGFF(Organism));
+    else
+         msg = strcat('Error. Need to provide GFF Location for'," ",Organism);
+        error(msg)
+    end
+else
+    if isfile([settings.otherGFF])
+        GFFobj = GFFAnnotation(settings.otherGFF);
+    else
+        msg = 'Error. Need to provide GFF Location for the custom organism.';
+        error(msg)
+    end
+end
+    try
+        if (isKey(settings.LocRoot_FASTA,Organism))
+             if isfile([settings.LocGTF(Organism)])
+             GTFobj = GTFAnnotation(settings.LocGTF(Organism));
+             else
+                 msg = strcat('Error. Need to provide GTF Location for'," ",Organism);
+                 error(msg)
+             end
+        else
+            if isfile([settings.otherGTF])
+                GTFobj = GFFAnnotation(settings.otherGTF);
+            else
+                msg = 'Error. Need to provide GTF Location for the custom organism.';
+                error(msg)
+            end
+        end
+    catch
+        if (isKey(settings.LocRoot_FASTA,Organism))
+            fixedEmptyTranscriptIdEntriesFile = strcat(extractBefore(settings.LocGTF(Organism),'.gtf'),'_fixed.gtf');
+        else
+            fixedEmptyTranscriptIdEntriesFile = strcat(extractBefore(settings.otherGTF,'.gtf'),'_fixed.gtf');
+        end
+        if (isfile(fixedEmptyTranscriptIdEntriesFile))
+            GTFobj = GTFAnnotation(fixedEmptyTranscriptIdEntriesFile);
+        else
+            if (isKey(settings.LocRoot_FASTA,Organism))
+            originalFile = settings.LocGTF(Organism);
+            else
+             originalFile = settings.otherGTF;  
+            end
+            % Read in GTF file (skip last empty line)
+            gtfLines = readlines(originalFile, EmptyLineRule="skip");
+            % Find entries that do not contain "transcript_id" attribute (exclude header)
+            invalidEntryIdx = ~contains(gtfLines, ("transcript_id" | textBoundary + "#"));
+            % Add empty "transcript_id" attribute to the invalid entries
+            gtfLines(invalidEntryIdx) = gtfLines(invalidEntryIdx) + ' transcript_id "";';
+            % Write to a new GTF file that has the invalid entries fixed
+            writelines(gtfLines, fixedEmptyTranscriptIdEntriesFile);
+            GTFobj = GTFAnnotation(fixedEmptyTranscriptIdEntriesFile);
+        end
+    end
+tEnd = toc;
+fprintf('\n')
+fprintf("Time elapsed to load annotation files %g seconds",round(tEnd,3,"significant"))
+if (strcmp(settings.referenceType,'RefSeq'))
+    geneInfo = getGenes(GTFobj,"Transcript",IncludeAccessionNumbers);
+    geneNames = geneInfo.GeneID{:};
+    geneChrNum = char(extractBefore(extractAfter(char(geneInfo.Reference),'NC_0000'),'.'));
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+    geneInfo = getGenes(GTFobj,"Transcript",extractBefore(IncludeAccessionNumbers,'.'));
+    geneNames = geneInfo.GeneName{:};
+    geneChrNum = char(geneInfo.Reference);
+end
+ids = GTFobj.Transcript(strcmp(GTFobj.Feature,'transcript'));
+btypes = extractBetween(string(regexp(GTFobj.Attributes(strcmp(GTFobj.Feature,'transcript')),'(?<=transcript_biotype )"\w*"(?=;)','match')),'"','"');
+Ribosomal_IDs = unique(ids(contains(btypes,'rRNA')));
+
+% name 
+%getTranscripts(GTFobj,"Gene",geneInfo.GeneID)
 
 %% Save Settings
-settings.FolderRootName = strcat(saveRoot,inputs1{gene_num,5},'_',strjoin(inputs1{gene_num,1},'_'));
-settings.rootName = strjoin(inputs1{gene_num,1},'_');
+settings.FolderRootName = strcat(saveRoot,'(',geneNames,')','_',strjoin(IncludeAccessionNumbers,'_'));
+settings.rootName = strjoin(IncludeAccessionNumbers,'_');
+settings.designerName = designerName;
+settings.saveRoot = saveRoot;
+
+%% Design Target Info
+settings.Organism = Organism;
+settings.GeneName = geneNames;
+settings.ChrNum = geneChrNum;
+settings.GeneChr = strcat('chr',geneChrNum);
+settings.chromosome_IDs = {char(geneInfo.Reference)};
+settings.transcript_IDs = IncludeAccessionNumbers;
+settings.ribosomal_IDs = Ribosomal_IDs;
+
+settings.ProbeSpacing = minProbeSpacing;
+settings.RemoveMisMatches = RemoveMisMatches;
+settings.SaltConcentration = SaltConcentration;
+settings.HybridizationTemperature = HybridizationTemperatureCelsius;
+settings.BLASTdna = BLASTdna;
+settings.BLASTrna = BLASTrna;
+settings.BLASTbatchSize = Parallelization_probeBatchSize;
+settings.BLASTsimultaneousParsingOverSequentialParsing = ParsingPreference;
+settings.num_parpool_local = feature('numcores');
+settings.BlastParameters.reward = reward;
+settings.BlastParameters.penalty = penalty;
+settings.BlastParameters.wordsize = word_size;
+settings.BlastParameters.gapopen = gapopen;
+settings.BlastParameters.gapextend = gapextend;
+settings.BlastParameters.evalue = evalue;
+settings.BlastParameters.num_alignments = num_alignments;
+settings.BlastParameters.dust = dust;
+settings.TargetBatchSize = Parallelization_targetBatchSize;
+settings.MinProbeSize = minProbeSize;
+settings.MaxProbeSize = maxProbeSize;
+settings.MinHomologySearchTargetSize = MinHomologySearchTargetSize;
+settings.N_model = Gibbs_Model;
+settings.ExpressionReferenceForDesigningProbes = ExpressionReferenceForProbeDesign;
+
+%% Gene Expression Parameters
+settings.DoAllGenesHaveSameExpression = DoAllGenesHaveSameExpression;
+settings.HumanSpecific.HumanExpGeneOrTransc = UseGeneOverTranscLevelExpression; % 1 (Gene/EMBL GENEID) , 0 (Transcript/EMBL Transcript ID)
+settings.UseRegularDNAExpression = UseRegularDNAExpression;%0 use DNA expression from gene expression track in expression data, 1 set expression to 2 for DNA.
+settings.UniformRNAExpression = nullRNAcopynumber;%if assuming no differences in gene's expression sets level.
+settings.DNAPloidy = nullDNAcopynumber;
+
+
+%% Cluster Parameters
+settings.clusterStatus = cluster;
+settings.isOffline = RunOffline;
+
+%% Selecting Probes Specifications
+settings.maxProbes = maxNumberOfProbes;
+settings.RemoveProbesWithRibosomalHits = RemoveProbesBindingRibosomalHits;
+
+%% Simulation Settings
+settings.SimulationConfiguration.Temperature_Celsius_Model_Vector = Temperature_Celsius_Model_Vector;
+settings.SimulationConfiguration.Gibbs_Model_Vector = Gibbs_Model_Vector;
+settings.SimulationConfiguration.Dilution_Vector = Dilution_Vector;
+settings.SimulationConfiguration.AutoBackground_Mean = AutoBackground_Mean;
+settings.SimulationConfiguration.AutoBackground_STD = AutoBackground_STD;
+settings.SimulationConfiguration.NumReferenceProbes = NumReferenceProbes;
+settings.SimulationConfiguration.SpotIntensity_Mean = SpotIntensity_Mean;
+settings.SimulationConfiguration.SpotIntensity_STD = SpotIntensity_STD;
+settings.SimulationConfiguration.Tref = Tref;
+settings.SimulationConfiguration.Mean_Diameter = Mean_Diameter;
+settings.SimulationConfiguration.CellRadius = Rcell;
+settings.SimulationConfiguration.SpotRadius = Rspot;
+settings.SimulationConfiguration.NumOfZStacks = Nstacks;
+settings.SimulationConfiguration.InitialGuessConc = InitialGuessConc;
+settings.SimulationConfiguration.ProbeConcentration = ProbeConcentration;
+settings.SimulationConfiguration.errThreshold = errThreshold;
+settings.SimulationConfiguration.MaxIter = MaxIter;
+settings.SimulationConfiguration.Signal_StepSize = Signal_StepSize;
+settings.SimulationConfiguration.Signal_MaxValue = Signal_MaxValue;
+
+
+
+
+%% Save Settings
+settings.FolderRootName = strcat(saveRoot,geneNames,'_',strjoin(IncludeAccessionNumbers,'_'));
+settings.rootName = strjoin(IncludeAccessionNumbers,'_');
 settings.designerName = designerName;
 
 %% Selecting Probes Specifications
-settings.maxProbes = max_probes;
-settings.RemoveProbesWithRibosomalHits = RemoveRibosomalHits;
+settings.maxProbes = maxNumberOfProbes;
+settings.RemoveProbesWithRibosomalHits = RemoveProbesBindingRibosomalHits;
+settings.RibosomalTranscripts = rRNA_ids;
 
-
-if (strcmp(settings.Organism,'Human'))
-    settings.SEQdbRoot = settings.hLocRoot;
-elseif (strcmp(settings.Organism,'Mouse'))
-    settings.SEQdbRoot = settings.mLocRoot;
-elseif (strcmp(settings.Organism,'Yeast'))
-    settings.SEQdbRoot = settings.yLocRoot;
-else
-    settings.SEQdbRoot = settings.otherBlastDatabase;
-end
-T_hybrid = HybridizationTemperature;
+T_hybrid = HybridizationTemperatureCelsius;
 Lmin = minProbeSize; Lmax = maxProbeSize;
 
 
 
 
-%% Load Annotation File
-fprintf('\n')
-fprintf('\n')
-fprintf("Loading genome and transcriptome annotation files")
-tic
-if (strcmp(settings.Organism,'Human'))
-    optsUCSC = detectImportOptions(settings.Human_wgEncodeGencodeRefSeqFile);
-    optsUCSC.VariableNames = {'Var1','Var2','Var3'};
-    Gencode_db = readtable(settings.Human_GencodeRefSeqMetadataFile,optsUCSC);
-    optsUCSC2 = detectImportOptions(settings.Human_wgEncodeGencodeAttributesFile);
-    optsUCSC2.VariableNames = settings.wgEncodeGencodeAttributesVariableNames;
-    EMBLAttrAlign_db = readtable(settings.Human_wgEncodeGencodeAttributesFile,optsUCSC2);
-    optsUCSC3 = detectImportOptions(settings.Human_wgEncodeGencodeCompFile);
-    optsUCSC3.VariableNames = settings.wgEncodeGencodeCompVariableNames;
-    EMBLComp_db = readtable(settings.Human_wgEncodeGencodeCompFile,optsUCSC3);
-elseif (strcmp(settings.Organism,'Mouse'))
-    optsUCSC = detectImportOptions(settings.Mouse_wgEncodeGencodeRefSeqFile);
-    optsUCSC.VariableNames = {'Var1','Var2','Var3'};
-    Gencode_db = readtable(settings.Mouse_GencodeRefSeqMetadataFile,optsUCSC);
-    optsUCSC2 = detectImportOptions(settings.Mouse_wgEncodeGencodeAttributesFile);
-    optsUCSC2.VariableNames =settings.wgEncodeGencodeAttributesVariableNames;
-    EMBLAttrAlign_db = readtable(settings.Mouse_wgEncodeGencodeCompFile,optsUCSC2);
-    optsUCSC3 = detectImportOptions(settings.Mouse_wgEncodeGencodeCompFile);
-    optsUCSC3.VariableNames = settings.wgEncodeGencodeCompVariableNames;
-    EMBLComp_db = readtable(settings.Mouse_wgEncodeGencodeCompFile,optsUCSC3);
-elseif (strcmp(settings.Organism,'Yeast'))
-    % optsUCSC2 = detectImportOptions(settings.Yeast_wgEncodeGencodeAttributesFile);
-    % optsUCSC2.VariableNames = settings.wgEncodeGencodeAttributesVariableNames;
-    % EMBLAttrAlign_db = readtable(settings.Yeast_wgEncodeGencodeAttributesFile,optsUCSC2);
-    % optsUCSC3 = detectImportOptions(settings.Yeast_wgEncodeGencodeCompFile);
-    % optsUCSC3.VariableNames = settings.wgEncodeGencodeCompVariableNames;
-    % EMBLComp_db = readtable(settings.Yeast_wgEncodeGencodeCompFile,optsUCSC3);
-else  %custom organism
-    optsUCSC2 = detectImportOptions(settings.Custom_wgEncodeGencodeAttributesFile);
-    optsUCSC2.VariableNames = settings.wgEncodeGencodeAttributesVariableNames;
-    EMBLAttrAlign_db = readtable(settings.Custom_wgEncodeGencodeAttributesFile,optsUCSC2);
-    optsUCSC3 = detectImportOptions(settings.Custom_wgEncodeGencodeCompFile);
-    optsUCSC3.VariableNames = settings.wgEncodeGencodeCompVariableNames;
-    EMBLComp_db = readtable(settings.Custom_wgEncodeGencodeCompFile,optsUCSC3);
-end
-tEnd = toc;
-fprintf('\n')
-fprintf("Time elapsed to load annotation files %g seconds",round(tEnd,3,"significant"))
 
 %% Generate Folder
 if (not(isfolder([saveRoot])))
     mkdir([saveRoot])
 end
-
 fprintf('\n')
 fprintf("Making probe target design output folder")
-if (not(isfolder([saveRoot inputs1{gene_num,5} '_' settings.rootName])))
-    mkdir([saveRoot inputs1{gene_num,5} '_' settings.rootName])
+fprintf('\n')
+if (not(isfolder([saveRoot '(' geneNames ')' '_' settings.rootName])))
+    mkdir([saveRoot  '(' geneNames ')' '_' settings.rootName])
 end
-settings.FolderName = [inputs1{gene_num,5} '_' settings.rootName];
+settings.FolderName = [ '(' geneNames ')' '_' settings.rootName];
 settings.FolderRootName = strcat('output',filesep,settings.FolderName);
-settings.rootName = strjoin(inputs1{gene_num,1},'_');
-settings.TargetLists = strjoin(inputs1{gene_num,1},', ');
-
-
+settings.rootName = strjoin(IncludeAccessionNumbers,'_');
+settings.TargetLists = strjoin(IncludeAccessionNumbers,', ');
 %% Generate Probes
 fprintf('\n') 
 fprintf('\n')
-fprintf(strcat("Designing probes for"," ",inputs1{gene_num,5}," ","Transcript IDs:"," ",settings.TargetLists))
+fprintf(strcat("Designing probes for"," ",geneNames," ","transcript id:"," ",settings.TargetLists))
 fprintf('\n')
 fprintf('\n')
 try
-    load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_probes' designerName '.mat'],'probes')
+    load([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_probes' designerName '.mat'],'probes')
     fprintf("Loading probe tile sequences")
 catch
     fprintf("Generating probe tile sequences")
     try
         tic
         [init_probes,~,~,~,~] = ...
-            BKJH_Probe_Generator([Lmin Lmax],inputs1{gene_num,1},inputs1{gene_num,2},inputs1{gene_num,3},inputs1{gene_num,8},inputs1{gene_num,9},settings.isOffline,settings.SEQdbRoot);
+            BKJH_Probe_Generator([Lmin Lmax],IncludeAccessionNumbers,InclusionSequenceFiles,ExcludeSequenceFiles,ExcludeAccessionNumbers,targetStrand,settings.isOffline,settings.SEQdbRoot);
         probes = init_probes;
-        save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_probes' designerName '.mat'],'probes','-v7.3')
+        save([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_probes' designerName '.mat'],'probes','-v7.3')
         tEnd = toc;
         fprintf('\n')
         fprintf("Time elapsed to tile probes %g seconds",round(tEnd,3,"significant"))
@@ -538,20 +634,20 @@ catch
         fprintf(1,'There was an error! The message was:\n%s',e.message);
     end
 end
-
 %% BLAST Probes
 fprintf('\n')
 fprintf('\n')
 ProgressBar.deleteAllTimers();
 try
-    load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_hits_table' designerName '.mat'],'gene_table')
+    load([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_hits_table' designerName '.mat'],'gene_table')
     fprintf("Loading probe BLAST results table")
 catch
     fprintf("BLASTING Probes in batches")
+    fprintf('\n')
     try
         tic                                                                                                           %Organism           %(Gene Name)        %(Gene Name)        %ChrNum
-        [~,gene_table] = Probe_checker_general_JH10(probes,inputs1{gene_num,4},inputs1{gene_num,5},inputs1{gene_num,6},inputs1{gene_num,7},settings);
-        save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_hits_table' designerName '.mat'],'-mat','gene_table','-v7.3');
+        [~,gene_table] = Probe_checker_general_JH10(probes,Organism,geneNames,geneNames,geneChrNum,settings);
+        save([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_hits_table' designerName '.mat'],'-mat','gene_table','-v7.3');
         tEnd = toc;fprintf('\n')
         fprintf("Time elapsed to generate probe BLAST results table %g seconds",round(tEnd,3,"significant"))
     catch e
@@ -564,7 +660,7 @@ end
 fprintf('\n')
 fprintf('\n')
 try
-    load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_ExpressionInfo' designerName '.mat'],'ExpressionMatrix');
+    load([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_ExpressionInfo' designerName '.mat'],'ExpressionMatrix');
     fprintf("Loading BLAST hits gene expression information")
 catch
     fprintf("Getting BLAST hits gene expression information")
@@ -573,7 +669,7 @@ catch
     try
         tic
         [ExpressionMatrix,get_expression_time] = A_JH_GetExpressionInfo_V2(gene_table,settings);
-        save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_ExpressionInfo' designerName '.mat'],'ExpressionMatrix','get_expression_time','settings','-v7.3');
+        save([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_ExpressionInfo' designerName '.mat'],'ExpressionMatrix','get_expression_time','settings','-v7.3');
         tEnd = toc;fprintf('\n')
         fprintf("Time elapsed to generate probe BLAST hits gene expression information %g seconds",round(tEnd,3,"significant"))
     catch e
@@ -587,11 +683,11 @@ settings.saveRoot = saveRoot;
 fprintf('\n')
 fprintf('\n')
 try
-    load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_Tm' num2str(settings.HybridizationTemperature) '_OnOffThermoInfo' designerName '.mat'],'Kon','Kb_Match');
-    load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_dHInfo' designerName '.mat'],'-mat','dHon_f','dHon_r','dHon_eq','dHeq_Match','dHf_Match','dHr_Match');
-    load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_dSInfo' designerName '.mat'],'-mat','dSon_f','dSon_r','dSon_eq','dSeq_Match','dSf_Match','dSr_Match');
-    load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_TmInfo' designerName '.mat'],'-mat','Tm_on','Tm_Match');
-    load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_dCpInfo' designerName '.mat'],'-mat','dCpon_eq','dCpeq_Match');
+    load([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_Tm' num2str(settings.HybridizationTemperature) '_OnOffThermoInfo' designerName '.mat'],'Kon','Kb_Match');
+    load([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_dHInfo' designerName '.mat'],'-mat','dHon_f','dHon_r','dHon_eq','dHeq_Match','dHf_Match','dHr_Match');
+    load([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_dSInfo' designerName '.mat'],'-mat','dSon_f','dSon_r','dSon_eq','dSeq_Match','dSf_Match','dSr_Match');
+    load([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_TmInfo' designerName '.mat'],'-mat','Tm_on','Tm_Match');
+    load([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_dCpInfo' designerName '.mat'],'-mat','dCpon_eq','dCpeq_Match');
     fprintf("Loading probe target thermodynamic information")
 catch
     fprintf("Computing probe target thermodynamic information")
@@ -600,12 +696,12 @@ catch
     try
         tic
         [Kb_Match,Kon,Koff,dHeq_Match,dSeq_Match,dHf_Match,dSf_Match,dHr_Match,dSr_Match,dCpeq_Match,dHon_eq,dSon_eq,dHon_f,dSon_f,dHon_r,dSon_r,dCpon_eq,Tm_on,Tm_Match] = ...
-            A_JH_GenerateThermoInfo_V5(probes,gene_table,inputs1{gene_num,5},settings);%add Kon Koff
-        save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_Tm' num2str(settings.HybridizationTemperature) '_OnOffThermoInfo' designerName '.mat'],'-mat','Kon','Koff','Kb_Match','-v7.3');
-        save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_dHInfo' designerName '.mat'],'-mat','dHon_f','dHon_r','dHon_eq','dHeq_Match','dHf_Match','dHr_Match','-v7.3');
-        save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_dSInfo' designerName '.mat'],'-mat','dSon_f','dSon_r','dSon_eq','dSeq_Match','dSf_Match','dSr_Match','-v7.3');
-        save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_TmInfo' designerName '.mat'],'-mat','Tm_on','Tm_Match','-v7.3');
-        save([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_dCpInfo' designerName '.mat'],'-mat','dCpon_eq','dCpeq_Match','-v7.3');
+            A_JH_GenerateThermoInfo_V5(probes,gene_table,geneNames,settings);%add Kon Koff
+        save([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_Tm' num2str(settings.HybridizationTemperature) '_OnOffThermoInfo' designerName '.mat'],'-mat','Kon','Koff','Kb_Match','-v7.3');
+        save([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_dHInfo' designerName '.mat'],'-mat','dHon_f','dHon_r','dHon_eq','dHeq_Match','dHf_Match','dHr_Match','-v7.3');
+        save([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_dSInfo' designerName '.mat'],'-mat','dSon_f','dSon_r','dSon_eq','dSeq_Match','dSf_Match','dSr_Match','-v7.3');
+        save([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_TmInfo' designerName '.mat'],'-mat','Tm_on','Tm_Match','-v7.3');
+        save([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_dCpInfo' designerName '.mat'],'-mat','dCpon_eq','dCpeq_Match','-v7.3');
         toc
         tEnd = toc;fprintf('\n')
         fprintf("Time elapsed to compute probe target thermodynamic information %g seconds",round(tEnd,3,"significant"))
@@ -644,17 +740,17 @@ catch
 end
 
 %% Basic Stats for Designing Probes Function
-if (ExpressionReferenceForDesigningProbes==0)
+if (ExpressionReferenceForProbeDesign==0)
 EKernel = ones(size(ExpressionMatrix,1),1);
 else
-EKernel = ExpressionMatrix(:,ExpressionReferenceForDesigningProbes);
+EKernel = ExpressionMatrix(:,ExpressionReferenceForProbeDesign);
 end
-Kon = squeeze(Kon(:,Nmodel));
-Kb_mod = squeeze(Kb_mod(:,:,:,Nmodel));
+Kon = squeeze(Kon(:,Gibbs_Model));
+Kb_mod = squeeze(Kb_mod(:,:,:,Gibbs_Model));
 DoesProbeBindSite = DoesProbeBindSite2;
 FoldName = [];
 if (settings.BLASTdna)
-    Kb_Complement = squeeze(Kb_Complement(:,:,Nmodel));
+    Kb_Complement = squeeze(Kb_Complement(:,:,Gibbs_Model));
 else
      dHeq_Complement= [];
     dCp_Complement= [];
@@ -664,7 +760,7 @@ end
 fprintf('\n')
 fprintf('\n')
 try
-    load([settings.FolderRootName filesep inputs1{gene_num,5} '_' settings.rootName '_Tm' num2str(T_hybrid) '_BasicDesignerStats' designerName '.mat'],'Tvec_RNA','Svec_RNA','TPvec_RNA','TSvec_RNA','TPvec_logKOFF_RNA','TPvec_logKOFFdivON_RNA','TPvec_logKONdivOFF_RNA',...
+    load([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_Tm' num2str(T_hybrid) '_BasicDesignerStats' designerName '.mat'],'Tvec_RNA','Svec_RNA','TPvec_RNA','TSvec_RNA','TPvec_logKOFF_RNA','TPvec_logKOFFdivON_RNA','TPvec_logKONdivOFF_RNA',...
         'Nvec_RNAmulti','Tvec_DNA','Svec_DNA','TPvec_DNA','TSvec_DNA','TPvec_logKOFF_DNA','TPvec_logKOFFdivON_DNA','TPvec_logKONdivOFF_DNA','TPvec_logKOFFdivCOMP_DNA','TPvec_logKCOMPdivOFF_DNA',...
         'Off_Score','Specificity_Score','NumRNAOffTargetOptions','Probes_WithNRNAOFF','NumDNAOffTargetOptions','Probes_WithNDNAOFF')
     fprintf("Loading probe target statistics information")
@@ -673,7 +769,7 @@ catch
         fprintf("Computing probe target statistics information")
         tic
         [Nvec_RNAmulti,RNAOFF_Score,RNASpecificity_Score,NumRNAOffTargetOptions,Probes_WithNRNAOFF,DNAOFF_Score,DNASpecificity_Score,NumDNAOffTargetOptions,Probes_WithNDNAOFF,Cout] = ...
-            A0_BasicDesignerStats([settings.BLASTrna settings.BLASTdna],removeUndesiredIsos,gene_table,settings,FoldName,DoesProbeBindSite,Kon,Kb_mod,Kb_Complement,EKernel);
+            A0_BasicDesignerStats([settings.BLASTrna settings.BLASTdna],removeUndesiredIsoformsFromPredictionOffTargets,gene_table,settings,settings.FolderRootName,DoesProbeBindSite,Kon,Kb_mod,Kb_Complement,EKernel);
         Tvec_RNA = Cout{1}{1};Svec_RNA = Cout{1}{2};TPvec_RNA = Cout{1}{3};TSvec_RNA = Cout{1}{4};
         TPvec_logKOFF_RNA = Cout{1}{5};TPvec_logKOFFdivON_RNA = Cout{1}{6};TPvec_logKONdivOFF_RNA = Cout{1}{7};
         Tvec_DNA = Cout{2}{1};Svec_DNA = Cout{2}{2};TPvec_DNA = Cout{2}{3};TSvec_DNA = Cout{2}{4};
@@ -703,7 +799,7 @@ catch
     try
         fprintf("Designing TrueProbes probe set")
         tic
-        chosenProbes = A_ZigZagProbeSelection_V5(probes,gene_table,settings,addSelfProb,packOptimal,Kon,Nvec_RNAmulti,Off_Score,Specificity_Score,Tvec_RNA,Svec_RNA,TPvec_RNA,TSvec_RNA,TPvec_logKOFF_RNA,TPvec_logKOFFdivON_RNA,TPvec_logKONdivOFF_RNA,ExpressionMatrix,DoesProbeBindSite,Kb_mod);
+        chosenProbes = A_ZigZagProbeSelection_V5(probes,gene_table,settings,IncludeSelfHybridizationInProbeSelection,packOptimal_ProbesWithNoOffTargets,Kon,Nvec_RNAmulti,Off_Score,Specificity_Score,Tvec_RNA,Svec_RNA,TPvec_RNA,TSvec_RNA,TPvec_logKOFF_RNA,TPvec_logKOFFdivON_RNA,TPvec_logKONdivOFF_RNA,ExpressionMatrix,DoesProbeBindSite,Kb_mod);
         save([saveRoot filesep settings.FolderName filesep settings.FolderName '_chosen.mat'],'chosenProbes','-v7.3')
         tEnd = toc;fprintf('\n')
         fprintf("Time elapsed to select TrueProbes probes %g seconds",round(tEnd,3,"significant"))
@@ -744,7 +840,7 @@ for v = 1:length(chosenProbes)
 end
 T = cell2table(final_probe_info,...
     'VariableNames',{'Probe Target' 'Base_Position-start' 'Base_Position-stop' 'Probe ID' 'Probe Sequence' 'Probe Length' 'GC_fraction' 'Probe Tm' '20+bp matches' '19bp matches' '18bp matches' '17bp matches' '16bp matches' '15bp matches'});
-filename = [saveRoot filesep settings.FolderName filesep settings.FolderName '_probes_final_' num2str(max_probes) 'max.xlsx'];
+filename = [saveRoot filesep settings.FolderName filesep settings.FolderName '_probes_final_' num2str(maxNumberOfProbes) 'max.xlsx'];
 if exist(filename,'file')        %delete if already exists
     delete(filename)
 end
@@ -756,7 +852,7 @@ size(final_probe_info,1)
 fprintf('\n')
 fprintf('\n')
 try
-    load([settings.FolderRootName filesep inputs1{gene_num,5} '_Tm' num2str(T_hybrid) '_ModelMetrics' designerName '.mat'],'ModelMetrics')
+    load([settings.FolderRootName filesep '(' geneNames ')_Tm' num2str(T_hybrid) '_ModelMetrics' designerName '.mat'],'ModelMetrics')
     fprintf("Loading TrueProbes probe set kinetic-model simulation results and RNA-FISH probe design metrics")
 catch
     fprintf("Computing TrueProbes probe set kinetic-model simulation results and RNA-FISH probe design metrics")
@@ -764,7 +860,7 @@ catch
         tic
         ModelMetrics = ...
             RNAsolver_JH2(chosenProbes,settings,probes,gene_table,ExpressionMatrix,DoesProbeBindSite2,dHeq_mod,dSeq_mod,dCp_mod,dHeq_Complement,dSeq_Complement,dCp_Complement)
-        save([settings.FolderRootName filesep inputs1{gene_num,5} '_Tm' num2str(T_hybrid) '_ModelMetrics' designerName '.mat'],'ModelMetrics','chosenProbes','settings','-v7.3')
+        save([settings.FolderRootName filesep '(' geneNames ')_Tm' num2str(T_hybrid) '_ModelMetrics' designerName '.mat'],'ModelMetrics','chosenProbes','settings','-v7.3')
         tEnd = toc;fprintf('\n')
         fprintf("Time elapsed to compute TrueProbes probe metrics %g seconds",round(tEnd,3,"significant"))
     catch e

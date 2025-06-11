@@ -1,6 +1,6 @@
 function [Nvec_RNAmulti,RNAOFF_Score,RNASpecificity_Score,NumRNAOffTargetOptions,Probes_WithNRNAOFF,DNAOFF_Score,DNASpecificity_Score,NumDNAOffTargetOptions,Probes_WithNDNAOFF,Cout] = A0_BasicDesignerStats(targetTypes,removeUndesiredIsos,gene_table,settings,FoldName,DoesProbeBindSite,Kon,Kb,Kb_Complement,EKernel)
 % This function determine the metrics and statistics used for selecting RNA-FISH probes.
-
+most_recent_num_local = 8;
 
 RNASpecificity_Score = zeros(1,size(DoesProbeBindSite,1));RNAOFF_Score = zeros(1,size(DoesProbeBindSite,1));  
 DNASpecificity_Score = zeros(1,size(DoesProbeBindSite,1));DNAOFF_Score = zeros(1,size(DoesProbeBindSite,1));
@@ -15,15 +15,15 @@ Cout{2} = cell(1,9);
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
-
-%ReferenceType=NCBI {
-RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
-RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
-RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
-RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
-contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
-% }
-
+if (strcmp(settings.referenceType,'RefSeq'))
+    RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
+    RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
+    RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
+    RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
+    contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+    contains_RNA = find(contains(gene_table.Name,settings.EMBL_RNAparser(Organism)));
+end
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
 gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
 gene_table.Ax = min(gene_table.SubjectIndices,[],2);
@@ -32,18 +32,34 @@ gene_table = sortrows(gene_table,[7 13],'ascend');
 Names = unique(gene_table.Name);
 Names = convertCharsToStrings(Names);
 uniNames = extractBefore(Names,'.');
-
-%ReferenceType=NCBI {
+if (sum(ismissing(uniNames))>0)
+    uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+end
+if (strcmp(settings.referenceType,'RefSeq'))
 DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
 DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
 DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
 NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
 NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
-NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%
-%}
-
+NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%IDs
 DNA_IDs =union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3).';
 NonDNA_IDs = intersect(intersect(NonDNA_IDs_1,NonDNA_IDs_2),NonDNA_IDs_3).';
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+DNA_IDs = find(~contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
+NonDNA_IDs = find(contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
+end
+
+    if (settings.clusterStatus)
+        most_recent_num = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
+    else
+        most_recent_num = most_recent_num_local;
+    end
+
+probeBatchSize = settings.BLASTbatchSize;
+targetBatchSize = settings.TargetBatchSize;
+
+
+
 if (settings.SingleOrMulti==1&&settings.AllIsoforms == 0)%One Gene/One Isoform
     GeneName = settings.GeneName;
     GeneTarget = settings.rootName;
@@ -84,6 +100,7 @@ Js_OFFDNAi = @(x,y)DNA_IDs(find(cumsum(ismember(DNA_IDs,Js(x)))==y,1));
 
 
 % finds list of each off-target both number, site and location, as well as Koff and Kon equilibrium constants
+
 if (isRNA)
     TPvec_RNA0 = cell(1,size(DoesProbeBindSite,1));
     Tvec_RNA = cell(1,size(DoesProbeBindSite,1));
@@ -101,14 +118,30 @@ if (isRNA)
     TPvec_logKOFFdivON_RNA = cell(1,length(OFF_RNAIDs));
     TPvec_logKONdivOFF_RNA = cell(1,length(OFF_RNAIDs));
 
+
     if (~isfile([settings.FolderRootName filesep TranscriptName '_' settings.rootName '_BasicStats_RNA_ByProbe_Info' settings.designerName '.mat']))%check if temp file exists
-        N_Batches = size(DoesProbeBindSite,1);
-        ResultsExist = zeros(1,size(DoesProbeBindSite,1));
-        ResultsSize = zeros(1,size(DoesProbeBindSite,1));
-        ResultsDate = cell(1,size(DoesProbeBindSite,1));
+        N_Probes = size(probes,1);
+        N_Batches = ceil(N_Probes/probeBatchSize);
+        batch_nums = 1:N_Batches;
+        R = mod(N_Probes,probeBatchSize);
+        Batch = cell(1,N_Batches);
+        if (R==0)
+            for k = 1:N_Batches
+                Batch{k} = [probeBatchSize*(k-1)+1:probeBatchSize*k];
+            end
+        else
+            for k = 1:N_Batches-1
+                Batch{k} = [probeBatchSize*(k-1)+1:probeBatchSize*k];
+            end
+            Batch{N_Batches} = [probeBatchSize*(N_Batches-1)+1:probeBatchSize*(N_Batches-1)+R];
+        end
+        ResultsExist = zeros(1,N_Batches);
+        ResultsSize = zeros(1,N_Batches);
+        ResultsDate = cell(1,N_Batches);
+
         for i = 1:N_Batches
-            if (isfile([settings.FolderRootName filesep TranscriptName  settings.designerName '_basicStatsRNA_Info_probebatch' num2str(i) '.mat']))%check if temp file exists
-                d = dir([settings.FolderRootName filesep TranscriptName settings.designerName '_basicStatsRNA_Info_probebatch' num2str(i) '.mat']);
+            if (isfile([settings.FolderRootName filesep '(' TranscriptName ')' settings.designerName '_basicStatsRNA_Info_probebatch' num2str(i) '.mat']))%check if temp file exists
+                d = dir([settings.FolderRootName filesep '(' TranscriptName ')' settings.designerName '_basicStatsRNA_Info_probebatch' num2str(i) '.mat']);
                 if (d.bytes>0)%check size greater than zero
                     ResultsExist(i) = 1;
                 end
@@ -119,13 +152,7 @@ if (isRNA)
         end
         Results_NotMade = find(ResultsExist==0);
         Results_Made = find(ResultsExist==1);
-        %Sort get most 8 recent ResultsMade GeneHitsMade and GeneHitsTable Made and
-        %add to probe_check_list
-        if (settings.clusterStatus)
-            most_recent_num = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
-        else
-            most_recent_num = 8;
-        end
+        %Sort get most recent ResultsMade GeneHitsMade and GeneHitsTable Made and add to probe_check_list
         if (length(Results_Made)<=most_recent_num)
             results_check1 = Results_Made;
         else
@@ -140,6 +167,8 @@ if (isRNA)
         batch_nums_to_check = union(Results_NotMade,results_check1);
         Kb_List = parallel.pool.Constant(Kb);
         Kon_List = parallel.pool.Constant(Kon);
+
+
         parfor v = 1:l;ength(batch_nums_to_check)
             p = batch_nums_to_check(v);
             temp_designer_stat_rna_p{v}{1} = length(Js_OFFRNA(p));
@@ -161,7 +190,10 @@ if (isRNA)
             Tvec_logKOFFdivON_RNA{p} = temp_designer_stat_rna_p{6};
             Tvec_logKONdivOFF_RNA{p} = temp_designer_stat_rna_p{7};
         end
+
     end
+
+
     for t = 1:length(OFF_RNAIDs) 
         TPvec_RNA0{t} = Tp(OFF_RNAIDs(t));%does not have multiplicity
         temp_RNAV1b = Tx(OFF_RNAIDs(t),TPvec_RNA0{t});
@@ -216,36 +248,23 @@ if (isDNA)
     TPvec_logKOFFdivCOMP_DNA = cell(1,length(DNA_IDs));
     TPvec_logKCOMPdivOFF_DNA = cell(1,length(DNA_IDs));
 
-    if (isfile([settings.FolderRootName filesep TranscriptName  settings.designerName '_basicStatsRNA_Info_probebatch' num2str(i) '.mat']))%check if temp file exists
-        d = dir([settings.FolderRootName filesep TranscriptName settings.designerName '_basicStatsRNA_Info_probebatch' num2str(i) '.mat']);
-        if (d.bytes>0)%check size greater than zero
-            ResultsExist(i) = 1;
+    
+    N_DNATargetBatches = ceil(length(Names)/targetBatchSize);
+    R = mod(length(Names),targetBatchSize);
+    Batch_siteMapping = cell(1,N_DNATargetBatches);
+    if (R==0)
+        for k = 1:N_DNATargetBatches
+            Batch_siteMapping{k} = [targetBatchSize*(k-1)+1:targetBatchSize*k];
         end
-        ResultsSize(i) = d.bytes;
-        ResultsDate{i} = datetime(d.date);
-        clear d
+    else
+        for k = 1:N_DNATargetBatches-1
+            Batch_siteMapping{k} = [targetBatchSize*(k-1)+1:targetBatchSize*k];
+        end
+        Batch_siteMapping{N_DNATargetBatches} = [targetBatchSize*(N_DNATargetBatches-1)+1:targetBatchSize*(N_DNATargetBatches-1)+R];
     end
-
-Results_NotMade = find(ResultsExist==0);
-Results_Made = find(ResultsExist==1);
-%Sort get most 8 recent ResultsMade GeneHitsMade and GeneHitsTable Made and
-%add to probe_check_list
-if (settings.clusterStatus)
-    most_recent_num = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
-else
-    most_recent_num = 8;
-end
-if (length(Results_Made)<=most_recent_num)
-    results_check1 = Results_Made;
-else
-    Results_RecentMade_Dates(:,1) = ResultsDate(Results_Made);
-    Results_RecentMade_Dates(:,2) = num2cell(Results_Made);
-    Results_RecentMade_Dates = table2timetable(cell2table(Results_RecentMade_Dates));
-    Results_RecentMade_Dates = sortrows(Results_RecentMade_Dates,1,'descend');
-    Results_RecentMade_Dates.Properties.VariableNames = {'ID'};
-    results_check1 = Results_RecentMade_Dates.ID(1:most_recent_num).';
-    clear Results_RecentMade_Dates
-end
+    DNATargetBatchesResultsExist = zeros(1,N_DNATargetBatches);
+    DNATargetBatchesResultsSize = zeros(1,N_DNATargetBatches);
+    DNATargetBatchesResultsDate = cell(1,N_DNATargetBatches);
 for p = 1:size(DoesProbeBindSite,1)
     Nvec_DNAsingle(p) = length(Js_OFFDNA(p));
     Nvec_DNAmulti(p) = sum(cellfun(@length,Sx(p,Js_OFFDNA(p))));
@@ -257,6 +276,35 @@ for p = 1:size(DoesProbeBindSite,1)
     Tvec_logKOFFdivCOMP_DNA{p} = log10(diag(full(squeeze(Kb(p,Tvec_DNA{p},Svec_DNA{p}))))'./diag(full(squeeze(Kb_Complement(Tvec_DNA{p},Svec_DNA{p}))))');
     Tvec_logKCOMPdivOFF_DNA{p} = log10(diag(full(squeeze(Kb_Complement(Tvec_DNA{p},Svec_DNA{p}))))'./diag(full(squeeze(Kb(p,Tvec_DNA{p},Svec_DNA{p}))))');
 end
+    if (isfile([settings.FolderRootName filesep '(' TranscriptName ')' settings.designerName '_basicStatsRNA_Info_probebatch' num2str(i) '.mat']))%check if temp file exists
+        d = dir([settings.FolderRootName filesep '(' TranscriptName ')' settings.designerName '_basicStatsRNA_Info_probebatch' num2str(i) '.mat']);
+        if (d.bytes>0)%check size greater than zero
+           DNATargetBatchesResultsExist(i) = 1;
+        end
+        DNATargetBatchesResultsSize(i) = d.bytes;
+        DNATargetBatchesResultsDate{i} = datetime(d.date);
+        clear d
+    end
+
+
+DNATargetBatchesResults_NotMade = find(DNATargetBatchesResultsExist==0);
+DNATargetBatchesResults_Made = find(DNATargetBatchesResultsExist==1);
+%Sort get most 8 recent ResultsMade GeneHitsMade and GeneHitsTable Made and
+%add to probe_check_list
+if (length(DNATargetBatchesResults_Made)<=most_recent_num)
+    results_check1 = DNATargetBatchesResults_Made;
+else
+    Results_RecentMade_Dates3(:,1) = ResultsDate(DNATargetBatchesResults_Made);
+    Results_RecentMade_Dates3(:,2) = num2cell(DNATargetBatchesResults_Made);
+    Results_RecentMade_Dates3 = table2timetable(cell2table(Results_RecentMade_Dates3));
+    Results_RecentMade_Dates3 = sortrows(Results_RecentMade_Dates3,1,'descend');
+    Results_RecentMade_Dates3.Properties.VariableNames = {'ID'};
+    results_check1 = Results_RecentMade_Dates3.ID(1:most_recent_num).';
+    clear Results_RecentMade_Dates3
+end
+
+
+
 for t = 1:length(DNA_IDs)
     TPvec_DNA0{t} = Tp(DNA_IDs(t))';
     temp_DNAV1b = Tx2(DNA_IDs(t),TPvec_DNA0{t});

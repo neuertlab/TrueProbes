@@ -27,18 +27,7 @@ RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
 RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
 contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
 elseif (strcmp(settings.referenceType,'ENSEMBL'))
-RNA_IDs_1 = find(contains(gene_table.Name,'EN'));
-RNA_IDs_2 = find(contains(gene_table.Name,'EN'));
-RNA_IDs_3 = find(contains(gene_table.Name,'EN'));
-RNA_IDs_4 = find(contains(gene_table.Name,'EN'));
-contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
-else
-    ss = 1;
-% RNA_IDs_1 = find(contains(gene_table.Name,'EN'));
-% RNA_IDs_2 = find(contains(gene_table.Name,'EN'));
-% RNA_IDs_3 = find(contains(gene_table.Name,'EN'));
-% RNA_IDs_4 = find(contains(gene_table.Name,'EN'));
-% contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+contains_RNA = find(contains(gene_table.Name,settings.EMBL_RNAparser(Organism)));
 end
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
 gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
@@ -58,17 +47,15 @@ DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
 NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
 NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
 NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%
-else
-ss = 1;
-DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
-DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
-DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
-NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
-NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
-NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%
-end
-DNA_IDs =union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3).';
+DNA_IDs = union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3).';
 NonDNA_IDs = intersect(intersect(NonDNA_IDs_1,NonDNA_IDs_2),NonDNA_IDs_3).';
+else
+DNA_IDs = find(~contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
+NonDNA_IDs = find(contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
+end
+
+
+
 %% Load version of databases     
     if (strcmp(Organism,'Yeast'))
         optsTabulaYeast = detectImportOptions(settings.YeastExpressionFile,'FileType','delimitedtext');

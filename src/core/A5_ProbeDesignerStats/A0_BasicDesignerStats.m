@@ -1,7 +1,5 @@
-function [Nvec_RNAmulti,RNAOFF_Score,RNASpecificity_Score,NumRNAOffTargetOptions,Probes_WithNRNAOFF,DNAOFF_Score,DNASpecificity_Score,NumDNAOffTargetOptions,Probes_WithNDNAOFF,Cout] = A0_BasicDesignerStats(targetTypes,removeUndesiredIsos,gene_table,settings,FoldName,DoesProbeBindSite,Kon,Kb,Kb_Complement,EKernel)
+function [Nvec_RNAmulti,RNAOFF_Score,RNASpecificity_Score,NumRNAOffTargetOptions,Probes_WithNRNAOFF,DNAOFF_Score,DNASpecificity_Score,NumDNAOffTargetOptions,Probes_WithNDNAOFF,Cout] = A0_BasicDesignerStats(targetTypes,removeUndesiredIsos,gene_table,settings,FolderRootName,DoesProbeBindSite,Kon,Kb,Kb_Complement,EKernel)
 % This function determine the metrics and statistics used for selecting RNA-FISH probes.
-
-
 RNASpecificity_Score = zeros(1,size(DoesProbeBindSite,1));RNAOFF_Score = zeros(1,size(DoesProbeBindSite,1));
 DNASpecificity_Score = zeros(1,size(DoesProbeBindSite,1));DNAOFF_Score = zeros(1,size(DoesProbeBindSite,1));
 NumRNAOffTargetOptions = [];Probes_WithNRNAOFF = [];
@@ -14,15 +12,15 @@ Cout{2} = cell(1,9);
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
-
-%ReferenceType=NCBI {
-RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
-RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
-RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
-RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
-contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
-% }
-
+if (strcmp(settings.referenceType,'RefSeq'))
+    RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
+    RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
+    RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
+    RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
+    contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+    contains_RNA = find(contains(gene_table.Name,settings.EMBL_RNAparser(Organism)));
+end
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
 gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
 gene_table.Ax = min(gene_table.SubjectIndices,[],2);
@@ -31,19 +29,22 @@ gene_table = sortrows(gene_table,[7 13],'ascend');
 Names = unique(gene_table.Name);
 Names = convertCharsToStrings(Names);
 uniNames = extractBefore(Names,'.');
-
-%ReferenceType=NCBI {
+if (sum(ismissing(uniNames))>0)
+    uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+end
+if (strcmp(settings.referenceType,'RefSeq'))
 DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
 DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
 DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
 NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
 NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
-NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%
-%}
-
+NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%IDs
 DNA_IDs =union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3).';
 NonDNA_IDs = intersect(intersect(NonDNA_IDs_1,NonDNA_IDs_2),NonDNA_IDs_3).';
-
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+DNA_IDs = find(~contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
+NonDNA_IDs = find(contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
+end
 GeneName = settings.GeneName;
 GeneTarget = settings.rootName;
 ON_RNAIDs = find(strcmp(uniNames,extractBefore(GeneTarget,'.')));
@@ -89,7 +90,7 @@ if (isRNA)
     fprintf("Generating RNA target statistics by probe")
     fprintf('\n')
     fprintf('\n')
-    progBar = ProgressBar(size(DoesProbeBindSite,1),'Title', 'Computing');
+    progBar = ProgressBar(size(DoesProbeBindSite,1),'WorkerDirectory',strcat(pwd,filesep,FolderRootName),'Title', 'Computing');
     for p = 1:size(DoesProbeBindSite,1)
         Nvec_RNAsingle(p) = length(Js_OFFRNA(p));
         Nvec_RNAmulti(p) = sum(cellfun(@length,Sx(p,Js_OFFRNA(p))));
@@ -106,7 +107,7 @@ if (isRNA)
     fprintf("Generating probe statistics by RNA off-targets")
     fprintf('\n')
     fprintf('\n')
-    progBar = ProgressBar(length(OFF_RNAIDs),'Title', 'Computing');
+    progBar = ProgressBar(length(OFF_RNAIDs),'WorkerDirectory',strcat(pwd,filesep,FolderRootName),'Title', 'Computing');
     for t = 1:length(OFF_RNAIDs)
         TPvec_RNA0{t} = Tp(OFF_RNAIDs(t));%does not have multiplicity
         temp_RNAV1b = Tx(OFF_RNAIDs(t),TPvec_RNA0{t});
@@ -136,7 +137,7 @@ if (isRNA)
     fprintf("Converting RNA Statistics into Probe Specificity and OFF-target Scores")
     fprintf('\n')
     fprintf('\n')
-    progBar = ProgressBar(length(Probes_With_RNAOFF));
+    progBar = ProgressBar(length(Probes_With_RNAOFF),'WorkerDirectory',strcat(pwd,filesep,FolderRootName));
     for v = 1:length(Probes_With_RNAOFF)
         temp_T = Tvec_RNA{Probes_With_RNAOFF(v)};
         temp_KOFF = Tvec_logKOFF_RNA{Probes_With_RNAOFF(v)};
@@ -172,7 +173,7 @@ if (isDNA)
     fprintf("Generating DNA target statistics by probe")
     fprintf('\n')
     fprintf('\n')
-    progBar = ProgressBar(size(DoesProbeBindSite,1),'Title', 'Computing');
+    progBar = ProgressBar(size(DoesProbeBindSite,1),'WorkerDirectory',strcat(pwd,filesep,FolderRootName),'Title', 'Computing');
     for p = 1:size(DoesProbeBindSite,1)
         Nvec_DNAsingle(p) = length(Js_OFFDNA(p));
         Nvec_DNAmulti(p) = sum(cellfun(@length,Sx(p,Js_OFFDNA(p))));
@@ -191,7 +192,7 @@ if (isDNA)
     fprintf("Generating probe statistics by DNA off-targets")
     fprintf('\n')
     fprintf('\n')
-    progBar = ProgressBar(length(DNA_IDs),'Title', 'Computing');
+    progBar = ProgressBar(length(DNA_IDs),'WorkerDirectory',strcat(pwd,filesep,FolderRootName),'Title', 'Computing');
     for t = 1:length(DNA_IDs)
         TPvec_DNA0{t} = Tp(DNA_IDs(t))';
         temp_DNAV1b = Tx2(DNA_IDs(t),TPvec_DNA0{t});
@@ -225,7 +226,7 @@ if (isDNA)
     fprintf("Converting DNA Statistics into Probe Specificity and OFF-target Scores")
     fprintf('\n')
     fprintf('\n')
-    progBar = ProgressBar(length(Probes_With_DNAOFF));
+    progBar = ProgressBar(length(Probes_With_DNAOFF),'WorkerDirectory',strcat(pwd,filesep,FolderRootName));
     for v = 1:length(Probes_With_DNAOFF)
         temp_T = Tvec_DNA{Probes_With_DNAOFF(v)};
         temp_KOFF = Tvec_logKOFF_DNA{Probes_With_DNAOFF(v)};

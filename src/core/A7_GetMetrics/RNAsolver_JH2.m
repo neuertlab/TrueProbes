@@ -16,35 +16,30 @@ V_Cell = @(R) 4/3*pi*(R^3)/10^15;%um to L
 z_domain_function = @(z,Pz) z(Pz>0);
 Pz_domain_function = @(Pz) Pz(Pz>0)/sum(Pz(Pz>0));
 
-
-AutoBackground_Mean = 278;
-AutoBackground_STD = 33;
-NumReferenceProbes = 48;
-SpotIntensity_Mean = 827;
-SpotIntensity_STD = 28;
-Rspot = 5;
-Mean_Diameter = 150;
-Nstacks = 67;
-Tref = 37+273.15;
-Rpx_spot = 5;
-Dcell = 150;%px  N Probes*area_spot/area_cell =
-Rcell = 10;%um to L
-errThreshold = 1;
-MaxIter = 40;
-GuessConc = 10^-10;
-PC0 = 5/10^6;%5uM
+Tvec = settings.SimulationConfiguration.Temperature_Celsius_Model_Vector+273.15;
+Mvec = settings.SimulationConfiguration.Gibbs_Model_Vector;
+Dvec = settings.SimulationConfiguration.Dilution_Vector;
+AutoBackground_Mean = settings.SimulationConfiguration.AutoBackground_Mean;
+AutoBackground_STD = settings.SimulationConfiguration.AutoBackground_STD;
+NumReferenceProbes = settings.SimulationConfiguration.NumReferenceProbes;
+SpotIntensity_Mean = settings.SimulationConfiguration.SpotIntensity_Mean;
+SpotIntensity_STD = settings.SimulationConfiguration.SpotIntensity_STD;
+Tref = settings.SimulationConfiguration.Tref+273.15;
+Mean_Diameter = settings.SimulationConfiguration.Mean_Diameter;
+Rcell = settings.SimulationConfiguration.CellRadius;
+Rspot = settings.SimulationConfiguration.SpotRadius;
+Nstacks = settings.SimulationConfiguration.NumOfZStacks;
+GuessConc = settings.SimulationConfiguration.InitialGuessConcc;
+PC0 = settings.SimulationConfiguration.ProbeConcentration;
+errThreshold = settings.SimulationConfiguration.errThreshold;
+MaxIter = settings.SimulationConfiguration.MaxIter;
 Diameter_vals = Mean_Diameter;
-Mvec = settings.N_model;
-Tvec = settings.HybridizationTemperature+273.15;
-Dvec =1;%1/10^6 is the point where it drops
-
 load('data/TS_DefaultParams.mat','TrueSpotDefaultThParameters')
 SI = 0:0.1:3000;%only works if SI
 SI_SignalMinusBackgd_I = -max(SI):0.1:1*max(SI);
 SI_Signal_wAuto_I = 0:0.1:2*max(SI);
 IntensityPerProbe = SpotIntensity_Mean/NumReferenceProbes;
 Pr_Auto_I = pIntensity(SI,AutoBackground_Mean,AutoBackground_STD);%I over SI
-
 NumNonUniformConditions = size(ExpressionMatrix,2);
 [~, ExpressionMatrix_nTPM] = tmm(ExpressionMatrix,0.3,0.05,-1e10,1);
 transcript_Expression_Equal_acrossSample = mean(ExpressionMatrix_nTPM(:));
@@ -57,7 +52,6 @@ Cvec = [size(nExpressionMatrix,2)-1 size(nExpressionMatrix,2)];
 else
 Cvec = [settings.ExpressionReferenceForDesigningProbes size(nExpressionMatrix,2)-1 size(nExpressionMatrix,2)];
 end
-
 GeneName = settings.GeneName;
 GeneTarget = settings.transcript_IDs;
 gene_table = sortrows(gene_table,[7 6],'ascend');
@@ -70,17 +64,7 @@ if (strcmp(settings.referenceType,'RefSeq'))
     RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
     contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
 elseif (strcmp(settings.referenceType,'ENSEMBL'))
-    RNA_IDs_1 = find(contains(gene_table.Name,'EN'));
-    RNA_IDs_2 = find(contains(gene_table.Name,'EN'));
-    RNA_IDs_3 = find(contains(gene_table.Name,'EN'));
-    RNA_IDs_4 = find(contains(gene_table.Name,'EN'));
-    contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
-else
-    % RNA_IDs_1 = find(contains(gene_table.Name,'EN'));
-    % RNA_IDs_2 = find(contains(gene_table.Name,'EN'));
-    % RNA_IDs_3 = find(contains(gene_table.Name,'EN'));
-    % RNA_IDs_4 = find(contains(gene_table.Name,'EN'));
-    % contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
+    contains_RNA = find(contains(gene_table.Name,settings.EMBL_RNAparser(Organism)));
 end
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
 gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
@@ -93,34 +77,27 @@ uniNames = extractBefore(Names,'.');
 if (sum(ismissing(uniNames))>0)
     uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
 end
-if (strcmp(settings.referenceType,'RefSeq'))
-    DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
-    DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
-    DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
-    NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
-    NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
-    NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%
-else
-    ss = 1;
-    DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
-    DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
-    DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
-    NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
-    NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
-    NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%
-end
-DNA_IDs =union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3).';
-NonDNA_IDs = intersect(intersect(NonDNA_IDs_1,NonDNA_IDs_2),NonDNA_IDs_3).';
 ON_IDs_specific = find(contains(uniNames,extractBefore(GeneTarget{:},'.')));
 ON_IDs_agnostic = find(contains(Names,GeneName));
 OFF_IDs = find(~contains(Names,GeneName));
+if (strcmp(settings.referenceType,'RefSeq'))
+DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
+DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
+DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
+NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
+NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
+NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%IDs
+DNA_IDs =union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3).';
+NonDNA_IDs = intersect(intersect(NonDNA_IDs_1,NonDNA_IDs_2),NonDNA_IDs_3).';
+elseif (strcmp(settings.referenceType,'ENSEMBL'))
+DNA_IDs = find(~contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
+NonDNA_IDs = find(contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
+end
 if (ndims(dHeq_Complement)~=3)%error quick fix
     dHeq_Complement =  permute(repmat(dHeq_Complement, [1 1 size(dHeq_mod,3)]),[1 3 2]);
     dSeq_Complement = permute(repmat(dSeq_Complement, [1 1 size(dHeq_mod,3)]),[1 3 2]);
     dCp_Complement = permute(repmat(dCp_Complement, [1 1 size(dHeq_mod,3)]),[1 3 2]);
 end
-
-
 LocMax = max(cell2mat(cellfun(@(x) x,{probes{:,3}},'UniformOutput',false)));
 Lpmin = min(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
 TargetLength = LocMax + Lpmin - 1;
@@ -130,8 +107,6 @@ if (theoryMaxProbes>settings.maxProbes)
 end
 PackEf = length(Pset)/theoryMaxProbes;
 ModelMetrics.PackingEfficiency = PackEf;
-
-
 [Ns_Config,Nc_Config,Js_RNA,Js_DNA,Js_Sites,linearIndexed,MultiDim_PJSMC,MultiDim_PJSMTDC]  = ...
     A_ModelSolverWrapper_V4(probes,Pset,settings,DoesProbeBindSite,DNA_IDs,NonDNA_IDs,dCp_mod,dHeq_mod,dSeq_mod,dCp_Complement,dSeq_Complement,dHeq_Complement);
 ProbeSetMetrics.Ns_Config = Ns_Config;
@@ -190,9 +165,7 @@ ProbeSetMetrics.IntensityPredictions.PzSignalMinusBackgd_ModelTemperatureDilutio
 ProbeSetMetrics.CountPredictions.IsoAgnostic_SpotCountMetrics_ModelTemperatureDilutionVector = cell(length(m_unique_loc),length(t_unique_loc),length(d_unique_loc));
 ProbeSetMetrics.CountPredictions.IsoSpecific_SpotCountMetrics_ModelTemperatureDilutionVector = cell(length(m_unique_loc),length(t_unique_loc),length(d_unique_loc));
 ProbeSetMetrics.CountPredictions.IsoAgnostic_SpotCountMetrics_ModelTemperatureDilutionVector = cell(length(m_unique_loc),length(t_unique_loc),length(d_unique_loc));
-
 ModelSolverFunctions = linearIndexed;
-
 for m_unique_loci = 1:length(m_unique_loc)
     for t_unique_loci = 1:length(t_unique_loc)
         for d_unique_loci = 1:length(d_unique_loc)
@@ -259,7 +232,6 @@ for m_unique_loci = 1:length(m_unique_loc)
             ProbeSetMetrics.BindingPredictions.IsoIgnorantConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoIgnorantConfusion_P;
             ProbeSetMetrics.BindingPredictions.IsoSpecificConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoSpecificConfusion_P;
             ProbeSetMetrics.BindingPredictions.IsoAgnosticConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoAgnosticConfusion_P;
-
             %Intensity Calculations
             Ioff_Pixel = repmat(Basic_Noff,[length(Diameter_vals) 1])*IntensityPerProbe/Nstacks*Rspot^2./(pi/4*Diameter_vals'.^2);%for all diameter entries
             Pn_XtoI_ON =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Non_P,1)-1,'Un',0),1)];
@@ -337,7 +309,6 @@ for m_unique_loci = 1:length(m_unique_loc)
                 param_struct_vector{nn} = TrueSpotDefaultThParameters;
                 param_struct_vector{nn}.sample_spot_table = [[1:length(Filtered_SpotCountCurves{nn})]' Filtered_SpotCountCurves{nn}'];
             end
-            
             scThresholdSuggestions = arrayfun(@(nn) RNAThreshold.scoreThresholdSuggestions(RNAThreshold.estimateThreshold(param_struct_vector{nn})),1:length(Cvec),'Un',0);
             scThresholdSuggestions =  [scThresholdSuggestions{:}];
             subfield_groups = {'pool','thstats'};
@@ -475,7 +446,5 @@ for m_unique_loci = 1:length(m_unique_loc)
         end
     end
 end
-
-
 ModelMetrics.ProbeSetMetrics = ProbeSetMetrics;
 end

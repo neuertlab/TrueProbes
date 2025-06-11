@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TrueProbeSettings>	
+	<MainProbe_Settings>
+		<minProbeSize> 20 </minProbeSize>
+		<maxProbeSize> 20 </maxProbeSize>
+		<minProbeSpacing> 3 </minProbeSpacing>
+		<maxNumberOfProbes> 96 </maxNumberOfProbes>
+		<targetStrand> 1 </targetStrand>
+		<MinHomologySearchTargetSize> 15 </MinHomologySearchTargetSize>
+		<BLAST_RNA> 1 </BLAST_RNA>
+		<BLAST_DNA> 0 </BLAST_DNA>
+		<ExpressionReferenceForProbeDesign> 0 </ExpressionReferenceForProbeDesign>
+	</MainProbe_Settings>
+	<Thermodynamic_Settings>
+		<Gibbs_Model> 4 </Gibbs_Model>
+		<HybridizationTemperature_Celsius> 37 </HybridizationTemperature_Celsius>
+		<HeatCapacityReferenceTemperature_Celsius> 37 </HeatCapacityReferenceTemperature_Celsius>
+		<SaltConcentration> 0.05 </SaltConcentration>
+		<RemoveMisMatches> 1 </RemoveMisMatches>
+	</Thermodynamic_Settings>
+	<DesignFiltering_Settings>
+		<RemoveProbesBindingRibosomalHits> 1 </RemoveProbesBindingRibosomalHits>
+		
+		<packOptimal_ProbesWithNoOffTargets> 1 </packOptimal_ProbesWithNoOffTargets>
+		<IncludeSelfHybridizationInProbeSelection> 1 </IncludeSelfHybridizationInProbeSelection>
+	</DesignFiltering_Settings>
+	<Parallelization_Settings>
+		<Parallelization_probeBatchSize> 20 </Parallelization_probeBatchSize>
+		<Parallelization_targetBatchSize> 200 </Parallelization_targetBatchSize>
+		<ParsingPreference> 1 </ParsingPreference>
+	</Parallelization_Settings>
+	<BLASTN_Settings>
+		<evalue> 1000 </evalue>
+		<gapextend> 2 </gapextend>
+		<gapopen> 5 </gapopen>
+		<numAlignments> 1000 </numAlignments>
+		<penalty> -3 </penalty>
+		<reward> 2 </reward>
+		<wordsize> 7 </wordsize>
+		<dust> no </dust>
+	</BLASTN_Settings>
+	<GeneExpression_Settings>
+		<DoAllGenesHaveSameExpression> 0 </DoAllGenesHaveSameExpression>
+		<UseGeneOverTranscLevelExpression> 0 </UseGeneOverTranscLevelExpression>
+		<UseRegularDNAExpression> 1 </UseRegularDNAExpression>
+		<nullRNAcopynumber> 100 </nullRNAcopynumber>
+		<nullDNAcopynumber> 2 </nullDNAcopynumber>
+		<TMM_LogRatioTrim> 0.3 </TMM_LogRatioTrim>
+		<TMM_SumTrim> 0.05 </TMM_SumTrim>
+		<TMM_Acutoff>-1e10 </TMM_Acutoff>
+		<TMM_doWeighting> 1 </TMM_doWeighting>
+	</GeneExpression_Settings>
+	<ModelSimulation_Settings>
+		<removeUndesiredIsoformsFromPrediction> 1 </removeUndesiredIsoformsFromPrediction>
+		<InitialFreeSolutionGuessConcentration_MicroMolar> 1e-10 </InitialFreeSolutionGuessConcentration_MicroMolar>
+		<ProbeConcentration_MicroMolar> 5e-6 </ProbeConcentration_MicroMolar>
+		<AutoFluoresenceBackground_MEAN> 278 </AutoFluoresenceBackground_MEAN>
+		<AutoFluoresenceBackground_STD> 33 </AutoFluoresenceBackground_STD>
+		<NumberOfProbesInReferenceSpots> 48 </NumberOfProbesInReferenceSpots>
+		<ReferenceSpotIntensity_MEAN> 827 </ReferenceSpotIntensity_MEAN>
+		<ReferenceSpotIntensity_STD> 28 </ReferenceSpotIntensity_STD>
+		<CellDiameter_Pixels> 50 </CellDiameter_Pixels>
+		<SpotRadius_Pixels> 5 </SpotRadius_Pixels>
+		<NumberOfReferenceZStacks> 67 </NumberOfReferenceZStacks>
+		<CellRadius_Micron> 10 </CellRadius_Micron>
+		<Dilution_Vector> 1,1e-2,1e-4 </Dilution_Vector>
+		<Gibbs_Model_Vector> 1,2,3,4 </Gibbs_Model_Vector>
+		<Temperature_Celsius_Model_Vector> 37,42,50,60 </Temperature_Celsius_Model_Vector>
+		<MaxRecursiveEquilibriiumIterations> 40 </MaxRecursiveEquilibriiumIterations>
+		<SolutionErrorTolerance> 1 </SolutionErrorTolerance>
+		<SignalStepSize> 1e-1 </SignalStepSize>
+		<SignalMaxValue> 3000 </SignalMaxValue>
+	</ModelSimulation_Settings>
+	<customOrganism_Database_Location>
+		<customRoot_FASTA> 'N/A' </customRoot_FASTA>
+		<customBlastDatabase_DNA> 'N/A' </customBlastDatabase_DNA>
+		<customBlastDatabase_RNA> 'N/A' </customBlastDatabase_RNA>
+		<custom_GFF> 'N/A' </custom_GFF>
+		<custom_GTF> 'N/A' </custom_GTF>
+	</customOrganism_Database_Location>
+</TrueProbeSettings>
