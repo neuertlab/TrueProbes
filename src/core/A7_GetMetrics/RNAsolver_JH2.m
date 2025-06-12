@@ -29,7 +29,7 @@ Mean_Diameter = settings.SimulationConfiguration.Mean_Diameter;
 Rcell = settings.SimulationConfiguration.CellRadius;
 Rspot = settings.SimulationConfiguration.SpotRadius;
 Nstacks = settings.SimulationConfiguration.NumOfZStacks;
-GuessConc = settings.SimulationConfiguration.InitialGuessConcc;
+GuessConc = settings.SimulationConfiguration.InitialGuessConc;
 PC0 = settings.SimulationConfiguration.ProbeConcentration;
 errThreshold = settings.SimulationConfiguration.errThreshold;
 MaxIter = settings.SimulationConfiguration.MaxIter;
@@ -43,7 +43,9 @@ doWeighting = settings.TMM.doWeighting;
 SI = 0:SI_StepSize:SI_MaxSignal;%only works if SI
 SI_SignalMinusBackgd_I = -max(SI):SI_StepSize:1*max(SI);
 SI_Signal_wAuto_I = 0:SI_StepSize:2*max(SI);
-IntensityPerProbe = SpotIntensity_Mean/NumReferenceProbes;
+IntensityPerProbe_Mean = SpotIntensity_Mean/NumReferenceProbes;
+IntensityPerProbe_STD = SpotIntensity_STD/sqrt(NumReferenceProbes);
+
 Pr_Auto_I = pIntensity(SI,AutoBackground_Mean,AutoBackground_STD);%I over SI
 NumNonUniformConditions = size(ExpressionMatrix,2);
 [~, ExpressionMatrix_nTPM] = tmm(ExpressionMatrix,logRatioTrim,sumTrim,Acutoff,doWeighting);
@@ -82,9 +84,9 @@ uniNames = extractBefore(Names,'.');
 if (sum(ismissing(uniNames))>0)
     uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
 end
-ON_IDs_specific = find(contains(uniNames,extractBefore(GeneTarget{:},'.')));
-ON_IDs_agnostic = find(contains(Names,GeneName));
-OFF_IDs = find(~contains(Names,GeneName));
+ON_IDs_specific = find(ismember(uniNames,extractBefore(settings.transcript_IDs{:},'.')));
+ON_IDs_agnostic = find(ismember(uniNames,extractBefore(settings.transcript_IDs_desired{:},'.')));
+OFF_IDs = find(~ismember(uniNames,extractBefore(settings.transcript_IDs_desired{:},'.')));
 if (strcmp(settings.referenceType,'RefSeq'))
 DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
 DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
@@ -103,6 +105,9 @@ if (ndims(dHeq_Complement)~=3)%error quick fix
     dSeq_Complement = permute(repmat(dSeq_Complement, [1 1 size(dHeq_mod,3)]),[1 3 2]);
     dCp_Complement = permute(repmat(dCp_Complement, [1 1 size(dHeq_mod,3)]),[1 3 2]);
 end
+fprintf("Computing Probe Design Target Packing Efficiency")
+fprintf('\n')
+fprintf('\n')
 LocMax = max(cell2mat(cellfun(@(x) x,{probes{:,3}},'UniformOutput',false)));
 Lpmin = min(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
 TargetLength = LocMax + Lpmin - 1;
@@ -112,6 +117,9 @@ if (theoryMaxProbes>settings.maxProbes)
 end
 PackEf = length(Pset)/theoryMaxProbes;
 ModelMetrics.PackingEfficiency = PackEf;
+fprintf("Generating thermodynamic-kinetic model structure")
+fprintf('\n')
+fprintf('\n')
 [Ns_Config,Nc_Config,Js_RNA,Js_DNA,Js_Sites,linearIndexed,MultiDim_PJSMC,MultiDim_PJSMTDC]  = ...
     A_ModelSolverWrapper_V4(probes,Pset,settings,DoesProbeBindSite,DNA_IDs,NonDNA_IDs,dCp_mod,dHeq_mod,dSeq_mod,dCp_Complement,dSeq_Complement,dHeq_Complement);
 ProbeSetMetrics.Ns_Config = Ns_Config;
@@ -122,7 +130,6 @@ ProbeSetMetrics.Js_Sites = Js_Sites;
 ProbeSetMetrics.ModelSolverFunctions_7D = MultiDim_PJSMTDC;
 ProbeSetMetrics.ModelSolverFunctions_5D = MultiDim_PJSMC;
 ProbeSetMetrics.ModelSolverFunctions_linIndex = linearIndexed;
-clear dCp_mod dSeq_mod dHeq_mod dCp_Complement dSeq_Complement dHeq_Complement
 [~,m_unique_loc,~] = unique(Mvec);
 [~,t_unique_loc,~] = unique(Tvec);
 [~,d_unique_loc,~] = unique(Dvec);
@@ -171,23 +178,43 @@ ProbeSetMetrics.CountPredictions.IsoAgnostic_SpotCountMetrics_ModelTemperatureDi
 ProbeSetMetrics.CountPredictions.IsoSpecific_SpotCountMetrics_ModelTemperatureDilutionVector = cell(length(m_unique_loc),length(t_unique_loc),length(d_unique_loc));
 ProbeSetMetrics.CountPredictions.IsoAgnostic_SpotCountMetrics_ModelTemperatureDilutionVector = cell(length(m_unique_loc),length(t_unique_loc),length(d_unique_loc));
 ModelSolverFunctions = linearIndexed;
+fprintf("Solving model for all specified solution configurations")
+fprintf('\n')
+fprintf('\n')
 for m_unique_loci = 1:length(m_unique_loc)
     for t_unique_loci = 1:length(t_unique_loc)
         for d_unique_loci = 1:length(d_unique_loc)
-            CProbes_Free = GuessConc*ones(length(Pset),length(Mvec),length(Cvec));
-            CProbes_Free0 = GuessConc*ones(length(Pset),length(Mvec),length(Cvec));
+            CProbes_Free = GuessConc*ones(length(Pset),length(Mvec(m_unique_loc(m_unique_loci))),length(Cvec));
+            CProbes_Free0 = GuessConc*ones(length(Pset),length(Mvec(m_unique_loc(m_unique_loci))),length(Cvec));
             ProbeConc = PC0*squeeze(permute(repmat(Dvec(d_unique_loc(d_unique_loci)),[1 1 length(Pset) 1 1 length(Cvec)]),[1 3 4 5 2 6]));
-            [CProbes_Free,varSSE,err,iter,eqSSE] = A_ModelEquilibriumSolverWrapper_V4(ModelSolverFunctions,MaxIter,errThreshold,Pset,nExpressionMatrix,Tvec,Mvec,Dvec,Cvec,Tref,Ns_Config,Nc_Config,CProbes_Free0,CProbes_Free,ProbeConc,Js_RNA,Js_DNA,Js_Sites,0);
+            fprintf("Solving model for free-steady state probe concentrations")
+            fprintf('\n')
+            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))),"°C")) 
+            fprintf('\n')
+            fprintf('\n')
+            [CProbes_Free,varSSE,err,iter,eqSSE] = A_ModelEquilibriumSolverWrapper_V4(ModelSolverFunctions,MaxIter,errThreshold,Pset,nExpressionMatrix,Tvec(t_unique_loc(t_unique_loci)),Mvec(m_unique_loc(m_unique_loci)),Dvec(d_unique_loc(d_unique_loci)),Cvec,Tref,Ns_Config,Nc_Config,CProbes_Free0,CProbes_Free,ProbeConc,Js_RNA,Js_DNA,Js_Sites,0);
             ProbeSetMetrics.iter(m_unique_loci,t_unique_loci,d_unique_loci)  = iter;
             ProbeSetMetrics.err(m_unique_loci,t_unique_loci,d_unique_loci,1:length(Cvec)) = err;
             ProbeSetMetrics.varSSE(m_unique_loci,t_unique_loci,d_unique_loci,1:length(Cvec))  = varSSE;
             ProbeSetMetrics.eqSSE(m_unique_loci,t_unique_loci,d_unique_loci,1:length(Cvec))  = eqSSE;
             ProbeSetMetrics.CProbes_Free{m_unique_loci,t_unique_loci,d_unique_loci} = CProbes_Free;
-            [c_Target_nBound,p_TargetSites_Bound,c_TargetSites_Bound] = A_DetectionSolverWrapper_V4(ModelSolverFunctions,[m_unique_loc(m_unique_loci) t_unique_loc(t_unique_loci) d_unique_loc(d_unique_loci)],Pset,settings,nExpressionMatrix,Tvec,Mvec,Dvec,Cvec,Tref,CProbes_Free,DoesProbeBindSite,Js_RNA,Js_DNA,Js_Sites,Names,ON_IDs_specific,ON_IDs_agnostic,OFF_IDs);
+            fprintf("Computing model steady-state equilibrium probe-target duplex concentrations")
+            fprintf('\n')
+            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))+273.15),"°C")) 
+            fprintf('\n')
+            fprintf('\n')
+            [c_Target_nBound,p_TargetSites_Bound,c_TargetSites_Bound] = A_DetectionSolverWrapper_V4(ModelSolverFunctions,[1 1 1],Pset,settings,nExpressionMatrix,Tvec(t_unique_loc(t_unique_loci)),Mvec(m_unique_loc(m_unique_loci)),Dvec(d_unique_loc(d_unique_loci)),Cvec,Tref,CProbes_Free,DoesProbeBindSite,Js_RNA,Js_DNA,Js_Sites,Names,ON_IDs_specific,ON_IDs_agnostic,OFF_IDs);
             ProbeSetMetrics.BindingPredictions.p_TargetSites_Bound_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = p_TargetSites_Bound;   %same regardless of t has all t, currently just adds to memory, by duplication
             ProbeSetMetrics.BindingPredictions.c_TargetSites_Bound_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = c_TargetSites_Bound;    %same regardless of t has all t, currently just adds to memory, by duplication
             ProbeSetMetrics.BindingPredictions.c_OnOtherOff_nBound_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = c_Target_nBound;
             %Probe Binding Calculations
+            fprintf("Computing probe set on/off-target binding model metrics")
+            fprintf('\n')
+            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))),"°C")) 
+            fprintf('\n')
+            fprintf(strcat("Cell Radius = ",string(Rcell),"μm"))
+            fprintf('\n')
+            fprintf('\n')
             OnSpecificCounts = squeeze(c_Target_nBound(1,:,:));
             OnOtherCounts = squeeze(c_Target_nBound(2,:,:));
             OffCounts = squeeze(c_Target_nBound(3,:,:));
@@ -237,8 +264,25 @@ for m_unique_loci = 1:length(m_unique_loc)
             ProbeSetMetrics.BindingPredictions.IsoIgnorantConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoIgnorantConfusion_P;
             ProbeSetMetrics.BindingPredictions.IsoSpecificConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoSpecificConfusion_P;
             ProbeSetMetrics.BindingPredictions.IsoAgnosticConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoAgnosticConfusion_P;
+            fprintf("Computing predicted probe set spot intensity and spot detection model metrics")
+            fprintf('\n')
+            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))),"°C")) 
+            fprintf('\n')
+            fprintf(strcat("Reference Mean Autofluorescence Background Intensity = ",string(AutoBackground_Mean)," ","a.u."))
+            fprintf('\n')
+            fprintf(strcat("Reference Autofluorescence Background Intensity Standard Deviation = ",string(AutoBackground_STD)))
+            fprintf('\n')
+            fprintf(strcat("Reference Mean Single Probe Intensity = ",string(IntensityPerProbe_Mean)," ","a.u."))
+            fprintf('\n')
+            fprintf(strcat("Reference Single Probe Intensity Standard Deviation = ",string(IntensityPerProbe_STD)))
+            fprintf('\n')
+            fprintf(strcat("Cell Pixel Diameter = ",string(Mean_Diameter),"px"))
+            fprintf('\n')
+            fprintf(strcat("Spot Radius = ",string(Rspot),"px"))
+            fprintf('\n')
+            fprintf('\n')
             %Intensity Calculations
-            Ioff_Pixel = repmat(Basic_Noff,[length(Diameter_vals) 1])*IntensityPerProbe/Nstacks*Rspot^2./(pi/4*Diameter_vals'.^2);%for all diameter entries
+            Ioff_Pixel = repmat(Basic_Noff,[length(Diameter_vals) 1])*IntensityPerProbe_Mean/Nstacks*Rspot^2./(pi/4*Diameter_vals'.^2);%for all diameter entries
             Pn_XtoI_ON =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Non_P,1)-1,'Un',0),1)];
             Pn_XtoI_OTHER =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Nother_P,1)-1,'Un',0),1)];
             Pn_XtoI_OFF =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Noff_P,1)-1,'Un',0),1)];

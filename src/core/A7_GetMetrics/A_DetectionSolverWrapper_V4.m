@@ -110,9 +110,9 @@ pON_IDs_other = find(ismember(tHit,setdiff(ON_IDs_agnostic,ON_IDs_specific)));
 if (~isempty(tHit))  
     Pt_ModelCellVector = F_DiscretePossionBinomialMultiCell(pAnyBindSiteCM0(tHit,:,:));
     Ct = permute(repmat(nExpressionMatrix(tHit,Cvec),[1 1 size(Pt_ModelCellVector,2)]),[1 3 2]).*Pt_ModelCellVector;
-    CtOFF = squeeze(sum(Ct(find(~contains(Names(tHit),settings.GeneName)),:,:),1,'omitnan'));
     CtON_specific = squeeze(sum(Ct(pON_IDs,:,:),1,'omitnan'));
     CtON_other = squeeze(sum(Ct(pON_IDs_other,:,:),1,'omitnan'));
+    CtOFF = squeeze(sum(Ct(pOFF_IDs,:,:),1,'omitnan'));
     CtN = permute(CATnWrapper({CtON_specific,CtON_other,CtOFF},3),[3 1 2]);
 end
 end

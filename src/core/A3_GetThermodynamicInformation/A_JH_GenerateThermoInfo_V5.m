@@ -3,6 +3,7 @@ function [Kb_Match,Kon,Koff,dHeq_Match,dSeq_Match,dHf_Match,dSf_Match,dHr_Match,
 % and computes binding energy and rates associated with off-target and on-targets
 N_methods = 8;
 N_methods2 = 3;
+N_methods3 = 9;
 kb = 0.001987204259;%boltzman constant
 T_hybrid = settings.HybridizationTemperature;
 SaltConcentration = settings.SaltConcentration;
@@ -134,14 +135,14 @@ if (calcOnOff)
     %Re-Map Energies to non-unique sites
     %Unique_to_Original = @(x) find(strcmpi(targetMatch_Unique{x},targetMatch).*strcmpi(probeMatch_Unique{x},probeMatch));
     Kon = zeros(size(probes,1),N_methods);
-    Tm_on = zeros(size(probes,1),N_methods+1);
+    Tm_on = zeros(size(probes,1),N_methods3);
     dHeq_Match = zeros(length(targetMatch),N_methods);
     dSeq_Match = zeros(length(targetMatch),N_methods);
     dCpeq_Match = zeros(length(targetMatch),N_methods);
-    dHf_Match = zeros(length(targetMatch),3);
-    dSf_Match = zeros(length(targetMatch),3);
-    dHr_Match = zeros(length(targetMatch),3);
-    dSr_Match = zeros(length(targetMatch),3);
+    dHf_Match = zeros(length(targetMatch),N_methods2);
+    dSf_Match = zeros(length(targetMatch),N_methods2);
+    dHr_Match = zeros(length(targetMatch),N_methods2);
+    dSr_Match = zeros(length(targetMatch),N_methods2);
     dHon_eq = zeros(size(probes,1),N_methods);
     dSon_eq = zeros(size(probes,1),N_methods);
     dCpon_eq = zeros(size(probes,1),N_methods);
@@ -149,7 +150,7 @@ if (calcOnOff)
     dSon_f = zeros(size(probes,1),3);
     dHon_r = zeros(size(probes,1),3);
     dSon_r = zeros(size(probes,1),3);
-    Tm_Match = zeros(length(targetMatch),N_methods+1);
+    Tm_Match = zeros(length(targetMatch),N_methods3);
     Kb_Match = zeros(length(targetMatch),N_methods);
     try
         n_cores = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));

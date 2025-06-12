@@ -2,7 +2,6 @@ function [Ns_Config,Nc_Config,Js_RNA,Js_DNA,Js_Sites,linearIndexed,MultiDim_PJSM
     R = 0.001987204259;%gas constant [Energy Kcal/mol K
     kb = 1.380649*10^-23;%bolzman constant J/K
     h = 6.62607015*10^-34;%planks constant J/Hz
-    Tref = 37+273.15;   
     spfunction = @(x) sqrt(x+1)-1;     
     Js = @(x) find(sum(squeeze(sum(DoesProbeBindSite(x,:,:),1)),2)>0);
     Js_Sites = @(x) find(sum(sum(DoesProbeBindSite(x,Js(x),:),1),2)>0);
@@ -53,6 +52,7 @@ function [Ns_Config,Nc_Config,Js_RNA,Js_DNA,Js_Sites,linearIndexed,MultiDim_PJSM
         spfun(@exp,-DHs_eq(T,Tref,p,n,m)./...
         permute(repmat(R*T',[1 length(p) length(n) length(m)]),[2 3 4 1])+...
         DSs_eq(T,Tref,p,n,m)/R);
+    K_S_lind = @(T,Tref,p,n,m,c) repmat(squeeze(sum(Ks_eq_sc(T,Tref,p,n,m),2)),[1 1 1 length(c)]);          
     K_S_sc = @(T,Tref,p,n,m,c) repmat(squeeze(sum(Ks_eq_sc(T,Tref,p,n,m),2)),[1 1 length(c)]);
     K_S = @(T,Tref,p,n,m,d,c) repmat(squeeze(sum(Ks_eq(T,Tref,p,n,m),2)),[1 1 1 length(d) length(c)]);
     %probe,probe,config,model,temp
@@ -191,7 +191,7 @@ function [Ns_Config,Nc_Config,Js_RNA,Js_DNA,Js_Sites,linearIndexed,MultiDim_PJSM
     linearIndexed.Paired_RNATargetSites = tsList_RNA;
     linearIndexed.Paired_DNATargetSites = tsList_DNA;
 
-    linearIndexed.K_S = K_S_sc;
+    linearIndexed.K_S = K_S_lind;
     MultiDim_PJSMC.K_S = K_S_sc;
     MultiDim_PJSMTDC.K_S = K_S;
     linearIndexed.K_CDeff = K_CDeff_lind;

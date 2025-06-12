@@ -47,7 +47,7 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
     if (runDNA)
         if (~BLASTdb_DNAexists)
             fprintf('\n')
-            fprintf("Making DNA BLAST Database")
+            fprintf("Making DNA BLAST database")
             fprintf('\n')
             dbtype = extractBefore("nucleotide", 5); % "nucl" or "prot" shorthand
             BLASTdb_DNAoptions = bioinfo.blastplus.MakeDatabaseOptions;
@@ -61,7 +61,7 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             if (~isempty(dna_files))
                 DNAFile = strcat('"',strjoin(string(cellfun(@(x) strcat(settings.SEQdbRoot,x),{FNAFiles(dna_files).name},'Un',0))," "),'"');
             elseif (isempty(dna_files))
-                msg = 'Error. No Genome File is in the target blast database directory for making the DNA BLASTDB.';
+                msg = 'Error. No genome file is in the target blast database directory for making the DNA BLASTDB.';
                 error(msg);
             end
             filesizeDNA = sum([FNAFiles(dna_files).bytes]);
@@ -86,7 +86,7 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
     if (runRNA)
         if (~BLASTdb_RNAexists)
             fprintf('\n')
-            fprintf("Making RNA BLAST Database")
+            fprintf("Making RNA BLAST database")
             fprintf('\n')
             dbtype = extractBefore("nucleotide", 5); % "nucl" or "prot" shorthand
             BLASTdb_RNAoptions = bioinfo.blastplus.MakeDatabaseOptions;
@@ -100,7 +100,7 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             if (~isempty(rna_files))
                 RNAFile = strcat('"',strjoin(string(cellfun(@(x) strcat(settings.SEQdbRoot,x),{FNAFiles(rna_files).name},'Un',0))," "),'"');
             elseif (isempty(rna_files))
-                msg = 'Error. No Genome File is in the target blast database directory for making the RNA BLASTDB.';
+                msg = 'Error. No transcriptome file is in the target blast database directory for making the RNA BLASTDB.';
                 error(msg);
             end
             filesizeRNA = sum([FNAFiles(rna_files).bytes]);

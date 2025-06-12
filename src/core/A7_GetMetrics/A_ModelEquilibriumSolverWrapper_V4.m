@@ -39,7 +39,6 @@ switch ModelSolverFunctions.solverType
         A4 = squeeze(h_DNA(CProbes_Free,Tvec,Tref,Pset,Js_DNA(Pset),Js_Sites(Pset),Mvec,Dvec,Cvec,nExpressionMatrix));%7-D
         A4(isnan(A4)) = 0;
 end
-
 CProbes_Free = squeeze(ProbeConc)./(1+A1+A2+A3+A4);
 xn = CProbes_Free;
 if (ndims(CProbes_Free0)-ndims(xn)>0)
@@ -107,10 +106,8 @@ switch ModelSolverFunctions.solverType
         A4(isnan(A4)) = 0;
 end
 eqSSE = sum((squeeze(ProbeConc)-squeeze(CProbes_Free).*(1+A1+A2+A3+A4)).^2,1,'omitnan');
-
 i = i + 1;
 if (double(i>MaxIter)+double(max(err)<errThreshold)==0)
     [CProbes_Free,varSSE,err,i,eqSSE] = A_ModelEquilibriumSolverWrapper_V4(ModelSolverFunctions,MaxIter,errThreshold,Pset,nExpressionMatrix,Tvec,Mvec,Dvec,Cvec,Tref,Ns_Config,Nc_Config,CProbes_Free0,CProbes_Free,ProbeConc,Js_RNA,Js_DNA,Js_Sites,i);
 end
-
 end

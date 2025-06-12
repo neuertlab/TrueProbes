@@ -60,10 +60,6 @@ else
     DNA_IDs = find(~contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
     NonDNA_IDs = find(contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
 end
-
-%% Identify location of on-target DNA and RNA molecules in list of DNA/RNA molecules
-
-
 %% Parse Gene_Hits to know which molecules to actually look exp values for.
 calcSiteMap = 0;
 try
@@ -74,7 +70,7 @@ catch
 end
 try
     load([settings.FolderRootName filesep '(' TranscriptName ')_Tm' num2str(T_hybrid) '_BindingEnergyMatrix' settings.designerName '.mat'],'Kb_mod')
-    load([settings.FolderRootName filesep '(' TranscriptName ')_BindingMatrices' settings.designerName '.mat'],'dHeq_mod','dSeq_mod','dHf_mod','dSf_mod','dHr_mod','dSr_mod','Tm_mod')
+    load([settings.FolderRootName filesep '(' TranscriptName ')_BindingMatrices' settings.designerName '.mat'],'dHeq_mod','dSeq_mod','dHf_mod','dSf_mod','dHr_mod','dSr_mod','dCp_mod','Tm_mod')
     calcSiteMap = calcSiteMap + 0;
 catch
     calcSiteMap = calcSiteMap + 1;

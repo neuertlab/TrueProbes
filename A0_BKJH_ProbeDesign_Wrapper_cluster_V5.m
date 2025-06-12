@@ -534,7 +534,7 @@ settings.transcript_IDs = IncludeAccessionNumbers;
 settings.ribosomal_IDs = Ribosomal_IDs;
 settings.transcript_IDs_desired = Transcript_All_Isoform_IDs;
 settings.transcript_IDs_undesired = Transcript_UnDesired_Isoform_IDs;
-settings.transcript_IDs_joint_undesired = Transcript_Joint_UnDesired_Isoforms_IDs ;
+settings.transcript_IDs_joint_undesired = Transcript_Joint_UnDesired_Isoforms_IDs;
 settings.ProbeSpacing = minProbeSpacing;
 settings.RemoveMisMatches = RemoveMisMatches;
 settings.SaltConcentration = SaltConcentration;
@@ -695,6 +695,10 @@ if (ismac)
         fprintf('\n')
     end
 end
+
+
+
+
 try
     load([settings.FolderRootName filesep '(' geneNames ')_' settings.rootName '_hits_table' designerName '.mat'],'gene_table')
     fprintf("Loading probe BLAST results table")
@@ -769,12 +773,12 @@ end
 
 %% Get Binding Site Mapping and Energy
 try
-    load([settings.FolderRootName filesep settings.GeneName '_binding_hits_map' designerName '.mat'],'DoesProbeBindSite2')
-    load([settings.FolderRootName filesep settings.GeneName  '_Tm' num2str(T_hybrid) '_BindingEnergyMatrix2' designerName '.mat'],'Kb_Complement')
-    load([settings.FolderRootName filesep settings.GeneName  '_Tm' num2str(T_hybrid) '_BindingEnergyMatrix' designerName '.mat'],'Kb_mod')
-    load([settings.FolderRootName filesep settings.GeneName '_BindingMatrices' designerName '.mat'],'dHeq_mod','dSeq_mod','dHf_mod','dSf_mod','dHr_mod','dSr_mod','dCp_mod')
+    load([settings.FolderRootName filesep '(' geneNames ')_binding_hits_map' designerName '.mat'],'DoesProbeBindSite2')
+    load([settings.FolderRootName filesep '(' geneNames ')_Tm' num2str(T_hybrid) '_BindingEnergyMatrix2' designerName '.mat'],'Kb_Complement')
+    load([settings.FolderRootName filesep '(' geneNames ')_Tm' num2str(T_hybrid) '_BindingEnergyMatrix' designerName '.mat'],'Kb_mod')
+    load([settings.FolderRootName filesep '(' geneNames ')_BindingMatrices' designerName '.mat'],'dHeq_mod','dSeq_mod','dHf_mod','dSf_mod','dHr_mod','dSr_mod','dCp_mod')
     if (settings.BLASTdna)
-        load([settings.FolderRootName filesep settings.GeneName '_BindingMatrices2' designerName '.mat'],'dHeq_Complement','dSeq_Complement','dHf_Complement','dSf_Complement','dHr_Complement','dSr_Complement','dCp_Complement')
+        load([settings.FolderRootName filesep '(' geneNames ')_BindingMatrices2' designerName '.mat'],'dHeq_Complement','dSeq_Complement','dHf_Complement','dSf_Complement','dHr_Complement','dSr_Complement','dCp_Complement')
     end
     fprintf("Loading probe target binding site maps")
     fprintf('\n')

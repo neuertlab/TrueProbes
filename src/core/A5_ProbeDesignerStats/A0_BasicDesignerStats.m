@@ -45,16 +45,13 @@ elseif (strcmp(settings.referenceType,'ENSEMBL'))
     DNA_IDs = find(~contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
     NonDNA_IDs = find(contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
 end
-GeneName = settings.GeneName;
-GeneTarget = settings.rootName;
-ON_RNAIDs = find(strcmp(uniNames,extractBefore(GeneTarget,'.')));
+ON_RNAIDs = find(ismember(uniNames,extractBefore(settings.transcript_IDs_desired{:},'.')));
 OFF_RNAIDs = setdiff(NonDNA_IDs,ON_RNAIDs);
-ON_RNAIDs_Isos = find(contains(Names,GeneName));
-Desired_Isoforms = find(contains(uniNames,extractBefore(GeneTarget,'.')));
+ON_RNAIDs_Isos =  find(ismember(uniNames,extractBefore(settings.transcript_IDs_desired{:},'.')));
+Desired_Isoforms =  find(ismember(uniNames,extractBefore(settings.transcript_IDs{:},'.')));
 UnDesired_Isoforms = setdiff(ON_RNAIDs_Isos,Desired_Isoforms);
 OFF_RNAIDs_minusIsos = setdiff(OFF_RNAIDs,UnDesired_Isoforms);
 if (removeUndesiredIsos)
-    ON_RNAIDs = ON_RNAIDs_Isos;
     OFF_RNAIDs = OFF_RNAIDs_minusIsos;
 end
 %Finds Off-targets and off-target binding sites
@@ -63,7 +60,6 @@ Tp = @(x) find(sum(squeeze(DoesProbeBindSite(:,x,:)),2)>0);
 Sx =@(x,Z) arrayfun(@(y) find(squeeze(DoesProbeBindSite(x,y,:))==1)',Z,'Un',0);
 Tx2 =@(y,Z) arrayfun(@(x) find(squeeze(DoesProbeBindSite(x,y,:))==1)',Z,'Un',0);
 Tx =@(y,Z) arrayfun(@(x) find(squeeze(DoesProbeBindSite(x,y,:))==1),Z,'Un',0);
-Js_RNA = @(x)NonDNA_IDs(ismember(NonDNA_IDs,Js(x)));
 Js_OFFRNA = @(x)OFF_RNAIDs(ismember(OFF_RNAIDs,Js(x)));
 Js_OFFRNAi = @(x,y)OFF_RNAIDs(find(cumsum(ismember(OFF_RNAIDs,Js(x)))==y,1));
 Js_OFFDNA = @(x)DNA_IDs(ismember(DNA_IDs,Js(x)));
