@@ -19,9 +19,6 @@ input_parameters = 'TrueProbes_ParameterSettings.xml';
 % 	4. Text Sequence Files to Include (files). Default is Empty
 % 	5. Text Sequence Files to Exclude (files). Default is Empty
 
-%% Clean up if necessary
-try ProgressBar.deleteAllTimers(); end;
-
 %% Genes To Design Probes For
 core_folders = genpath(strcat(pwd,filesep,'src',filesep,'core'));
 modified_matlab_function_folders = genpath(strcat(pwd,filesep,'src',filesep,'modified_matlab_functions'));
@@ -33,7 +30,7 @@ multiprod_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filese
 xsum_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'XSum_2014_06_16'));
 xml_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'xml2struct-master'));
 trueSpot_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'TrueSpot-main'));
-prog_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'MatlabProgressBar'));
+progbar_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'parwaitbar'));
 addpath(core_folders);
 addpath(modified_matlab_function_folders);
 addpath(util_folders);
@@ -44,7 +41,7 @@ addpath(multiprod_folders);
 addpath(xsum_folders);
 addpath(xml_folders);
 addpath(trueSpot_folders);
-addpath(prog_folders);
+addpath(progbar_folders);
 
 
 

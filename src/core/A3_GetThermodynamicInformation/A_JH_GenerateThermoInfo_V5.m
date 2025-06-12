@@ -111,9 +111,9 @@ else
     calcOnOff = 1;
 end
 if (calcOnOff)
-    fprintf('\n')
-    fprintf('\n')
     fprintf("Get List of Unique Probe and Target Alignment Sequences")
+    fprintf('\n')
+    fprintf('\n')
     %gets sequences of probe and target in blast records
     targetMatch = arrayfun(@(x) strrep(gene_table.Alignment{x}(3,:),'-','N'),1:size(gene_table,1),'UniformOutput',false);%slow not so slow
     probeMatch = arrayfun(@(x) seqrcomplement(strrep(gene_table.Alignment{x}(1,:),'-','N')),1:size(gene_table,1),'UniformOutput',false);%slow
@@ -162,13 +162,10 @@ if (calcOnOff)
         %p = parpool;
         %p.IdleTimeout = Inf;
     end
-    fprintf('\n')
-    fprintf('\n')
     fprintf("Compute On-Target Binding Affinity for All Probes")
     fprintf('\n')
     fprintf('\n')
-    progBar = ProgressBar(size(probes,1),'IsParallel', true,'WorkerDirectory',strcat(pwd,filesep,FolderRootName),'Title', 'Computing');
-    progBar.setup([],[],[]);
+    wb = parwaitbar(size(probes,1),'WaitMessage', 'Computing');
     parfor i=1:size(probes,1)
         pause(0.1);
         [temp_dHeq{i}, temp_dSeq{i}, temp_dGeq{i}, ...
@@ -192,9 +189,11 @@ if (calcOnOff)
         temp_dSr{i} = [];
         temp_dCpeq{i} = [];
         temp_Tm{i} = [];
-        updateParallel([],strcat(pwd,filesep,FolderRootName));
+        progress(wb);
     end
-    progBar.release();
+    wb.delete();
+    fprintf('\n')
+    fprintf('\n')
     clear temp_dHeq temp_dSeq temp_dGeq temp_dHf temp_dSf temp_dHr temp_dSr temp_dCpeq temp_Tm
     %compute binding thermodynamic/kinetic information for on-target hits parallelized
     if (~isfile([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_dCpInfo' settings.designerName '.mat']))%check if temp file exists
@@ -213,12 +212,10 @@ if (calcOnOff)
         end
         ResultsExist = zeros(1,N_uniqueCalcPairsBatches);
         ResultsDate = cell(1,N_uniqueCalcPairsBatches);
-        fprintf('\n')
-        fprintf('\n')
         fprintf("Check if probe batch gibbs free energy files exist")
         fprintf('\n')
         fprintf('\n')
-        progBar = ProgressBar(N_uniqueCalcPairsBatches,'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Checking');
+        wb = parwaitbar(N_uniqueCalcPairsBatches,'WaitMessage', 'Checking');
         parfor i = 1:N_uniqueCalcPairsBatches
             if (isfile([FolderRootName filesep '(' TranscriptName ')' designerName '_deltaGibsonInfo_batch' num2str(i) '.mat']))%check if temp file exists
                 d = dir([FolderRootName filesep '(' TranscriptName ')' designerName '_deltaGibsonInfo_batch' num2str(i) '.mat']);
@@ -227,9 +224,11 @@ if (calcOnOff)
                 end
                 ResultsDate{i} = datetime(d.date);
             end
-            updateParallel([],strcat(pwd,filesep,FolderRootName));
+            progress(wb);
         end
-        progBar.release();
+        wb.delete();
+        fprintf('\n')
+        fprintf('\n')
         Results_NotMade = find(ResultsExist==0);
         Results_Made = find(ResultsExist==1);
         %Sort get most recent ResultsMade GeneHitsMade and GeneHitsTable Made and add to probe_check_list
@@ -250,13 +249,10 @@ if (calcOnOff)
             targetMatch_Unique_Constant = parallel.pool.Constant(targetMatch_Unique);
             probeMatch_Unique_Constant = parallel.pool.Constant(probeMatch_Unique);
             Batch_uniqueCalcPairs_Constant = parallel.pool.Constant(Batch_uniqueCalcPairs);
-            fprintf('\n')
-            fprintf('\n')
             fprintf("Computing Binding Affinity for Batches of Unique Probe Target Sequence Pairs")
             fprintf('\n')
             fprintf('\n')
-            progBar = ProgressBar(length(batch_nums_to_check),'IsParallel', true,'WorkerDirectory',strcat(pwd,filesep,FolderRootName),'Title', 'Computing');
-            progBar.setup([],[],[]);
+            wb = parwaitbar(length(batch_nums_to_check),'WaitMessage','Computing');
             parfor v = 1:length(batch_nums_to_check)
                 pause(0.1)
                 uniquePair_temp_dHeq{v} = cell(1,length(Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}));
@@ -293,16 +289,16 @@ if (calcOnOff)
                 uniquePair_temp_dSr{v} = [];
                 uniquePair_temp_dCpeq{v} = [];
                 uniquePair_temp_Tm{v} = [];
-                updateParallel([],strcat(pwd,filesep,FolderRootName));
+                progress(wb);
             end
-            progBar.release();
+            wb.delete();
+            fprintf('\n')
+            fprintf('\n')
         end
-        fprintf('\n')
-        fprintf('\n')
         fprintf("Aggregating probe target batch thermodynamic information")
         fprintf('\n')
         fprintf('\n')
-        progBar = ProgressBar(N_uniqueCalcPairsBatches,'WorkerDirectory',strcat(pwd,filesep,FolderRootName));
+        wb = parwaitbar(N_uniqueCalcPairsBatches,'WaitMessage','Aggregating');
         for v = 1:N_uniqueCalcPairsBatches
             if isfile([settings.FolderRootName filesep '(' TranscriptName ')' designerName '_deltaGibsonInfo_batch' num2str(v) '.mat'])
                 load([settings.FolderRootName filesep '(' TranscriptName ')' designerName '_deltaGibsonInfo_batch' num2str(v) '.mat'],'partial_delta_gibson_tmp');
@@ -319,9 +315,9 @@ if (calcOnOff)
                 end
                 clear partial_delta_gibson_tmp
             end
-            progBar([],[],[]);
+            progress(wb);
         end
-        progBar.release();
+        wb.delete();
         save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_dHInfo' settings.designerName '.mat'],'dHon_f','dHon_r','dHon_eq','dHeq_Match','dHf_Match','dHr_Match','-v7.3');
         save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_dSInfo' settings.designerName '.mat'],'dSon_f','dSon_r','dSon_eq','dSeq_Match','dSf_Match','dSr_Match','-v7.3');
         save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_TmInfo' settings.designerName '.mat'],'Tm_on','Tm_Match','-v7.3');
@@ -332,14 +328,14 @@ if (calcOnOff)
         fprintf("Deleting temporary gibbs energy files")
         fprintf('\n')
         fprintf('\n')
-        progBar = ProgressBar(N_uniqueCalcPairsBatches,'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Deleting');
+        wb = parwaitbar(N_uniqueCalcPairsBatches,'WaitMessage', 'Deleting');
         parfor i = 1:N_uniqueCalcPairsBatches
             if exist([FolderRootName filesep '(' TranscriptName ')' designerName '_deltaGibsonInfo_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
                 delete([FolderRootName filesep '(' TranscriptName ')' designerName '_deltaGibsonInfo_batch' num2str(i) '.mat'])
             end
-            updateParallel([],strcat(pwd,filesep,FolderRootName));
+            progress(wb);
         end
-        progBar.release();
+        wb.delete();
     else
     end
     load([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_dKbInfo' settings.designerName '.mat'],'Kb_Match');
@@ -358,8 +354,7 @@ if (calcOnOff)
         fprintf("Check if on/off-target thermo batch files exist")
         fprintf('\n')
         fprintf('\n')
-        progBar = ProgressBar(N_Batches,'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Checking');
-        progBar.setup([],[],[]);
+        wb = parwaitbar(N_Batches,'WaitMessage', 'Checking');
         parfor i = 1:N_Batches
             if (isfile([FolderRootName filesep '(' TranscriptName ')' designerName '_OnOffInfo_batch' num2str(i) '.mat']))%check if temp file exists
                 d = dir([FolderRootName filesep '(' TranscriptName ')' designerName '_OnOffInfo_batch' num2str(i) '.mat']);
@@ -368,9 +363,11 @@ if (calcOnOff)
                 end
                 ResultsDate_OnOff_1D{i} = datetime(d.date);
             end
-            updateParallel([],strcat(pwd,filesep,FolderRootName));
+            progress(wb);
         end
-        progBar.release();
+        wb.delete();
+        fprintf('\n')
+        fprintf('\n')
         Results_NotMade_OnOff_1D = find(ResultsExist_OnOff_1D ==0);
         Results_Made_OnOff_1D = find(ResultsExist_OnOff_1D ==1);
         %Sort get most recent ResultsMade GeneHitsMade and GeneHitsTable Made and add to probe_check_list
@@ -393,13 +390,10 @@ if (calcOnOff)
         NamesZ_List = parallel.pool.Constant(NamesZ);
         Batch_List = parallel.pool.Constant(Batch);
         %build structure with on/off-target binding by each target in blast results.
-        fprintf('\n')
-        fprintf('\n')
         fprintf("Computing 1D Probe Batch On/Off-Target affinity index values")
         fprintf('\n')
         fprintf('\n')
-        progBar = ProgressBar(length(batch_nums_to_check_OnOff_1D),'IsParallel', true,'WorkerDirectory',strcat(pwd,filesep,FolderRootName),'Title', 'Computing');
-        progBar.setup([],[],[]);
+        wb = parwaitbar(length(batch_nums_to_check_OnOff_1D),'WaitMessage', 'Computing');
         parfor v=1:length(batch_nums_to_check_OnOff_1D)
             pause(0.1);
             temp_on_off{v} = cell(1,length(Batch_List.Value{batch_nums_to_check_OnOff_1D(v)}));
@@ -413,13 +407,13 @@ if (calcOnOff)
                 NamesZ_OFF = NamesZ_List.Value(Indx_OFF);
                 trimmed_NamesZ_OFF = extractBefore(NamesZ_OFF,'.');
                 if (sum(ismissing(trimmed_NamesZ_OFF))>0)
-                trimmed_NamesZ_OFF(ismissing(trimmed_NamesZ_OFF)) = extractBefore(NamesZ_OFF(ismissing(NamesZ_OFF)),' ');
+                    trimmed_NamesZ_OFF(ismissing(trimmed_NamesZ_OFF)) = extractBefore(NamesZ_OFF(ismissing(NamesZ_OFF)),' ');
                 end
                 Names_OFF = unique(trimmed_NamesZ_OFF);
                 NamesZ_ON = NamesZ_List.Value(Indx_ON);
                 trimmed_NamesZ_ON = extractBefore(NamesZ_ON,'.');
                 if (sum(ismissing(trimmed_NamesZ_ON))>0)
-                trimmed_NamesZ_ON(ismissing(trimmed_NamesZ_ON)) = extractBefore(NamesZ_ON(ismissing(trimmed_NamesZ_ON)),' ');
+                    trimmed_NamesZ_ON(ismissing(trimmed_NamesZ_ON)) = extractBefore(NamesZ_ON(ismissing(trimmed_NamesZ_ON)),' ');
                 end
                 Names_ON = unique(trimmed_NamesZ_ON);
                 Names_p = union(Names_OFF,Names_ON);
@@ -444,21 +438,20 @@ if (calcOnOff)
             end
             parsave_partial_on_off([FolderRootName filesep '(' TranscriptName ')' designerName '_OnOffInfo_batch' num2str(batch_nums_to_check_OnOff_1D(v)) '.mat'],temp_on_off{v});
             temp_on_off{v} = [];
-            updateParallel([],strcat(pwd,filesep,FolderRootName));
+            progress(wb);
         end
-        progBar.release();
+        wb.delete();
+        fprintf('\n')
+        fprintf('\n')
     end
-    fprintf('\n')
-    fprintf('\n')
     fprintf("Aggregating 1D On/Off-Target Simple affinity index values")
     fprintf('\n')
     fprintf('\n')
-    % delete temporary files generated for each batches blast report
-    progBar = ProgressBar(N_Batches,'IsParallel', true,'WorkerDirectory',strcat(pwd,filesep,FolderRootName),'Title', 'Aggregating');
-    progBar.setup([],[],[]);
     Koff = cell(1,N_Batches);
     Kb_Match_List = parallel.pool.Constant(Kb_Match);
+    wb = parwaitbar(N_Batches,'WaitMessage', 'Aggregating');
     parfor v=1:N_Batches
+        pause(0.1);
         if isfile([FolderRootName filesep '(' TranscriptName ')' designerName '_OnOffInfo_batch' num2str(v) '.mat'])
             partial_on_off_tmp = load([FolderRootName filesep '(' TranscriptName ')' designerName '_OnOffInfo_batch' num2str(v) '.mat']).partial_on_off_tmp;
             Koff{v} = ndSparse.build([length(Batch{v}) length(Names) N_methods],0);
@@ -493,9 +486,9 @@ if (calcOnOff)
                 end
             end
         end
-        updateParallel([],strcat(pwd,filesep,FolderRootName));
+        progress(wb);
     end
-    progBar.release();
+    wb.delete();
     Koff = CATnWrapper(Koff,1);
     save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_Tm' num2str(settings.HybridizationTemperature) '_OnOffThermoInfo' settings.designerName '.mat'],'Kon','Koff','Kb_Match','-v7.3');
     fprintf('\n')
@@ -503,14 +496,15 @@ if (calcOnOff)
     fprintf("Deleting temporary 1D On/Off-Target Simple affinity index value files")
     fprintf('\n')
     fprintf('\n')
-    progBar = ProgressBar(size(probes,1),'IsParallel', true,'WorkerDirectory',strcat(pwd,filesep,FolderRootName),'Title', 'Deleting');
-    progBar.setup([],[],[]);
+    wb = parwaitbar(N_Batches,'WaitMessage','Deleting');
     parfor i = 1:N_Batches
         if exist([FolderRootName filesep '(' TranscriptName ')' designerName '_OnOffInfo_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
             delete([FolderRootName filesep '(' TranscriptName ')' designerName '_OnOffInfo_batch' num2str(i) '.mat'])
         end
-        updateParallel([],strcat(pwd,filesep,FolderRootName));
+        progress(wb);
     end
-    progBar.release();
+    wb.delete();
+    fprintf('\n')
+    fprintf('\n')
 end
 end

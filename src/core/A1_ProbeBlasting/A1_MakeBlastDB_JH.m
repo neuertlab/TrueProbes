@@ -21,11 +21,7 @@ end
 fprintf('\n')
 fprintf("Checking if BLAST Database exists")
 fprintf('\n')
-addpath(settings.blastpath)
-if (~ismac)
-    setenv("PATH",strcat(pwd,filesep,settings.blastpath,";",getenv("PATH")));
-else
-    setenv("PATH",strcat(pwd,filesep,settings.blastpath,":",getenv("PATH")));
+if (ismac)
     system('ulimit -n 65536');
 end
 if (runDNA)
@@ -80,7 +76,7 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             outputRoot_temp = strrep(outputRoot,' ','_');
             outputDatabaseDNA_temp = strrep(outputDatabaseDNA,' ','_');
             opts = bioinfo.internal.CLIOptions.create('bioinfo.blastplus.MakeDatabaseOptions',BLASTdb_DNAoptions);
-            args = sprintf('%s -dbtype %s -in %s -out %s %s -max_file_sz %d', strcat(settings.blastpath,filesep,'makeblastdb'),dbtype, inputFileDNA, outputDatabaseDNA_temp, opts.getCommand(),filesizeDNA);
+            args = sprintf('%s -dbtype %s -in %s -out %s %s -max_file_sz %d', "makeblastdb",dbtype, inputFileDNA, outputDatabaseDNA_temp, opts.getCommand(),filesizeDNA);
             [status, result] = system(args,'-echo');
             if status
                 error(message('bioinfo:blastplus:blastplus:NativeErrorOrWarning','blastplusdatabase', result));
@@ -119,7 +115,7 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             outputRoot_temp = strrep(outputRoot,' ','_');
             outputDatabaseRNA_temp = strrep(outputDatabaseRNA,' ','_');
             opts = bioinfo.internal.CLIOptions.create('bioinfo.blastplus.MakeDatabaseOptions',BLASTdb_RNAoptions);
-            args = sprintf('%s -dbtype %s -in %s -out %s %s -max_file_sz %d', strcat(settings.blastpath,filesep,'makeblastdb'),dbtype, inputFileRNA, outputDatabaseRNA_temp, opts.getCommand(),filesizeRNA);
+            args = sprintf('%s -dbtype %s -in %s -out %s %s -max_file_sz %d', "makeblastdb",dbtype, inputFileRNA, outputDatabaseRNA_temp, opts.getCommand(),filesizeRNA);
             [status, result] = system(args,'-echo');
             if status
                 error(message('bioinfo:blastplus:blastplus:NativeErrorOrWarning','blastplusdatabase', result));

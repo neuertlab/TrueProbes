@@ -60,6 +60,7 @@ fprintf(strcat("BLAST DNA = ",num2str(runDNA)))
 fprintf('\n')
 fprintf(strcat("BLAST RNA = ",num2str(runRNA)))
 fprintf('\n')
+fprintf('\n')
 %probe_nums = 1:size(probes,1);
 % each row is information for a probe, then within the cell array in the second column, rows are genes, columns are number of hits
 fail_nums = zeros(size(probes,1));
@@ -90,13 +91,12 @@ ResultsDate2 = cell(1,N_Batches);
 GeneHitsTableExist = zeros(1,N_Batches);
 GeneHitsTableSize = zeros(1,N_Batches);
 GeneHitsTableDate = cell(1,N_Batches);
-fprintf('\n')
-fprintf('\n')
 fprintf("Checking if probe batch BLAST report xml or gene hit table files exist")
 fprintf('\n')
 fprintf('\n')
-progBar = ProgressBar(N_Batches,'WorkerDirectory', strcat(pwd,filesep,FolderRootName));
+wb = parwaitbar(N_Batches,'WaitMessage', 'checking');
 for i = 1:N_Batches
+    pause(0.1);
     if (isfile([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) 'resultsDNA.xml']))%check if XML file exists
         d = dir([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) 'resultsDNA.xml']);
         if (d.bytes>0)%check size greater than zero
@@ -124,9 +124,11 @@ for i = 1:N_Batches
         GeneHitsTableDate{i} = datetime(d.date);
         clear d
     end
-    progBar([],[],[]);
+    wb.progress();
 end
-progBar.release();
+wb.delete();
+fprintf('\n')
+fprintf('\n')
 Results_NotMade = find(ResultsExist==0);
 Results_Made = find(ResultsExist==1);
 Results_NotMade2 = find(ResultsExist2==0);
@@ -134,11 +136,11 @@ Results_Made2 = find(ResultsExist2==1);
 GeneHitsTable_NotMade = find(GeneHitsTableExist==0);
 GeneHitsTable_Made = find(GeneHitsTableExist==1);
 if (and(runDNA,runRNA))
-probes_to_check1 = union(Results_NotMade,Results_NotMade2);
+    probes_to_check1 = union(Results_NotMade,Results_NotMade2);
 elseif (runRNA)
-probes_to_check1 = Results_NotMade2;
+    probes_to_check1 = Results_NotMade2;
 elseif (runDNA)
-probes_to_check1 = Results_NotMade;
+    probes_to_check1 = Results_NotMade;
 end
 probes_to_check2 = GeneHitsTable_NotMade;
 %Sort get most recent ResultsMade GeneHitsMade and GeneHitsTable Made and add to probe_check_list
@@ -179,13 +181,12 @@ probes_to_check3 = union(results_check1,results_check2);
 probes_to_check4 = results_check4;
 batch_nums_to_check1 = union(probes_to_check1,probes_to_check3);
 batch_nums_to_check2 = union(probes_to_check2,probes_to_check4);
-fprintf('\n')
-fprintf('\n')
 fprintf("Generating probe batch fasta files")
 fprintf('\n')
 fprintf('\n')
-progBar = ProgressBar(N_Batches,'WorkerDirectory', strcat(pwd,filesep,FolderRootName));
+wb = parwaitbar(N_Batches,'WaitMessage', 'generating');
 for i = 1:N_Batches
+    pause(0.1);
     data = [];
     %% For local blast on server
     if exist([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
@@ -196,10 +197,11 @@ for i = 1:N_Batches
         data(v).Header = ['p' num2str(Batch{i}(v))];
     end
     fastawrite([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) '.fa'],data);
-    % BatchMaxLen(i) = max(cellfun(@length,probes(Batch{i},2)));
-    progBar([],[],[]);
+    wb.progress();
 end
-progBar.release();
+wb.delete();
+fprintf('\n')
+fprintf('\n')
 if (or(~isempty(batch_nums_to_check1),~isempty(batch_nums_to_check2)))
     try
         pc = parcluster('local');
@@ -222,22 +224,11 @@ MinHomologySize_Constant = parallel.pool.Constant(settings.MinHomologySearchTarg
 %if no database can make database
 %how to check if
 if (~isempty(batch_nums_to_check1))
-    blastpath = settings.blastpath;
-    addpath(blastpath)
-    if (ismac)
-    setenv("PATH",strcat(pwd,filesep,blastpath,":",getenv("PATH")));
-    system('ulimit -n 65536');
-    else
-    setenv("PATH",strcat(pwd,filesep,blastpath,";",getenv("PATH")));
-    end
-    fprintf('\n')
-    fprintf('\n')
     fprintf("blasting probe batch fasta files")
     fprintf('\n')
     fprintf('\n')
     strcat(pwd,filesep,FolderRootName)
-    progBar = ProgressBar(length(batch_nums_to_check1),'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Blasting');
-    progBar.setup([],[],[]);
+    wb = parwaitbar(length(batch_nums_to_check1),'WaitMessage', 'Blasting');
     parfor v = 1:length(batch_nums_to_check1)
         pause(0.1);
         i = batch_nums_to_check1(v);
@@ -256,9 +247,9 @@ if (~isempty(batch_nums_to_check1))
                 error(message('bioinfo:blastplus:blastplus:InvalidDatabase', database_DNA));
             end
             if (~ismac)
-            blastn_args_DNA = sprintf('%s -query %s -db %s -out %s %s', strcat(blastpath,filesep,"blastn"), sequence_data, database_DNA, outputfile_DNA, optionsCmd);
+                blastn_args_DNA = sprintf('%s -query %s -db %s -out %s %s', "blastn", sequence_data, database_DNA, outputfile_DNA, optionsCmd);
             else
-            blastn_args_DNA = sprintf('%s -query %s -db %s -out %s %s', strcat(blastpath,filesep,"blastn"), strcat(char(39),sequence_data,char(39)), database_DNA, strcat(char(39),outputfile_DNA,char(39)), optionsCmd);   
+                blastn_args_DNA = sprintf('%s -query %s -db %s -out %s %s', "blastn", strcat(char(39),sequence_data,char(39)), database_DNA, strcat(char(39),outputfile_DNA,char(39)), optionsCmd);
             end
             [status, result] = system(blastn_args_DNA);
             if status
@@ -274,29 +265,29 @@ if (~isempty(batch_nums_to_check1))
             bnopts_RNA = blastplusoptions("blastn",strcat(" -num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
                 " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)));
             bnopts_RNA.Task = "blastn";
-            bnopts_RNA.ReportFormat = "BLASTXML"; 
+            bnopts_RNA.ReportFormat = "BLASTXML";
             optionsCmd = bnopts_RNA.getCommand();
             if isempty(dir(database_RNA + ".*"))
                 error(message('bioinfo:blastplus:blastplus:InvalidDatabase', database_RNA));
             end
             if (~ismac)
-            blastn_args_RNA = sprintf('%s -query %s -db %s -out %s %s', strcat(blastpath,filesep,"blastn"), sequence_data, database_RNA, outputfile_RNA, optionsCmd);
+                blastn_args_RNA = sprintf('%s -query %s -db %s -out %s %s', "blastn", sequence_data, database_RNA, outputfile_RNA, optionsCmd);
             else
-            blastn_args_RNA = sprintf('%s -query %s -db %s -out %s %s', strcat(blastpath,filesep,"blastn"), strcat(char(39),sequence_data,char(39)), database_RNA, strcat(char(39),outputfile_RNA,char(39)), optionsCmd);    
+                blastn_args_RNA = sprintf('%s -query %s -db %s -out %s %s', "blastn", strcat(char(39),sequence_data,char(39)), database_RNA, strcat(char(39),outputfile_RNA,char(39)), optionsCmd);
             end
             [status, result] = system(blastn_args_RNA);
             if status
                 error(message('bioinfo:blastplus:blastplus:NativeErrorOrWarning',"blastn", result));
             end
         end
-        updateParallel([],strcat(pwd,filesep,FolderRootName));
+        progress(wb);
     end
-    progBar.release();
+    wb.delete();
+    fprintf('\n')
+    fprintf('\n')
 end
 % process each batch blast report into structure needed for downstream usage in probe design and evaluation
 % concantenate each batches results together into a single output file
-fprintf('\n')
-fprintf('\n')
 fprintf("Generating MATLAB tables from probe BLAST batch results")
 fprintf('\n')
 fprintf('\n')
@@ -305,297 +296,297 @@ fprintf(num2str(batch_nums_to_check2))
 fprintf('\n')
 fprintf('\n')
 if (~isempty(batch_nums_to_check2))
-Batch_List = parallel.pool.Constant(Batch);
-    fprintf('\n')
-    fprintf('\n')
     fprintf("Converting probe batch report xml files into matlab tables")
     fprintf('\n')
     fprintf('\n')
-progBar = ProgressBar(length(batch_nums_to_check2),'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Converting');
-progBar.setup([],[],[]);
-parfor y = 1:length(batch_nums_to_check2)
-    pause(0.1);
-    i = batch_nums_to_check2(y);
-    total_temp_hits_subnode = [];    %Will store the gene hits information for storage
-    %% For local blast on server
-    pSeq = fastaread([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa']);
-    if (runDNA)
-        if (simultaneous)%If All at Once
-            temp_hits_subnode = readstruct([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'],...
-                "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations)'));
-            temp_hits_subnode = struct2cell(temp_hits_subnode.Iteration(:));
-            probe_szs = cellfun(@(x) length(x.Hit),temp_hits_subnode(5,:));
-            temp_hits_subnode = cellfun(@(x) x.Hit,temp_hits_subnode(5,:),'Un',0);
-            temp_hits_all = [temp_hits_subnode{:}];
-            probe_ids = [];probe_ord = [];
-            for v = 1:length(probe_szs)
-                probe_ord = [probe_ord v*ones(1,probe_szs(v))];
-                probe_ids = [probe_ids Batch_List.Value{i}(v)*ones(1,probe_szs(v))];
-            end
-            temp_hits_subnode = squeeze(struct2cell([temp_hits_all.Hit_hsps]));
-            for v = 1:length(temp_hits_subnode)
-                [temp_hits_subnode{v}.align_num] = deal(temp_hits_all(v).Hit_num);
-                [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
-                [temp_hits_subnode{v}.ProbeNum] = deal(probe_ids(v));
-                [temp_hits_subnode{v}.ProbeSequence] = deal(pSeq(probe_ord(v)).Sequence);
-                S2 = [temp_hits_subnode{v}.Hsp_align_len];
-                S2b = [temp_hits_subnode{v}.Hsp_gaps];
-                S2c = arrayfun(@(x)S2(x)-S2b(x),1:length(S2),'Un',0);
-                [temp_hits_subnode{v}.Match] = S2c{:};
-                if (sum(([temp_hits_subnode{v}.Match]>=MinHomologySize_Constant.Value))>0)
-                    temp_hits_subnode{v} = temp_hits_subnode{v}([temp_hits_subnode{v}.Match]>=MinHomologySize_Constant.Value);
-                end
-            end
-            temp_hits_subnode  = [temp_hits_subnode{:}];%cat cell array of structs
-            S2 = [temp_hits_subnode.Hsp_align_len];
-            S1 = [temp_hits_subnode.Hsp_query_frame;temp_hits_subnode.Hsp_hit_frame].';
-            S1a = arrayfun(@(x)strplaceStrand(S1(x,:)),1:size(S1,1),'Un',0);
-            [temp_hits_subnode.Strand] = S1a{:};
-            S_SubjectIndices = [temp_hits_subnode.Hsp_hit_from;temp_hits_subnode.Hsp_hit_to].';
-            S_SubjectIndices = arrayfun(@(x) S_SubjectIndices(x,:),1:length(S2),'Un',0).';
-            [temp_hits_subnode.SubjectIndices] = S_SubjectIndices{:};
-            S_QueryIndices = [temp_hits_subnode.Hsp_query_from;temp_hits_subnode.Hsp_query_to].';
-            S_QueryIndices = arrayfun(@(x) S_QueryIndices(x,:),1:length(S2),'Un',0).';
-            [temp_hits_subnode.QueryIndices] = S_QueryIndices{:};
-            S3a = cellfun(@(x) x(2),S_QueryIndices,'Un',0);
-            [temp_hits_subnode.Possible] = S3a{:};
-            S4 = arrayfun(@(x) round(100*S2(x)/S3a{x},0),1:length(S2),'Un',0);
-            [temp_hits_subnode.Percent] = S4{:};
-            S_Score = num2cell([temp_hits_subnode.Hsp_score]);
-            [temp_hits_subnode.Score] = S_Score{:};
-            S_Expect = num2cell([temp_hits_subnode.Hsp_evalue]);
-            [temp_hits_subnode.Expect] = S_Expect{:};
-            S_Alignment = arrayfun(@(x) [char(temp_hits_subnode(x).Hsp_qseq);...
-                char(temp_hits_subnode(x).Hsp_midline);char(temp_hits_subnode(x).Hsp_hseq)],...
-                1:length(S2),'Un',0);
-            [temp_hits_subnode.Alignment] = S_Alignment{:};
-            temp_hits_subnode = rmfield(temp_hits_subnode,...
-                {'Hsp_query_frame','Hsp_hit_frame','Hsp_hit_from','Hsp_hit_to',...
-                'Hsp_query_from','Hsp_query_to','Hsp_qseq','Hsp_hseq','Hsp_midline',...
-                'Hsp_num','Hsp_bit_score','Hsp_gaps','Hsp_align_len',...
-                'Hsp_positive','Hsp_identity','Hsp_score','Hsp_evalue'});
-            total_temp_hits_subnode = [total_temp_hits_subnode temp_hits_subnode];
-        else%If Individual Probes Sequentially
-            for w = 1:length(Batch_List.Value{i})
+    Batch_List = parallel.pool.Constant(Batch);
+    wb = parwaitbar(length(batch_nums_to_check2),'WaitMessage', 'Converting');
+    parfor y = 1:length(batch_nums_to_check2)
+        pause(0.1);
+        i = batch_nums_to_check2(y);
+        total_temp_hits_subnode = [];    %Will store the gene hits information for storage
+        %% For local blast on server
+        pSeq = fastaread([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa']);
+        if (runDNA)
+            if (simultaneous)%If All at Once
                 temp_hits_subnode = readstruct([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'],...
-                    "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations//Iteration[',num2str(w),']//Iteration_hits)'));
-                sub_neststruc = squeeze(struct2cell([temp_hits_subnode.Hit(:).Hit_hsps]));
-                for v = 1:length(sub_neststruc)
-                    [sub_neststruc{v}.align_num] = deal(temp_hits_subnode.Hit(v).Hit_num);
-                    [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
-                    [sub_neststruc{v}.ProbeNum] = deal(Batch_List.Value{i}(w));
-                    [sub_neststruc{v}.ProbeSequence] = deal(pSeq(w).Sequence);
+                    "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations)'));
+                temp_hits_subnode = struct2cell(temp_hits_subnode.Iteration(:));
+                probe_szs = cellfun(@(x) length(x.Hit),temp_hits_subnode(5,:));
+                temp_hits_subnode = cellfun(@(x) x.Hit,temp_hits_subnode(5,:),'Un',0);
+                temp_hits_all = [temp_hits_subnode{:}];
+                probe_ids = [];probe_ord = [];
+                for v = 1:length(probe_szs)
+                    probe_ord = [probe_ord v*ones(1,probe_szs(v))];
+                    probe_ids = [probe_ids Batch_List.Value{i}(v)*ones(1,probe_szs(v))];
                 end
-                temp_hits_subnode  = [sub_neststruc{:}];%cat cell array of structs
+                temp_hits_subnode = squeeze(struct2cell([temp_hits_all.Hit_hsps]));
+                for v = 1:length(temp_hits_subnode)
+                    [temp_hits_subnode{v}.align_num] = deal(temp_hits_all(v).Hit_num);
+                    [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
+                    [temp_hits_subnode{v}.ProbeNum] = deal(probe_ids(v));
+                    [temp_hits_subnode{v}.ProbeSequence] = deal(pSeq(probe_ord(v)).Sequence);
+                    S2 = [temp_hits_subnode{v}.Hsp_align_len];
+                    S2b = [temp_hits_subnode{v}.Hsp_gaps];
+                    S2c = arrayfun(@(x)S2(x)-S2b(x),1:length(S2),'Un',0);
+                    [temp_hits_subnode{v}.Match] = S2c{:};
+                    if (sum(([temp_hits_subnode{v}.Match]>=MinHomologySize_Constant.Value))>0)
+                        temp_hits_subnode{v} = temp_hits_subnode{v}([temp_hits_subnode{v}.Match]>=MinHomologySize_Constant.Value);
+                    end
+                end
+                temp_hits_subnode  = [temp_hits_subnode{:}];%cat cell array of structs
                 S2 = [temp_hits_subnode.Hsp_align_len];
-                S2b = [temp_hits_subnode.Hsp_gaps];
-                S2c = arrayfun(@(x)S2(x)-S2b(x),1:length(S2),'Un',0);
-                [temp_hits_subnode.Match] = S2c{:};
-                if (sum(([temp_hits_subnode.Match]>=MinHomologySize_Constant.Value))>0)%What if no hits over MinHomologySize_Constant.Value?
-                    temp_hits_subnode = temp_hits_subnode([temp_hits_subnode.Match]>=MinHomologySize_Constant.Value);
+                S1 = [temp_hits_subnode.Hsp_query_frame;temp_hits_subnode.Hsp_hit_frame].';
+                S1a = arrayfun(@(x)strplaceStrand(S1(x,:)),1:size(S1,1),'Un',0);
+                [temp_hits_subnode.Strand] = S1a{:};
+                S_SubjectIndices = [temp_hits_subnode.Hsp_hit_from;temp_hits_subnode.Hsp_hit_to].';
+                S_SubjectIndices = arrayfun(@(x) S_SubjectIndices(x,:),1:length(S2),'Un',0).';
+                [temp_hits_subnode.SubjectIndices] = S_SubjectIndices{:};
+                S_QueryIndices = [temp_hits_subnode.Hsp_query_from;temp_hits_subnode.Hsp_query_to].';
+                S_QueryIndices = arrayfun(@(x) S_QueryIndices(x,:),1:length(S2),'Un',0).';
+                [temp_hits_subnode.QueryIndices] = S_QueryIndices{:};
+                S3a = cellfun(@(x) x(2),S_QueryIndices,'Un',0);
+                [temp_hits_subnode.Possible] = S3a{:};
+                S4 = arrayfun(@(x) round(100*S2(x)/S3a{x},0),1:length(S2),'Un',0);
+                [temp_hits_subnode.Percent] = S4{:};
+                S_Score = num2cell([temp_hits_subnode.Hsp_score]);
+                [temp_hits_subnode.Score] = S_Score{:};
+                S_Expect = num2cell([temp_hits_subnode.Hsp_evalue]);
+                [temp_hits_subnode.Expect] = S_Expect{:};
+                S_Alignment = arrayfun(@(x) [char(temp_hits_subnode(x).Hsp_qseq);...
+                    char(temp_hits_subnode(x).Hsp_midline);char(temp_hits_subnode(x).Hsp_hseq)],...
+                    1:length(S2),'Un',0);
+                [temp_hits_subnode.Alignment] = S_Alignment{:};
+                temp_hits_subnode = rmfield(temp_hits_subnode,...
+                    {'Hsp_query_frame','Hsp_hit_frame','Hsp_hit_from','Hsp_hit_to',...
+                    'Hsp_query_from','Hsp_query_to','Hsp_qseq','Hsp_hseq','Hsp_midline',...
+                    'Hsp_num','Hsp_bit_score','Hsp_gaps','Hsp_align_len',...
+                    'Hsp_positive','Hsp_identity','Hsp_score','Hsp_evalue'});
+                total_temp_hits_subnode = [total_temp_hits_subnode temp_hits_subnode];
+            else%If Individual Probes Sequentially
+                for w = 1:length(Batch_List.Value{i})
+                    temp_hits_subnode = readstruct([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'],...
+                        "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations//Iteration[',num2str(w),']//Iteration_hits)'));
+                    sub_neststruc = squeeze(struct2cell([temp_hits_subnode.Hit(:).Hit_hsps]));
+                    for v = 1:length(sub_neststruc)
+                        [sub_neststruc{v}.align_num] = deal(temp_hits_subnode.Hit(v).Hit_num);
+                        [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
+                        [sub_neststruc{v}.ProbeNum] = deal(Batch_List.Value{i}(w));
+                        [sub_neststruc{v}.ProbeSequence] = deal(pSeq(w).Sequence);
+                    end
+                    temp_hits_subnode  = [sub_neststruc{:}];%cat cell array of structs
                     S2 = [temp_hits_subnode.Hsp_align_len];
-                    S1 = [temp_hits_subnode.Hsp_query_frame;temp_hits_subnode.Hsp_hit_frame].';
-                    S1a = arrayfun(@(x)strplaceStrand(S1(x,:)),1:size(S1,1),'Un',0);
-                    [temp_hits_subnode.Strand] = S1a{:};
-                    S_SubjectIndices = [temp_hits_subnode.Hsp_hit_from;temp_hits_subnode.Hsp_hit_to].';
-                    S_SubjectIndices = arrayfun(@(x) S_SubjectIndices(x,:),1:length(S2),'Un',0).';
-                    [temp_hits_subnode.SubjectIndices] = S_SubjectIndices{:};
-                    S_QueryIndices = [temp_hits_subnode.Hsp_query_from;temp_hits_subnode.Hsp_query_to].';
-                    S_QueryIndices = arrayfun(@(x) S_QueryIndices(x,:),1:length(S2),'Un',0).';
-                    [temp_hits_subnode.QueryIndices] = S_QueryIndices{:};
-                    S3a = cellfun(@(x) x(2),S_QueryIndices,'Un',0);
-                    [temp_hits_subnode.Possible] = S3a{:};
-                    S4 = arrayfun(@(x) round(100*S2(x)/S3a{x},0),1:length(S2),'Un',0);
-                    [temp_hits_subnode.Percent] = S4{:};
-                    S_Score = num2cell([temp_hits_subnode.Hsp_score]);
-                    [temp_hits_subnode.Score] = S_Score{:};
-                    S_Expect = num2cell([temp_hits_subnode.Hsp_evalue]);
-                    [temp_hits_subnode.Expect] = S_Expect{:};
-                    S_Alignment = arrayfun(@(x) [char(temp_hits_subnode(x).Hsp_qseq);...
-                        char(temp_hits_subnode(x).Hsp_midline);char(temp_hits_subnode(x).Hsp_hseq)],...
-                        1:length(S2),'Un',0);
-                    [temp_hits_subnode.Alignment] = S_Alignment{:};
-                    temp_hits_subnode = rmfield(temp_hits_subnode,...
-                        {'Hsp_query_frame','Hsp_hit_frame','Hsp_hit_from','Hsp_hit_to',...
-                        'Hsp_query_from','Hsp_query_to','Hsp_qseq','Hsp_hseq','Hsp_midline',...
-                        'Hsp_num','Hsp_bit_score','Hsp_gaps','Hsp_align_len',...
-                        'Hsp_positive','Hsp_identity','Hsp_score','Hsp_evalue'});
-                    total_temp_hits_subnode = [total_temp_hits_subnode temp_hits_subnode];
+                    S2b = [temp_hits_subnode.Hsp_gaps];
+                    S2c = arrayfun(@(x)S2(x)-S2b(x),1:length(S2),'Un',0);
+                    [temp_hits_subnode.Match] = S2c{:};
+                    if (sum(([temp_hits_subnode.Match]>=MinHomologySize_Constant.Value))>0)%What if no hits over MinHomologySize_Constant.Value?
+                        temp_hits_subnode = temp_hits_subnode([temp_hits_subnode.Match]>=MinHomologySize_Constant.Value);
+                        S2 = [temp_hits_subnode.Hsp_align_len];
+                        S1 = [temp_hits_subnode.Hsp_query_frame;temp_hits_subnode.Hsp_hit_frame].';
+                        S1a = arrayfun(@(x)strplaceStrand(S1(x,:)),1:size(S1,1),'Un',0);
+                        [temp_hits_subnode.Strand] = S1a{:};
+                        S_SubjectIndices = [temp_hits_subnode.Hsp_hit_from;temp_hits_subnode.Hsp_hit_to].';
+                        S_SubjectIndices = arrayfun(@(x) S_SubjectIndices(x,:),1:length(S2),'Un',0).';
+                        [temp_hits_subnode.SubjectIndices] = S_SubjectIndices{:};
+                        S_QueryIndices = [temp_hits_subnode.Hsp_query_from;temp_hits_subnode.Hsp_query_to].';
+                        S_QueryIndices = arrayfun(@(x) S_QueryIndices(x,:),1:length(S2),'Un',0).';
+                        [temp_hits_subnode.QueryIndices] = S_QueryIndices{:};
+                        S3a = cellfun(@(x) x(2),S_QueryIndices,'Un',0);
+                        [temp_hits_subnode.Possible] = S3a{:};
+                        S4 = arrayfun(@(x) round(100*S2(x)/S3a{x},0),1:length(S2),'Un',0);
+                        [temp_hits_subnode.Percent] = S4{:};
+                        S_Score = num2cell([temp_hits_subnode.Hsp_score]);
+                        [temp_hits_subnode.Score] = S_Score{:};
+                        S_Expect = num2cell([temp_hits_subnode.Hsp_evalue]);
+                        [temp_hits_subnode.Expect] = S_Expect{:};
+                        S_Alignment = arrayfun(@(x) [char(temp_hits_subnode(x).Hsp_qseq);...
+                            char(temp_hits_subnode(x).Hsp_midline);char(temp_hits_subnode(x).Hsp_hseq)],...
+                            1:length(S2),'Un',0);
+                        [temp_hits_subnode.Alignment] = S_Alignment{:};
+                        temp_hits_subnode = rmfield(temp_hits_subnode,...
+                            {'Hsp_query_frame','Hsp_hit_frame','Hsp_hit_from','Hsp_hit_to',...
+                            'Hsp_query_from','Hsp_query_to','Hsp_qseq','Hsp_hseq','Hsp_midline',...
+                            'Hsp_num','Hsp_bit_score','Hsp_gaps','Hsp_align_len',...
+                            'Hsp_positive','Hsp_identity','Hsp_score','Hsp_evalue'});
+                        total_temp_hits_subnode = [total_temp_hits_subnode temp_hits_subnode];
+                    end
                 end
             end
         end
-    end
-    if (runRNA)
-        if (simultaneous)%If All at Once
-            temp_hits_subnode = readstruct([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'],...
-                "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations)'));
-            temp_hits_subnode = struct2cell(temp_hits_subnode.Iteration(:));
-            probe_szs = cellfun(@(x) length(x.Hit),temp_hits_subnode(5,:));
-            temp_hits_subnode = cellfun(@(x) x.Hit,temp_hits_subnode(5,:),'Un',0);
-            temp_hits_all = [temp_hits_subnode{:}];
-            probe_ids = [];probe_ord = [];
-            for v = 1:length(probe_szs)
-                probe_ord = [probe_ord v*ones(1,probe_szs(v))];
-                probe_ids = [probe_ids Batch_List.Value{i}(v)*ones(1,probe_szs(v))];
-            end
-            temp_hits_subnode = squeeze(struct2cell([temp_hits_all.Hit_hsps]));
-            for v = 1:length(temp_hits_subnode)
-                [temp_hits_subnode{v}.align_num] = deal(temp_hits_all(v).Hit_num);
-                [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
-                [temp_hits_subnode{v}.ProbeNum] = deal(probe_ids(v));
-                [temp_hits_subnode{v}.ProbeSequence] = deal(pSeq(probe_ord(v)).Sequence);
-                S2 = [temp_hits_subnode{v}.Hsp_align_len];
-                S2b = [temp_hits_subnode{v}.Hsp_gaps];
-                S2c = arrayfun(@(x)S2(x)-S2b(x),1:length(S2),'Un',0);
-                [temp_hits_subnode{v}.Match] = S2c{:};
-                if (sum(([temp_hits_subnode{v}.Match]>=MinHomologySize_Constant.Value))>0)
-                    temp_hits_subnode{v} = temp_hits_subnode{v}([temp_hits_subnode{v}.Match]>=MinHomologySize_Constant.Value);
-                end
-            end
-            temp_hits_subnode  = [temp_hits_subnode{:}];%cat cell array of structs
-            S2 = [temp_hits_subnode.Hsp_align_len];
-            S1 = [temp_hits_subnode.Hsp_query_frame;temp_hits_subnode.Hsp_hit_frame].';
-            S1a = arrayfun(@(x)strplaceStrand(S1(x,:)),1:size(S1,1),'Un',0);
-            [temp_hits_subnode.Strand] = S1a{:};
-            S_SubjectIndices = [temp_hits_subnode.Hsp_hit_from;temp_hits_subnode.Hsp_hit_to].';
-            S_SubjectIndices = arrayfun(@(x) S_SubjectIndices(x,:),1:length(S2),'Un',0).';
-            [temp_hits_subnode.SubjectIndices] = S_SubjectIndices{:};
-            S_QueryIndices = [temp_hits_subnode.Hsp_query_from;temp_hits_subnode.Hsp_query_to].';
-            S_QueryIndices = arrayfun(@(x) S_QueryIndices(x,:),1:length(S2),'Un',0).';
-            [temp_hits_subnode.QueryIndices] = S_QueryIndices{:};
-            S3a = cellfun(@(x) x(2),S_QueryIndices,'Un',0);
-            [temp_hits_subnode.Possible] = S3a{:};
-            S4 = arrayfun(@(x) round(100*S2(x)/S3a{x},0),1:length(S2),'Un',0);
-            [temp_hits_subnode.Percent] = S4{:};
-            S_Score = num2cell([temp_hits_subnode.Hsp_score]);
-            [temp_hits_subnode.Score] = S_Score{:};
-            S_Expect = num2cell([temp_hits_subnode.Hsp_evalue]);
-            [temp_hits_subnode.Expect] = S_Expect{:};
-            S_Alignment = arrayfun(@(x) [char(temp_hits_subnode(x).Hsp_qseq);...
-                char(temp_hits_subnode(x).Hsp_midline);char(temp_hits_subnode(x).Hsp_hseq)],...
-                1:length(S2),'Un',0);
-            [temp_hits_subnode.Alignment] = S_Alignment{:};
-            temp_hits_subnode = rmfield(temp_hits_subnode,...
-                {'Hsp_query_frame','Hsp_hit_frame','Hsp_hit_from','Hsp_hit_to',...
-                'Hsp_query_from','Hsp_query_to','Hsp_qseq','Hsp_hseq','Hsp_midline',...
-                'Hsp_num','Hsp_bit_score','Hsp_gaps','Hsp_align_len',...
-                'Hsp_positive','Hsp_identity','Hsp_score','Hsp_evalue'});
-            total_temp_hits_subnode = [total_temp_hits_subnode temp_hits_subnode];
-        else%If Individual Probes Sequentially
-            for w = 1:length(Batch_List.Value{i})
+        if (runRNA)
+            if (simultaneous)%If All at Once
                 temp_hits_subnode = readstruct([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'],...
-                    "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations//Iteration[',num2str(w),']//Iteration_hits)'));
-                sub_neststruc = squeeze(struct2cell([temp_hits_subnode.Hit(:).Hit_hsps]));
-                for v = 1:length(sub_neststruc)
-                    [sub_neststruc{v}.align_num] = deal(temp_hits_subnode.Hit(v).Hit_num);
-                    [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
-                    [sub_neststruc{v}.ProbeNum] = deal(Batch_List.Value{i}(w));
-                    [sub_neststruc{v}.ProbeSequence] = deal(pSeq(w).Sequence);
+                    "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations)'));
+                temp_hits_subnode = struct2cell(temp_hits_subnode.Iteration(:));
+                probe_szs = cellfun(@(x) length(x.Hit),temp_hits_subnode(5,:));
+                temp_hits_subnode = cellfun(@(x) x.Hit,temp_hits_subnode(5,:),'Un',0);
+                temp_hits_all = [temp_hits_subnode{:}];
+                probe_ids = [];probe_ord = [];
+                for v = 1:length(probe_szs)
+                    probe_ord = [probe_ord v*ones(1,probe_szs(v))];
+                    probe_ids = [probe_ids Batch_List.Value{i}(v)*ones(1,probe_szs(v))];
                 end
-                temp_hits_subnode  = [sub_neststruc{:}];%cat cell array of structs
+                temp_hits_subnode = squeeze(struct2cell([temp_hits_all.Hit_hsps]));
+                for v = 1:length(temp_hits_subnode)
+                    [temp_hits_subnode{v}.align_num] = deal(temp_hits_all(v).Hit_num);
+                    [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
+                    [temp_hits_subnode{v}.ProbeNum] = deal(probe_ids(v));
+                    [temp_hits_subnode{v}.ProbeSequence] = deal(pSeq(probe_ord(v)).Sequence);
+                    S2 = [temp_hits_subnode{v}.Hsp_align_len];
+                    S2b = [temp_hits_subnode{v}.Hsp_gaps];
+                    S2c = arrayfun(@(x)S2(x)-S2b(x),1:length(S2),'Un',0);
+                    [temp_hits_subnode{v}.Match] = S2c{:};
+                    if (sum(([temp_hits_subnode{v}.Match]>=MinHomologySize_Constant.Value))>0)
+                        temp_hits_subnode{v} = temp_hits_subnode{v}([temp_hits_subnode{v}.Match]>=MinHomologySize_Constant.Value);
+                    end
+                end
+                temp_hits_subnode  = [temp_hits_subnode{:}];%cat cell array of structs
                 S2 = [temp_hits_subnode.Hsp_align_len];
-                S2b = [temp_hits_subnode.Hsp_gaps];
-                S2c = arrayfun(@(x)S2(x)-S2b(x),1:length(S2),'Un',0);
-                [temp_hits_subnode.Match] = S2c{:};
-                if (sum(([temp_hits_subnode.Match]>=MinHomologySize_Constant.Value))>0)%What if no hits over MinHomologySize_Constant.Value?
-                    temp_hits_subnode = temp_hits_subnode([temp_hits_subnode.Match]>=MinHomologySize_Constant.Value);
+                S1 = [temp_hits_subnode.Hsp_query_frame;temp_hits_subnode.Hsp_hit_frame].';
+                S1a = arrayfun(@(x)strplaceStrand(S1(x,:)),1:size(S1,1),'Un',0);
+                [temp_hits_subnode.Strand] = S1a{:};
+                S_SubjectIndices = [temp_hits_subnode.Hsp_hit_from;temp_hits_subnode.Hsp_hit_to].';
+                S_SubjectIndices = arrayfun(@(x) S_SubjectIndices(x,:),1:length(S2),'Un',0).';
+                [temp_hits_subnode.SubjectIndices] = S_SubjectIndices{:};
+                S_QueryIndices = [temp_hits_subnode.Hsp_query_from;temp_hits_subnode.Hsp_query_to].';
+                S_QueryIndices = arrayfun(@(x) S_QueryIndices(x,:),1:length(S2),'Un',0).';
+                [temp_hits_subnode.QueryIndices] = S_QueryIndices{:};
+                S3a = cellfun(@(x) x(2),S_QueryIndices,'Un',0);
+                [temp_hits_subnode.Possible] = S3a{:};
+                S4 = arrayfun(@(x) round(100*S2(x)/S3a{x},0),1:length(S2),'Un',0);
+                [temp_hits_subnode.Percent] = S4{:};
+                S_Score = num2cell([temp_hits_subnode.Hsp_score]);
+                [temp_hits_subnode.Score] = S_Score{:};
+                S_Expect = num2cell([temp_hits_subnode.Hsp_evalue]);
+                [temp_hits_subnode.Expect] = S_Expect{:};
+                S_Alignment = arrayfun(@(x) [char(temp_hits_subnode(x).Hsp_qseq);...
+                    char(temp_hits_subnode(x).Hsp_midline);char(temp_hits_subnode(x).Hsp_hseq)],...
+                    1:length(S2),'Un',0);
+                [temp_hits_subnode.Alignment] = S_Alignment{:};
+                temp_hits_subnode = rmfield(temp_hits_subnode,...
+                    {'Hsp_query_frame','Hsp_hit_frame','Hsp_hit_from','Hsp_hit_to',...
+                    'Hsp_query_from','Hsp_query_to','Hsp_qseq','Hsp_hseq','Hsp_midline',...
+                    'Hsp_num','Hsp_bit_score','Hsp_gaps','Hsp_align_len',...
+                    'Hsp_positive','Hsp_identity','Hsp_score','Hsp_evalue'});
+                total_temp_hits_subnode = [total_temp_hits_subnode temp_hits_subnode];
+            else%If Individual Probes Sequentially
+                for w = 1:length(Batch_List.Value{i})
+                    temp_hits_subnode = readstruct([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'],...
+                        "StructSelector",strcat('(//BlastOutput//BlastOutput_iterations//Iteration[',num2str(w),']//Iteration_hits)'));
+                    sub_neststruc = squeeze(struct2cell([temp_hits_subnode.Hit(:).Hit_hsps]));
+                    for v = 1:length(sub_neststruc)
+                        [sub_neststruc{v}.align_num] = deal(temp_hits_subnode.Hit(v).Hit_num);
+                        [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
+                        [sub_neststruc{v}.ProbeNum] = deal(Batch_List.Value{i}(w));
+                        [sub_neststruc{v}.ProbeSequence] = deal(pSeq(w).Sequence);
+                    end
+                    temp_hits_subnode  = [sub_neststruc{:}];%cat cell array of structs
                     S2 = [temp_hits_subnode.Hsp_align_len];
-                    S1 = [temp_hits_subnode.Hsp_query_frame;temp_hits_subnode.Hsp_hit_frame].';
-                    S1a = arrayfun(@(x)strplaceStrand(S1(x,:)),1:size(S1,1),'Un',0);
-                    [temp_hits_subnode.Strand] = S1a{:};
-                    S_SubjectIndices = [temp_hits_subnode.Hsp_hit_from;temp_hits_subnode.Hsp_hit_to].';
-                    S_SubjectIndices = arrayfun(@(x) S_SubjectIndices(x,:),1:length(S2),'Un',0).';
-                    [temp_hits_subnode.SubjectIndices] = S_SubjectIndices{:};
-                    S_QueryIndices = [temp_hits_subnode.Hsp_query_from;temp_hits_subnode.Hsp_query_to].';
-                    S_QueryIndices = arrayfun(@(x) S_QueryIndices(x,:),1:length(S2),'Un',0).';
-                    [temp_hits_subnode.QueryIndices] = S_QueryIndices{:};
-                    S3a = cellfun(@(x) x(2),S_QueryIndices,'Un',0);
-                    [temp_hits_subnode.Possible] = S3a{:};
-                    S4 = arrayfun(@(x) round(100*S2(x)/S3a{x},0),1:length(S2),'Un',0);
-                    [temp_hits_subnode.Percent] = S4{:};
-                    S_Score = num2cell([temp_hits_subnode.Hsp_score]);
-                    [temp_hits_subnode.Score] = S_Score{:};
-                    S_Expect = num2cell([temp_hits_subnode.Hsp_evalue]);
-                    [temp_hits_subnode.Expect] = S_Expect{:};
-                    S_Alignment = arrayfun(@(x) [char(temp_hits_subnode(x).Hsp_qseq);...
-                        char(temp_hits_subnode(x).Hsp_midline);char(temp_hits_subnode(x).Hsp_hseq)],...
-                        1:length(S2),'Un',0);
-                    [temp_hits_subnode.Alignment] = S_Alignment{:};
-                    temp_hits_subnode = rmfield(temp_hits_subnode,...
-                        {'Hsp_query_frame','Hsp_hit_frame','Hsp_hit_from','Hsp_hit_to',...
-                        'Hsp_query_from','Hsp_query_to','Hsp_qseq','Hsp_hseq','Hsp_midline',...
-                        'Hsp_num','Hsp_bit_score','Hsp_gaps','Hsp_align_len',...
-                        'Hsp_positive','Hsp_identity','Hsp_score','Hsp_evalue'});
-                    total_temp_hits_subnode = [total_temp_hits_subnode temp_hits_subnode];
+                    S2b = [temp_hits_subnode.Hsp_gaps];
+                    S2c = arrayfun(@(x)S2(x)-S2b(x),1:length(S2),'Un',0);
+                    [temp_hits_subnode.Match] = S2c{:};
+                    if (sum(([temp_hits_subnode.Match]>=MinHomologySize_Constant.Value))>0)%What if no hits over MinHomologySize_Constant.Value?
+                        temp_hits_subnode = temp_hits_subnode([temp_hits_subnode.Match]>=MinHomologySize_Constant.Value);
+                        S2 = [temp_hits_subnode.Hsp_align_len];
+                        S1 = [temp_hits_subnode.Hsp_query_frame;temp_hits_subnode.Hsp_hit_frame].';
+                        S1a = arrayfun(@(x)strplaceStrand(S1(x,:)),1:size(S1,1),'Un',0);
+                        [temp_hits_subnode.Strand] = S1a{:};
+                        S_SubjectIndices = [temp_hits_subnode.Hsp_hit_from;temp_hits_subnode.Hsp_hit_to].';
+                        S_SubjectIndices = arrayfun(@(x) S_SubjectIndices(x,:),1:length(S2),'Un',0).';
+                        [temp_hits_subnode.SubjectIndices] = S_SubjectIndices{:};
+                        S_QueryIndices = [temp_hits_subnode.Hsp_query_from;temp_hits_subnode.Hsp_query_to].';
+                        S_QueryIndices = arrayfun(@(x) S_QueryIndices(x,:),1:length(S2),'Un',0).';
+                        [temp_hits_subnode.QueryIndices] = S_QueryIndices{:};
+                        S3a = cellfun(@(x) x(2),S_QueryIndices,'Un',0);
+                        [temp_hits_subnode.Possible] = S3a{:};
+                        S4 = arrayfun(@(x) round(100*S2(x)/S3a{x},0),1:length(S2),'Un',0);
+                        [temp_hits_subnode.Percent] = S4{:};
+                        S_Score = num2cell([temp_hits_subnode.Hsp_score]);
+                        [temp_hits_subnode.Score] = S_Score{:};
+                        S_Expect = num2cell([temp_hits_subnode.Hsp_evalue]);
+                        [temp_hits_subnode.Expect] = S_Expect{:};
+                        S_Alignment = arrayfun(@(x) [char(temp_hits_subnode(x).Hsp_qseq);...
+                            char(temp_hits_subnode(x).Hsp_midline);char(temp_hits_subnode(x).Hsp_hseq)],...
+                            1:length(S2),'Un',0);
+                        [temp_hits_subnode.Alignment] = S_Alignment{:};
+                        temp_hits_subnode = rmfield(temp_hits_subnode,...
+                            {'Hsp_query_frame','Hsp_hit_frame','Hsp_hit_from','Hsp_hit_to',...
+                            'Hsp_query_from','Hsp_query_to','Hsp_qseq','Hsp_hseq','Hsp_midline',...
+                            'Hsp_num','Hsp_bit_score','Hsp_gaps','Hsp_align_len',...
+                            'Hsp_positive','Hsp_identity','Hsp_score','Hsp_evalue'});
+                        total_temp_hits_subnode = [total_temp_hits_subnode temp_hits_subnode];
+                    end
                 end
             end
         end
-    end
-    total_temp_hits_subnode = struct2table(total_temp_hits_subnode);
-    total_temp_hits_subnode = total_temp_hits_subnode(:,{'Score' 'Expect' 'Strand' 'Alignment' 'QueryIndices' 'SubjectIndices' 'Name' 'ProbeSequence' 'ProbeNum' 'Match' 'Possible' 'Percent'});
-    total_temp_hits_subnode = sortrows(total_temp_hits_subnode,10,'descend');%Check is Match
-    %filter out hits to Bacterial Artifical Chromosomes, and first on-target match.
-    loc_BAC = find(contains(total_temp_hits_subnode.Name,'BAC clone'));
-    %loc_Chromosome = find(contains(total_temp_hits_subnode.Name,['chromosome ' Chromosome]));%only k<=2 kept, so remove first entry
-    %loc_ORF = find(contains(total_temp_hits_subnode.Name,['open reading frame' Chromosome]));%only k<=2 kept, so remove first entry
-    %loc_DNA = union(loc_Chromosome,loc_ORF);
-    columns_All = 1:size(total_temp_hits_subnode,1);
-    columns_Remaining1 = setdiff(columns_All,loc_BAC);
-    temp2 = total_temp_hits_subnode(columns_Remaining1,:);
-    parsave_gene_hits_table([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat'],temp2)
-    if (runDNA)
-        if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'],'file')        %delete xml if already exists
-            delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'])
+        total_temp_hits_subnode = struct2table(total_temp_hits_subnode);
+        total_temp_hits_subnode = total_temp_hits_subnode(:,{'Score' 'Expect' 'Strand' 'Alignment' 'QueryIndices' 'SubjectIndices' 'Name' 'ProbeSequence' 'ProbeNum' 'Match' 'Possible' 'Percent'});
+        total_temp_hits_subnode = sortrows(total_temp_hits_subnode,10,'descend');%Check is Match
+        %filter out hits to Bacterial Artifical Chromosomes, and first on-target match.
+        loc_BAC = find(contains(total_temp_hits_subnode.Name,'BAC clone'));
+        %loc_Chromosome = find(contains(total_temp_hits_subnode.Name,['chromosome ' Chromosome]));%only k<=2 kept, so remove first entry
+        %loc_ORF = find(contains(total_temp_hits_subnode.Name,['open reading frame' Chromosome]));%only k<=2 kept, so remove first entry
+        %loc_DNA = union(loc_Chromosome,loc_ORF);
+        columns_All = 1:size(total_temp_hits_subnode,1);
+        columns_Remaining1 = setdiff(columns_All,loc_BAC);
+        temp2 = total_temp_hits_subnode(columns_Remaining1,:);
+        parsave_gene_hits_table([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat'],temp2)
+        if (runDNA)
+            if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'],'file')        %delete xml if already exists
+                delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'])
+            end
         end
-    end
-    if (runRNA)
-        if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'],'file')        %delete xml if already exists
-            delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'])
+        if (runRNA)
+            if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'],'file')        %delete xml if already exists
+                delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'])
+            end
         end
+        if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
+            delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'])
+        end
+        progress(wb);
     end
-    if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
-        delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'])
-    end
-    updateParallel([],strcat(pwd,filesep,FolderRootName));
-end
-progBar.release();
+    wb.delete();
+    fprintf('\n')
+    fprintf('\n')
 end
 %% Load all files and clear
-fprintf('\n')
-fprintf('\n')
 fprintf("Aggregating probe BLAST batch MATLAB tables into a single MATLAB BLAST gene hits table")
 fprintf('\n')
 fprintf('\n')
 % delete temporary files generated for each batches blast report
 tic
 gene_table = cell(1,N_Batches);
-progBar = ProgressBar(N_Batches,'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Loading Batches');
-progBar.setup([],[],[]);
+wb = parwaitbar(N_Batches,'WaitMessage','Loading Batches');
 parfor i = 1:N_Batches
     if isfile([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat'])
         gene_table{i} = load([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat']).gene_hits_table_tmp;
     end
-    updateParallel([],strcat(pwd,filesep,FolderRootName));
+    progress(wb);
 end
-progBar.release();
+wb.delete();
 gene_table = vertcat(gene_table{:});
 save([settings.FolderRootName filesep '(' TranscriptName ')' '_' settings.rootName '_hits_table' settings.designerName '.mat'],'gene_table','-v7.3')
 save([settings.FolderRootName filesep '(' TranscriptName ')' '_' settings.rootName '_fail_nums' settings.designerName '.mat'],'fail_nums','-v7.3')
-tEnd = toc;fprintf('\n')
+tEnd = toc;
+fprintf('\n')
+fprintf('\n')
 fprintf("Time elapsed to aggregate BLAST result batch tables %g seconds",round(tEnd,3,"significant"))
 fprintf('\n')
 fprintf('\n')
 fprintf("Deleting temporary probe BLAST batch gene hits tables")
 fprintf('\n')
 fprintf('\n')
-progBar = ProgressBar(N_Batches,'IsParallel',true,'WorkerDirectory', strcat(pwd,filesep,FolderRootName),'Title', 'Deleting Batches');
+wb = parwaitbar(N_Batches,'WaitMessage','Deleting Batches');
 parfor i = 1:N_Batches
     if exist([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
         delete([FolderRootName filesep '(' TranscriptName ')' designerName '_gene_hits_table_batch' num2str(i) '.mat'])
     end
-    updateParallel([],strcat(pwd,filesep,FolderRootName));
+    progress(wb);
 end
-progBar.release();
+wb.delete();
+fprintf('\n')
+fprintf('\n')
 end
 function o = strplaceStrand(vec)
 if (prod(vec)>0)
