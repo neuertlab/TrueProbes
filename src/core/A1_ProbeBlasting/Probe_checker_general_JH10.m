@@ -227,57 +227,42 @@ if (~isempty(batch_nums_to_check1))
     fprintf("blasting probe batch fasta files")
     fprintf('\n')
     fprintf('\n')
-    strcat(pwd,filesep,FolderRootName)
     wb = parwaitbar(length(batch_nums_to_check1),'WaitMessage', 'Blasting');
     parfor v = 1:length(batch_nums_to_check1)
         pause(0.1);
         i = batch_nums_to_check1(v);
         if (runDNA)
             sequence_data = [FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'];
-            outputfile_DNA = [FolderRootName  filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'];
+            outputfile_DNA = [FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'];
             database_DNA = db1;
             per_id = 100*MinHomologySize_Constant.Value/MaxProbeSize;
             strand = 'both';
-            bnopts_DNA = blastplusoptions("blastn",strcat(" -num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
-                " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)));
-            bnopts_DNA.Task = "blastn";
-            bnopts_DNA.ReportFormat = "BLASTXML";
-            optionsCmd = bnopts_DNA.getCommand();
-            if isempty(dir(database_DNA + ".*"))
-                error(message('bioinfo:blastplus:blastplus:InvalidDatabase', database_DNA));
-            end
+            options = strcat("-num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
+                " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)," -task blastn -outfmt 5");
             if (~ismac)
-                blastn_args_DNA = sprintf('%s -query %s -db %s -out %s %s', "blastn", sequence_data, database_DNA, outputfile_DNA, optionsCmd);
+                [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", sequence_data, database_DNA, outputfile_DNA, options));
             else
-                blastn_args_DNA = sprintf('%s -query %s -db %s -out %s %s', "blastn", strcat(char(39),sequence_data,char(39)), database_DNA, strcat(char(39),outputfile_DNA,char(39)), optionsCmd);
+                [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", strcat(char(39),sequence_data,char(39)), database_DNA, strcat(char(39),outputfile_DNA,char(39)), options));
             end
-            [status, result] = system(blastn_args_DNA);
             if status
-                error(message('bioinfo:blastplus:blastplus:NativeErrorOrWarning',"blastn", result));
+                error(msg)
             end
         end
         if (runRNA)
             sequence_data = [FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'];
-            outputfile_RNA = [FolderRootName  filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'];
+            outputfile_RNA = [FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsRNA.xml'];
             database_RNA = db2;
             per_id = 100*MinHomologySize_Constant.Value/MaxProbeSize;
             strand = 'plus';
-            bnopts_RNA = blastplusoptions("blastn",strcat(" -num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
-                " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)));
-            bnopts_RNA.Task = "blastn";
-            bnopts_RNA.ReportFormat = "BLASTXML";
-            optionsCmd = bnopts_RNA.getCommand();
-            if isempty(dir(database_RNA + ".*"))
-                error(message('bioinfo:blastplus:blastplus:InvalidDatabase', database_RNA));
-            end
+            options = strcat("-num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
+                " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)," -task blastn -outfmt 5");
             if (~ismac)
-                blastn_args_RNA = sprintf('%s -query %s -db %s -out %s %s', "blastn", sequence_data, database_RNA, outputfile_RNA, optionsCmd);
+                [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", sequence_data, database_RNA, outputfile_RNA, options));
             else
-                blastn_args_RNA = sprintf('%s -query %s -db %s -out %s %s', "blastn", strcat(char(39),sequence_data,char(39)), database_RNA, strcat(char(39),outputfile_RNA,char(39)), optionsCmd);
+                [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", strcat(char(39),sequence_data,char(39)), database_RNA, strcat(char(39),outputfile_RNA,char(39)), options));
             end
-            [status, result] = system(blastn_args_RNA);
             if status
-                error(message('bioinfo:blastplus:blastplus:NativeErrorOrWarning',"blastn", result));
+                error(msg)
             end
         end
         progress(wb);
