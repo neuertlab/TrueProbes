@@ -49,13 +49,12 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             fprintf('\n')
             fprintf("Making DNA BLAST database")
             fprintf('\n')
-            dbtype = extractBefore("nucleotide", 5); % "nucl" or "prot" shorthand
-            BLASTdb_DNAoptions = bioinfo.blastplus.MakeDatabaseOptions;
+            dbtype ="nucl"; 
             if (strcmp(settings.referenceType,'RefSeq'))
-                BLASTdb_DNAoptions.Title = strcat(settings.Organism,'_NCBI_genomic');
+                BLASTdbDNA_Title = strcat(settings.Organism,'_NCBI_genomic');
                 dna_files = find(~contains({FNAFiles.name},'rna').*contains({FNAFiles.name},'genomic'),1);
             elseif (strcmp(settings.referenceType,'ENSEMBL'))
-                BLASTdb_DNAoptions.Title = strcat(settings.Organism,'_ENSEMBL_genomic');
+                BLASTdbDNA_Title = strcat(settings.Organism,'_ENSEMBL_genomic');
                 dna_files = find(contains({FNAFiles.name},'.dna'));
             end
             if (~isempty(dna_files))
@@ -75,12 +74,16 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             end
             outputRoot_temp = strrep(outputRoot,' ','_');
             outputDatabaseDNA_temp = strrep(outputDatabaseDNA,' ','_');
-            opts = bioinfo.internal.CLIOptions.create('bioinfo.blastplus.MakeDatabaseOptions',BLASTdb_DNAoptions);
-            args = sprintf('%s -dbtype %s -in %s -out %s %s -max_file_sz %d', "makeblastdb",dbtype, inputFileDNA, outputDatabaseDNA_temp, opts.getCommand(),filesizeDNA);
-            [status, result] = system(args,'-echo');
+            args = sprintf('%s -dbtype %s -title %s -in %s -out %s -max_file_sz %d', "makeblastdb",dbtype, BLASTdbDNA_Title, inputFileDNA,  outputDatabaseDNA_temp,filesizeDNA);
+            [status,msg] = system(args);
             if status
-                error(message('bioinfo:blastplus:blastplus:NativeErrorOrWarning','blastplusdatabase', result));
+                error(msg)
+                fprintf('\n')
+                fprintf('\n')
             end
+            fprintf('Made DNA Blast database')
+            fprintf('\n')
+            fprintf('\n')
         end
     end
     if (runRNA)
@@ -88,13 +91,12 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             fprintf('\n')
             fprintf("Making RNA BLAST database")
             fprintf('\n')
-            dbtype = extractBefore("nucleotide", 5); % "nucl" or "prot" shorthand
-            BLASTdb_RNAoptions = bioinfo.blastplus.MakeDatabaseOptions;
+            dbtype ="nucl"; 
             if (strcmp(settings.referenceType,'RefSeq'))
-                BLASTdb_RNAoptions.Title = strcat(settings.Organism,'_NCBI_transcript');
+                BLASTdbRNA_Title = strcat(settings.Organism,'_NCBI_transcript');
                 rna_files = find(contains({FNAFiles.name},'rna').*~contains({FNAFiles.name},'genomic'),1);
             elseif (strcmp(settings.referenceType,'ENSEMBL'))
-                BLASTdb_RNAoptions.Title = strcat(settings.Organism,'_ENSEMBL_transcript');
+                BLASTdbRNA_Title = strcat(settings.Organism,'_ENSEMBL_transcript');
                 rna_files = find(~contains({FNAFiles.name},'.dna'));
             end
             if (~isempty(rna_files))
@@ -114,12 +116,16 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             end
             outputRoot_temp = strrep(outputRoot,' ','_');
             outputDatabaseRNA_temp = strrep(outputDatabaseRNA,' ','_');
-            opts = bioinfo.internal.CLIOptions.create('bioinfo.blastplus.MakeDatabaseOptions',BLASTdb_RNAoptions);
-            args = sprintf('%s -dbtype %s -in %s -out %s %s -max_file_sz %d', "makeblastdb",dbtype, inputFileRNA, outputDatabaseRNA_temp, opts.getCommand(),filesizeRNA);
-            [status, result] = system(args,'-echo');
+            args = sprintf('%s -dbtype %s -title %s -in %s -out %s -max_file_sz %d', "makeblastdb",dbtype, BLASTdbRNA_Title, inputFileRNA, outputDatabaseRNA_temp,filesizeRNA);
+            [status,msg] = system(args);
             if status
-                error(message('bioinfo:blastplus:blastplus:NativeErrorOrWarning','blastplusdatabase', result));
+                error(msg)
+                fprintf('\n')
+                fprintf('\n')
             end
+            fprintf('Made RNA Blast database')
+            fprintf('\n')
+            fprintf('\n')
         end
         sep_locations = strfind(outputRoot,filesep);
         space_locations = find(isspace(outputRoot));
@@ -128,6 +134,11 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             files_in_temp_folder = dir(outputRoot_temp);
             for k = find([files_in_temp_folder.isdir]==0)
                 [status,msg] = movefile(strcat(outputRoot_temp,files_in_temp_folder(k).name), strcat(outputRoot,files_in_temp_folder(k).name));
+                if status
+                    fprintf(msg)
+                    fprintf('\n')
+                    fprintf('\n')
+                end
             end
             rmdir(outputRoot_temp_char(1:sep_locations(find(sep_locations>space_locations(1),1))-1),'s')
         end

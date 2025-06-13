@@ -44,32 +44,32 @@ clear row Flip_Identity Self_Flip_Identity
 for i=FinalProbeSet
     for j=FinalProbeSet
         if (i ~= j)
-            tempAlign1 = swalignMod(pi_seq{i},pi_seq{j},'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
+            [~,tempAlign1] = swalign(pi_seq{i},pi_seq{j},'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
             TopCrossDimerSeqParsed1{i}{j} = tempAlign1(1,:);
             BotCrossDimerSeqParsed1{i}{j} = tempAlign1(3,:);
             TopCrossDimerSeqParsed1{j}{i} = tempAlign1(1,:);
             BotCrossDimerSeqParsed1{j}{i} = tempAlign1(3,:);
-            tempAlign2 = swalignMod(pi_seq{i},reverse(pi_seq{j}),'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
+            [~,tempAlign2] = swalign(pi_seq{i},reverse(pi_seq{j}),'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
             TopCrossDimerSeqParsed2{i}{j} = tempAlign2(1,:);
             BotCrossDimerSeqParsed2{i}{j} = tempAlign2(3,:);
             TopCrossDimerSeqParsed2{j}{i} = tempAlign2(1,:);
             BotCrossDimerSeqParsed2{j}{i} = tempAlign2(3,:);
-            tempAlign3 = swalignMod(reverse(pi_seq{i}),pi_seq{j},'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
+            [~,tempAlign3] = swalign(reverse(pi_seq{i}),pi_seq{j},'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
             TopCrossDimerSeqParsed3{i}{j} = tempAlign3(1,:);
             BotCrossDimerSeqParsed3{i}{j} = tempAlign3(3,:);
             TopCrossDimerSeqParsed3{j}{i} = tempAlign3(1,:);
             BotCrossDimerSeqParsed3{j}{i} = tempAlign3(3,:);
-            tempAlign4 = swalignMod(reverse(reverse(pi_seq{i})),reverse(pi_seq{j}),'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
+            [~,tempAlign4] = swalign(reverse(reverse(pi_seq{i})),reverse(pi_seq{j}),'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
             TopCrossDimerSeqParsed4{i}{j} = tempAlign4(1,:);
             BotCrossDimerSeqParsed4{i}{j} = tempAlign4(3,:);
             TopCrossDimerSeqParsed4{j}{i} = tempAlign4(1,:);
             BotCrossDimerSeqParsed4{j}{i} = tempAlign4(3,:); 
             clear tempAlign*
         else
-            tempAlign1 = swalignMod(pi_seq{i},reverse(pi_seq{j}),'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
+            [~,tempAlign1] = swalign(pi_seq{i},reverse(pi_seq{j}),'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
             TopCrossDimerSeqParsed1{i}{j} = tempAlign1(1,:);
             BotCrossDimerSeqParsed1{i}{j} = tempAlign1(3,:);
-            tempAlign2 = swalignMod(pi_seq{i},pi_seq{j},'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
+            [~,tempAlign2] = swalign(pi_seq{i},pi_seq{j},'SCORINGMATRIX',scr_mat,'GAPOPEN',5,'ALPHA','NT');
             TopCrossDimerSeqParsed2{i}{j} = tempAlign2(1,:);
             BotCrossDimerSeqParsed2{i}{j} = tempAlign2(3,:);
             clear tempAlign*

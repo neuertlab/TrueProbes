@@ -9,8 +9,6 @@ function chosenProbes = A_ZigZagProbeSelection_V5(probes,gene_table,settings,add
 % Remaining probes are picked according to the zig-zag selection, 
 % Accounted for with cross-dimerization potential with all probes already designed.
 
-GeneName = settings.GeneName;
-GeneTarget = settings.transcript_IDs;
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
@@ -48,18 +46,14 @@ DNA_IDs = find(~contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
 NonDNA_IDs = find(contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
 end
 
-
-ON_RNAIDs = find(strcmp(uniNames,extractBefore(GeneTarget,'.')));
+ON_RNAIDs = find(ismember(uniNames,extractBefore(settings.transcript_IDs_desired{:},'.')));
 OFF_RNAIDs = setdiff(NonDNA_IDs,ON_RNAIDs);
-ON_RNAIDs_Isos = find(contains(Names,GeneName));
-Desired_Isoforms = find(contains(uniNames,extractBefore(GeneTarget,'.')));
+ON_RNAIDs_Isos =  find(ismember(uniNames,extractBefore(settings.transcript_IDs_desired{:},'.')));
+Desired_Isoforms =  find(ismember(uniNames,extractBefore(settings.transcript_IDs{:},'.')));
 UnDesired_Isoforms = setdiff(ON_RNAIDs_Isos,Desired_Isoforms);
 OFF_RNAIDs_minusIsos = setdiff(OFF_RNAIDs,UnDesired_Isoforms);
 ON_RNAIDs = ON_RNAIDs_Isos;
 OFF_RNAIDs = OFF_RNAIDs_minusIsos;
-
-
-
 fprintf('\n')
 fprintf('\n')
 fprintf("Generating matrix of allowed probe combinations given spacing")

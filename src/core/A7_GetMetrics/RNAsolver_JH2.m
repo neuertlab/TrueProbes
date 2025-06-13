@@ -200,7 +200,7 @@ for m_unique_loci = 1:length(m_unique_loc)
             ProbeSetMetrics.CProbes_Free{m_unique_loci,t_unique_loci,d_unique_loci} = CProbes_Free;
             fprintf("Computing model steady-state equilibrium probe-target duplex concentrations")
             fprintf('\n')
-            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))+273.15),"°C")) 
+            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))),"°C")) 
             fprintf('\n')
             fprintf('\n')
             [c_Target_nBound,p_TargetSites_Bound,c_TargetSites_Bound] = A_DetectionSolverWrapper_V4(ModelSolverFunctions,[1 1 1],Pset,settings,nExpressionMatrix,Tvec(t_unique_loc(t_unique_loci)),Mvec(m_unique_loc(m_unique_loci)),Dvec(d_unique_loc(d_unique_loci)),Cvec,Tref,CProbes_Free,DoesProbeBindSite,Js_RNA,Js_DNA,Js_Sites,Names,ON_IDs_specific,ON_IDs_agnostic,OFF_IDs);
@@ -227,9 +227,21 @@ for m_unique_loci = 1:length(m_unique_loc)
             Non_P = Non_Counts.*OnSpecificDistribution;
             Nother_P = Nother_Counts.*OnOtherDistribution;
             Noff_P = Noff_Counts.*OffDistribution;
+            Non_P(isnan(Non_P)) = 0;
+            Noff_P(isnan(Noff_P)) = 0;
+            Nother_P(isnan(Nother_P)) = 0;
             Non_P = Non_P(1:find(squeeze(sum(Non_P,2))>0, 1, 'last'),:);
             Nother_P = Nother_P(1:find(squeeze(sum(Nother_P,2))>0, 1, 'last'),:);
             Noff_P = Noff_P(1:find(squeeze(sum(Noff_P,2))>0, 1, 'last'),:);
+            if (isempty(Non_P))
+                Non_P = ndSparse.build([max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)]) length(Cvec)],0);
+            end
+            if (isempty(Nother_P))
+                Nother_P = ndSparse.build([max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)]) length(Cvec)],0);
+            end
+            if (isempty(Noff_P))
+                Noff_P = ndSparse.build([max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])  length(Cvec)],0);
+            end
             Basic_Noff = sum(Noff_P.*[0:size(Noff_P,1)-1]',1);
             IsoIgnorantConfusion_P = confusionMatrixWrapper_MultiCell(...
                 CATnWrapper({permute(Non_P(2:end,:),[2 1]), ndSparse.build([size(Non_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Non_P,1)])},2),...
@@ -287,15 +299,27 @@ for m_unique_loci = 1:length(m_unique_loc)
             Pn_XtoI_OTHER =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Nother_P,1)-1,'Un',0),1)];
             Pn_XtoI_OFF =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Noff_P,1)-1,'Un',0),1)];
             Pon_I = permute(squeeze(sum(permute(repmat(Non_P(2:end,:)',[1 1 length(SI)]),[2 3 1]).*Pn_XtoI_ON,1))./sum(Non_P(2:end,:),1),[2 1]);%I over SI
+            Pon_I(isnan(Pon_I)) = 0;
+            if (sum(ismember(sum(Non_P,1),0))>0)
+            Pon_I(sum(Non_P,1)==0,1) = 1;
+            end
             Non_I = sum(Non_P(2:end,:),1)'.*Pon_I;
             if (~isempty(Nother_P))
                 Pother_I = permute(squeeze(sum(permute(repmat(Nother_P(2:end,:)',[1 1 length(SI)]),[2 3 1]).*Pn_XtoI_OTHER,1))./sum(Nother_P(2:end,:),1),[2 1]);%I over SI
+                Pother_I(isnan(Pother_I)) = 0;
+                if (sum(ismember(sum(Nother_P,1),0))>0)
+                    Pother_I(sum(Nother_P,1)==0,1) = 1;
+                end
                 Nother_I = sum(Nother_P(2:end,:),1)'.*Pother_I;
             else
                 Pother_I = [];
                 Nother_I = [];
             end
             Poff_I = permute(squeeze(sum(permute(repmat(Noff_P(2:end,:)',[1 1 length(SI)]),[2 3 1]).*Pn_XtoI_OFF,1))./sum(Noff_P(2:end,:),1),[2 1]);%I over SI
+            Poff_I(isnan(Poff_I)) = 0;
+            if (sum(ismember(sum(Noff_P,1),0))>0)
+                Poff_I(sum(Noff_P,1)==0,1) = 1;
+            end
             Noff_I = sum(Noff_P(2:end,:),1)'.*Poff_I;
             Pon_wAuto_I = CATnWrapper(arrayfun(@(x) plus_Random(full(squeeze(Pon_I(x,:))),Pr_Auto_I),1:size(Pon_I,1),'Un',0),1);
             if (~isempty(Nother_P))
