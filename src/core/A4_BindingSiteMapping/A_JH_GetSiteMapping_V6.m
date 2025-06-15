@@ -14,6 +14,8 @@ Lpmin = min(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
 most_recent_num_local = settings.num_parpool_local;
 T_hybrid = settings.HybridizationTemperature;
 SaltConcentration = settings.SaltConcentration;
+PrimerConcentration = settings.PrimerConcentration;
+
 Organism = settings.Organism;
 TranscriptName = settings.GeneName;
 designerName = settings.designerName;
@@ -506,7 +508,7 @@ if (calcEnergyMatrix2)
                 for l=1:MolN_ProbesAtEvents{i}(site)
                     PI = MolProbesAtEvents{i}{site}(l);
                     currentEvent = Mol_ProbesAtEventsID{i}{site}(l);
-                    [dHeq, dSeq, dGeq, dHf, dSf, ~, dHr, dSr, ~,dCpeq, dTm] = F_DeltaGibson_V3(targetMatch{currentEvent},seqrcomplement(lower(targetMatch{currentEvent})),SaltConcentration,T_hybrid);
+                    [dHeq, dSeq, dGeq, dHf, dSf, ~, dHr, dSr, ~,dCpeq, dTm] = F_DeltaGibson_V3(targetMatch{currentEvent},seqrcomplement(lower(targetMatch{currentEvent})),SaltConcentration,T_hybrid,PrimerConcentration);
                     POGmod_Complement(PI,i,site,:) = dGeq;
                     dHeq_Complement(PI,i,site,:) = dHeq;
                     dSeq_Complement(PI,i,site,:) = dSeq;

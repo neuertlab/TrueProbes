@@ -7,6 +7,7 @@ N_methods3 = 9;
 kb = 0.001987204259;%boltzman constant
 T_hybrid = settings.HybridizationTemperature;
 SaltConcentration = settings.SaltConcentration;
+PrimerConcentration = settings.PrimerConcentration;
 RemoveMisMatches = settings.RemoveMisMatches;
 chromosome_ID = settings.chromosome_IDs;
 transcript_ID = settings.transcript_IDs;
@@ -171,7 +172,7 @@ if (calcOnOff)
         pause(0.1);
         [temp_dHeq{i}, temp_dSeq{i}, temp_dGeq{i}, ...
             temp_dHf{i}, temp_dSf{i}, ~, ...
-            temp_dHr{i}, temp_dSr{i}, ~,temp_dCpeq{i},temp_Tm{i}] = F_DeltaGibson_V3(lower(pi_seq{i}),seqrcomplement(lower(pi_seq{i})),SaltConcentration,T_hybrid);
+            temp_dHr{i}, temp_dSr{i}, ~,temp_dCpeq{i},temp_Tm{i}] = F_DeltaGibson_V3(lower(pi_seq{i}),seqrcomplement(lower(pi_seq{i})),SaltConcentration,T_hybrid,PrimerConcentration);
         dHon_eq(i,:) = temp_dHeq{i};
         dSon_eq(i,:) = temp_dSeq{i};
         dHon_f(i,:) = temp_dHf{i};
@@ -272,7 +273,7 @@ if (calcOnOff)
                     [uniquePair_temp_dHeq{v}{w}, uniquePair_temp_dSeq{v}{w}, uniquePair_temp_dGeq{v}{w}, ...
                         uniquePair_temp_dHf{v}{w}, uniquePair_temp_dSf{v}{w}, ~, ...
                         uniquePair_temp_dHr{v}{w}, uniquePair_temp_dSr{v}{w}, ~,uniquePair_temp_dCpeq{v}{w},uniquePair_temp_Tm{v}{w}] = ...
-                        F_DeltaGibson_V3(targetMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},probeMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},SaltConcentration,T_hybrid);
+                        F_DeltaGibson_V3(targetMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},probeMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},SaltConcentration,T_hybrid,PrimerConcentration);
                     temp_indx{v}{w}= find(strcmpi(targetMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},targetMatch).*strcmpi(probeMatch_Unique_Constant.Value{Batch_uniqueCalcPairs_Constant.Value{batch_nums_to_check(v)}(w)},probeMatch));
                     temp_GibsonInfo{v}{w} = {temp_indx{v}{w};uniquePair_temp_dGeq{v}{w};uniquePair_temp_dHeq{v}{w}';uniquePair_temp_dSeq{v}{w}';...
                         uniquePair_temp_dHf{v}{w}';uniquePair_temp_dSf{v}{w}';...

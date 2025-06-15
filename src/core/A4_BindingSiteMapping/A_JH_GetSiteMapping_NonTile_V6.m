@@ -15,6 +15,8 @@ RemoveMisMatches = settings.RemoveMisMatches;
 kb = 0.001987204259;%boltzman constant
 T_hybrid = settings.HybridizationTemperature;
 SaltConcentration = settings.SaltConcentration;
+PrimerConcentration = settings.PrimerConcentration;
+
 most_recent_num_local = settings.num_parpool_local;
 Organism = settings.Organism;
 ChrNum = settings.ChrNum;
@@ -566,7 +568,7 @@ if (calcEnergyMatrix2)
                 for l=1:MolN_ProbesAtEvents{i}(site)
                     PI = MolProbesAtEvents{i}{site}(l);
                     currentEvent = Mol_ProbesAtEventsID{i}{site}(l);
-                    [dHeq, dSeq, dGeq, dHf, dSf, ~, dHr, dSr, ~,dCpeq, dTm] = F_DeltaGibson_V3(targetMatch{currentEvent},seqrcomplement(lower(targetMatch{currentEvent})),SaltConcentration,T_hybrid);
+                    [dHeq, dSeq, dGeq, dHf, dSf, ~, dHr, dSr, ~,dCpeq, dTm] = F_DeltaGibson_V3(targetMatch{currentEvent},seqrcomplement(lower(targetMatch{currentEvent})),SaltConcentration,T_hybrid,PrimerConcentration);
                     POGmod_Complement(PI,i,site,:) = dGeq;
                     dHeq_Complement(PI,i,site,:) = dHeq;
                     dSeq_Complement(PI,i,site,:) = dSeq;

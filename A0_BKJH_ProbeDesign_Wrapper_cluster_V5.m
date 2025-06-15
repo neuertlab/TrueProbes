@@ -96,6 +96,8 @@ IncludeSelfHybridizationInProbeSelection = inputsParameterSettings.DesignFilteri
 Gibbs_Model = inputsParameterSettings.Thermodynamic_Settings.Gibbs_Model; %Which Hybridization model to use for probe design and evaluation
 SaltConcentration = inputsParameterSettings.Thermodynamic_Settings.SaltConcentration; %Concentration of Salt in thermodynamic calculations mol/L
 HybridizationTemperatureCelsius = inputsParameterSettings.Thermodynamic_Settings.HybridizationTemperature_Celsius; % Temperature for Evaluating Probe Design and Simulations
+PrimerConcentration = inputsParameterSettings.Thermodynamic_Settings.PrimerConcentration; % Temperature for Evaluating Probe Design and Simulations
+
 Tref = inputsParameterSettings.Thermodynamic_Settings.HeatCapacityReferenceTemperature_Celsius;
 RemoveMisMatches = inputsParameterSettings.Thermodynamic_Settings.RemoveMisMatches;%remove mismatches from nearest neighbor quantification of probe binding
 
@@ -182,10 +184,6 @@ if (word_size<2)
     msg = 'Error. BLAST nucleotide match reward must be greater than or equal to two.';
     error(msg)
 end
-if (isMATLABReleaseOlderThan("R2024a"))
-    msg = 'Error. \n MATLAB must Be version 2024a or higher for blastplus to work.';
-    error(msg)
-end
 addons = matlab.addons.installedAddons;
 if (~ismember("Bioinformatics Toolbox",addons.Name))
     msg = 'Error. You need to have the Bioinformatics Toolbox installed for the software to work properly (https://www.mathworks.com/products/bioinfo.html)';
@@ -211,10 +209,15 @@ if (~ismember("Symbolic Math Toolbox",addons.Name))
     msg = 'Error. The Symbolic Math Toolbox installed must be installed for the software to work properly: (https://www.mathworks.com/products/symbolic.html)';
     error(msg)
 end
-if (~ismember("BLAST+ Support Package for Bioinformatics Toolbox",addons.Name))
-    msg = 'Error. The BLAST+ Support Package for Bioinformatics Toolbox must be installed for the software to work properly: (https://www.mathworks.com/matlabcentral/fileexchange/156414-blast-support-package-for-bioinformatics-toolbox)';
-    error(msg)
-end
+% if (~ismember("BLAST+ Support Package for Bioinformatics Toolbox",addons.Name))
+%     msg = 'Error. The BLAST+ Support Package for Bioinformatics Toolbox must be installed for the software to work properly: (https://www.mathworks.com/matlabcentral/fileexchange/156414-blast-support-package-for-bioinformatics-toolbox)';
+%     error(msg)
+% end
+% if (isMATLABReleaseOlderThan("R2024a"))
+%     msg = 'Error. \n MATLAB must Be version 2024a or higher for blastplus to work.';
+%     error(msg)
+% end
+
 mfilePath = mfilename('fullpath');
 if contains(mfilePath,'LiveEditorEvaluationHelper')
     mfilePath = matlab.desktop.editor.getActiveFilename;
@@ -539,6 +542,7 @@ settings.ProbeSpacing = minProbeSpacing;
 settings.RemoveMisMatches = RemoveMisMatches;
 settings.SaltConcentration = SaltConcentration;
 settings.HybridizationTemperature = HybridizationTemperatureCelsius;
+settings.PrimerConcentration = PrimerConcentration;
 settings.BLASTdna = BLASTdna;
 settings.BLASTrna = BLASTrna;
 settings.BLASTbatchSize = Parallelization_probeBatchSize;

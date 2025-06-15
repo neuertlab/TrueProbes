@@ -11,6 +11,7 @@ FinalProbeSet = sort(FinalProbeSet,'ascend');
 RemoveMisMatches = settings.RemoveMisMatches;
 SaltConcentration = settings.SaltConcentration;
 T_hybrid = settings.HybridizationTemperature;
+PrimerConcentration = settings.PrimerConcentration;
 RV = @(x) (seqrcomplement(x));
 for i=1:size(probes,1)
    pi_seq{i} = RV(probes{i,2});
@@ -290,7 +291,7 @@ for i=FinalProbeSet
                 [temp_dHeq, temp_dSeq, temp_dGeq, ...
                  temp_dHf, temp_dSf, ~, ...
                  temp_dHr, temp_dSr, ~,temp_dCpeq, ~] = ...
-                 F_DeltaGibson_V3(strrep(CrossDimerSeqParsed{v,w}{k,1},'-','N'),reverse(strrep(CrossDimerSeqParsed{v,w}{k,2},'-','N')),SaltConcentration,T_hybrid);
+                 F_DeltaGibson_V3(strrep(CrossDimerSeqParsed{v,w}{k,1},'-','N'),reverse(strrep(CrossDimerSeqParsed{v,w}{k,2},'-','N')),SaltConcentration,T_hybrid,PrimerConcentration);
                  dHd_eq(i,j,k,:) = temp_dHeq;
                  dSd_eq(i,j,k,:) = temp_dSeq;
                  Kd_eq(i,j,k,:) = exp(-temp_dGeq/(kb*(T_hybrid+273.15)));

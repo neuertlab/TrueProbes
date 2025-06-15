@@ -1,8 +1,9 @@
-function [dHeq, dSeq, dGeq, dHf, dSf, dGf, dHr, dSr, dGr, dCpeq, Tm] = F_DeltaGibson_V3(seq1,seq2,C,T)
+function [dHeq, dSeq, dGeq, dHf, dSf, dGf, dHr, dSr, dGr, dCpeq, Tm] = F_DeltaGibson_V3(seq1,seq2,C,T,P)
 % This function computes terms for DeltaGibson Free energy changes for any two pairs of DNA sequences binding.
 % This function compute DeltaGibson for both binding equilibrium and forward/reverse transition-state rates.
 % Additionally this compute Tm for DNA sequence binding.
 % Additionally includeded are meso-scale mechanistic model which explicity includes terms for mismatches.
+
 
 N_models = 8;
 dGeq = zeros(N_models,1);
@@ -39,6 +40,8 @@ b = 1/(kb*(273.15));%T
 %theta = 1/(1+exp(-dTdS/RT))
 RV = @(x) (seqrcomplement(x));
 SaltConcentration = C;
+Temperature = T;
+PrimerConc = P;
 if (strcmp(seq1,seq2))%for when they are the same
     seq1 = strip(seq1,'N');
     seq2 = strip(seq2,'N');
@@ -64,17 +67,19 @@ seq1Matched = seq1(MatchedLoc);
 seq2Matched = seq2c(MatchedLoc);
 %delta Sd wrong?  correct sometimes also incorrect double
 %wrong for more gcs?
+
+
 if (~isempty(MatchedLoc))
-    seq1_Data = F_NearestNeighborWrapper(RV(seq1Matched),'Salt',SaltConcentration,'Temp',T);
-    seq2_Data = F_NearestNeighborWrapper(RV(seq2Matched),'Salt',SaltConcentration,'Temp',T); 
+    seq1_Data = F_NearestNeighborWrapper_V2(RV(seq1Matched),SaltConcentration,Temperature,PrimerConc);
+    seq2_Data = F_NearestNeighborWrapper_V2(RV(seq2Matched),SaltConcentration,Temperature,PrimerConc);
     dHseq1 = seq1_Data.Thermo(:,1);
     dHseq2 = seq2_Data.Thermo(:,1);
     dSseq1 = seq1_Data.Thermo(:,2)./1000;
     dSseq2 = seq2_Data.Thermo(:,2)./1000;
     dGseq1 = seq1_Data.Thermo(:,3);
     dGseq2 = seq2_Data.Thermo(:,3);
-    seq1_TData = F_NearestNeighborTransitionWrapper(RV(seq1Matched),'Salt',SaltConcentration,'Temp',T);
-    seq2_TData = F_NearestNeighborTransitionWrapper(RV(seq2Matched),'Salt',SaltConcentration,'Temp',T); 
+    seq1_TData = F_NearestNeighborTransitionWrapper_V2(RV(seq1Matched),SaltConcentration,Temperature,PrimerConc);
+    seq2_TData = F_NearestNeighborTransitionWrapper_V2(RV(seq2Matched),SaltConcentration,Temperature,PrimerConc); 
     dHseq1_T = seq1_TData.Thermo(:,1);
     dHseq2_T = seq2_TData.Thermo(:,1);
     dSseq1_T = seq1_TData.Thermo(:,2)./1000;
@@ -87,9 +92,7 @@ if (~isempty(MatchedLoc))
     dHt = 0.5*(dHseq1_T + dHseq2_T);   
     dSt = 0.5*(dSseq1_T + dSseq2_T);   
     dGt = 0.5*(dGseq1_T + dGseq2_T);   
-    % association units has moles diff molecules.
-    %
-    
+    % association units has moles diff molecules
     %fL fM fH rL rM rH eqL eqM eqH
     dHf = dHt(1:3);
     dHr = dHt(4:6);

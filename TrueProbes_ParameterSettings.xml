@@ -16,11 +16,11 @@
 		<HybridizationTemperature_Celsius> 37 </HybridizationTemperature_Celsius>
 		<HeatCapacityReferenceTemperature_Celsius> 37 </HeatCapacityReferenceTemperature_Celsius>
 		<SaltConcentration> 0.05 </SaltConcentration>
+		<PrimerConcentration>50e-6</PrimerConcentration>
 		<RemoveMisMatches> 1 </RemoveMisMatches>
 	</Thermodynamic_Settings>
 	<DesignFiltering_Settings>
 		<RemoveProbesBindingRibosomalHits> 1 </RemoveProbesBindingRibosomalHits>
-		
 		<packOptimal_ProbesWithNoOffTargets> 1 </packOptimal_ProbesWithNoOffTargets>
 		<IncludeSelfHybridizationInProbeSelection> 1 </IncludeSelfHybridizationInProbeSelection>
 	</DesignFiltering_Settings>
