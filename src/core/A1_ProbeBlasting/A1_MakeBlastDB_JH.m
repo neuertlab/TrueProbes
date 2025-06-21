@@ -74,7 +74,7 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             end
             outputRoot_temp = strrep(outputRoot,' ','_');
             outputDatabaseDNA_temp = strrep(outputDatabaseDNA,' ','_');
-            args = sprintf('%s -dbtype %s -title %s -in %s -out %s -max_file_sz %d', "makeblastdb",dbtype, BLASTdbDNA_Title, inputFileDNA,  outputDatabaseDNA_temp,filesizeDNA);
+            args = sprintf('%s -dbtype %s -title %s -in %s -out %s -max_file_sz %d -parse_seqids', "makeblastdb",dbtype, BLASTdbDNA_Title, inputFileDNA,  outputDatabaseDNA_temp,filesizeDNA);
             [status,msg] = system(args);
             if status
                 error(msg)
@@ -116,7 +116,7 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             end
             outputRoot_temp = strrep(outputRoot,' ','_');
             outputDatabaseRNA_temp = strrep(outputDatabaseRNA,' ','_');
-            args = sprintf('%s -dbtype %s -title %s -in %s -out %s -max_file_sz %d', "makeblastdb",dbtype, BLASTdbRNA_Title, inputFileRNA, outputDatabaseRNA_temp,filesizeRNA);
+            args = sprintf('%s -dbtype %s -title %s -in %s -out %s -max_file_sz %d -parse_seqids', "makeblastdb",dbtype, BLASTdbRNA_Title, inputFileRNA, outputDatabaseRNA_temp,filesizeRNA);
             [status,msg] = system(args);
             if status
                 error(msg)
@@ -135,9 +135,11 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             for k = find([files_in_temp_folder.isdir]==0)
                 [status,msg] = movefile(strcat(outputRoot_temp,files_in_temp_folder(k).name), strcat(outputRoot,files_in_temp_folder(k).name));
                 if status
+                    if (~isempty(msg))
                     fprintf(msg)
                     fprintf('\n')
                     fprintf('\n')
+                    end
                 end
             end
             rmdir(outputRoot_temp_char(1:sep_locations(find(sep_locations>space_locations(1),1))-1),'s')

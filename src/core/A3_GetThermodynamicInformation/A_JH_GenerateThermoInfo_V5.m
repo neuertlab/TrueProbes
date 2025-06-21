@@ -68,15 +68,8 @@ end
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
-if (strcmp(settings.referenceType,'RefSeq'))
-    RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
-    RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
-    RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
-    RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
-    contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
-elseif (strcmp(settings.referenceType,'ENSEMBL'))
-    contains_RNA = find(contains(gene_table.Name,settings.EMBL_RNAparser(Organism)));
-end
+gene_table_NamesZ = convertCharsToStrings(gene_table.Name);
+contains_RNA = find(ismember(gene_table_NamesZ,settings.RNAdbParser));
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
 gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
 gene_table.Ax = min(gene_table.SubjectIndices,[],2);
@@ -119,6 +112,7 @@ if (calcOnOff)
     %gets sequences of probe and target in blast records
     targetMatch = arrayfun(@(x) strrep(gene_table.Alignment{x}(3,:),'-','N'),1:size(gene_table,1),'UniformOutput',false);%slow not so slow
     probeMatch = arrayfun(@(x) seqrcomplement(strrep(gene_table.Alignment{x}(1,:),'-','N')),1:size(gene_table,1),'UniformOutput',false);%slow
+    %N is to deal with insertions in alignment matches, that 
     %Find Unique Pairs  (Do Mapping and Reverse Mapping)
     CalcDictionary = unique([targetMatch(:)' probeMatch(:)']);
     CalcDict2 = convertCharsToStrings(CalcDictionary);%1xN string

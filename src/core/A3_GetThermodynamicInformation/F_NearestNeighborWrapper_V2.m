@@ -156,6 +156,8 @@ oligo = rmfield(oligo,{'Hairpins','Dimers'});
 %chemical modifications and RNA/DNA, RNA/RNA interactions'
 %new 2023 papers
 
+%./vargibbs -ct=400 -o=mytest -par=data/P-SL98.par -seq=ACGT -calc=prediction
+
 
 end
 
@@ -226,6 +228,9 @@ Rejali21SymmetryCorrection = [0 -1.4];%H %S
 Rejali21InitTermATwoTerminalAnnotation = [0 0];%H %S
 Rejali21InitTermGCwoTerminalAnnotation = [0 0];%H %S
 
+
+
+ 
 corrs =[1 5  7  2;4 10 8  6;7 9  10 5;3 7  4  1];  
 Sant04_H = Sant04H_Table(corrs);Sant04_S = Sant04S_Table(corrs);  
 Allawi97_H = Allawi97H_Table(corrs);Allawi97_S = Allawi97S_Table(corrs); 

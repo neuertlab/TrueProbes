@@ -43,8 +43,8 @@ SaltConcentration = C;
 Temperature = T;
 PrimerConc = P;
 if (strcmp(seq1,seq2))%for when they are the same
-    seq1 = strip(seq1,'N');
-    seq2 = strip(seq2,'N');
+    seq1 = strip(seq1,'N');%remove insertions
+    seq2 = strip(seq2,'N');%remove insertions
 else
     seq2i = seq2;
     seq2 = strip(seq2,'N');

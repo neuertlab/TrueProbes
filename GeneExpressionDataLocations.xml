@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table>
+    <row>
+        <Organism>Human</Organism>
+        <GTEx_Gene>data/DatabaseData/Gene_Expression_Data/Human/gtexGeneV8.txt</GTEx_Gene>
+        <GTEx_Transcript>data/DatabaseData/Gene_Expression_Data/Human/gtexTranscExpr.bed</GTEx_Transcript>
+        <TCGA_Gene>data/DatabaseData/Gene_Expression_Data/Human/tcgaGeneExpr.bed</TCGA_Gene>
+        <TCGA_Transcript>data/DatabaseData/Gene_Expression_Data/Human/tcgaTranscExpr.bed</TCGA_Transcript>
+		<SingleCellAtlas>data/DatabaseData/Gene_Expression_Data/Human/tabulasapiens_tissue_cell_type.bed</SingleCellAtlas>
+		<SingleCellAtlas>data/DatabaseData/Gene_Expression_Data/Human/SingleCellMerged.bed</SingleCellAtlas>
+    </row>
+    <row>
+        <Organism>Mouse</Organism>
+        <SingleCellAtlas>data/DatabaseData/Gene_Expression_Data/Mouse/tabulamuris_barChart.bed</SingleCellAtlas>
+		
+    </row>
+    <row>
+        <Organism>Rat</Organism>
+    </row>
+    <row>
+        <Organism>Zebrafish</Organism>
+    </row>
+    <row>
+        <Organism>Fruitfly</Organism>
+    </row>
+    <row>
+        <Organism>Worm</Organism>
+    </row>
+    <row>
+        <Organism>Yeast</Organism>
+    </row>
+	<tracks>
+		<bed>
+			<columns>chrom,chromStart,chromEnd,name,score,strand,name2,expCount,expScores,dataOffset,dataLen </columns>
+		</bed>
+	</tracks>
+</table>
