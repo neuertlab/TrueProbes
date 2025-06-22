@@ -29,6 +29,10 @@
 		<Parallelization_targetBatchSize> 200 </Parallelization_targetBatchSize>
 		<ParsingPreference> 1 </ParsingPreference>
 	</Parallelization_Settings>
+	<MAKEBLASTDB_Settings>
+		<parse_seqids>true</parse_seqids>
+		<hash_index>false</hash_index>
+	</MAKEBLASTDB_Settings>
 	<BLASTN_Settings>
 		<evalue> 1000 </evalue>
 		<gapextend> 2 </gapextend>

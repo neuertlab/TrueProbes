@@ -1,8 +1,5 @@
-function [Ks_eq,dHs_eq,dSs_eq,dHs_f,dSs_f,dHs_r,dSs_r,dCps_eq,Kd_eq,dHd_eq,dSd_eq,dHd_f,dSd_f,dHd_r,dSd_r,dCpd_eq,ElapsedTimeForSecondaryStructureSeq,ElapsedEquilibriumRateEvaluation] = A_JH_GenerateSecondaryStructureInfo_V2(probes,FinalProbeSet,settings)
-%Jason Hughes Software to get self binding and cross binding energy for
-%probes used together in a probe set
-
-
+function [Ks_eq,dHs_eq,dSs_eq,dHs_f,dSs_f,dHs_r,dSs_r,dCps_eq,Kd_eq,dHd_eq,dSd_eq,dHd_f,dSd_f,dHd_r,dSd_r,dCpd_eq,N_Self,N_Cross,ElapsedTimeForSecondaryStructureSeq,ElapsedEquilibriumRateEvaluation] = A_JH_GenerateSecondaryStructureInfo_V3(probes,FinalProbeSet,settings)
+%Jason Hughes Software to get self binding and cross binding energy for probes used together in a probe set
 N_methods = 8;
 N_methods2 = 3;
 kb = 0.001987204259;%boltzman constant
@@ -13,6 +10,7 @@ SaltConcentration = settings.SaltConcentration;
 T_hybrid = settings.HybridizationTemperature;
 PrimerConcentration = settings.PrimerConcentration;
 RV = @(x) (seqrcomplement(x));
+pi_seq = cell(1,size(probes,1));
 for i=1:size(probes,1)
    pi_seq{i} = RV(probes{i,2});
 end
@@ -43,9 +41,16 @@ for x = 1:length(SelfSeqParsed)
         SelfSeqParsed{x} = {SelfSeqParsed{x}{~cellfun(@isempty,SelfSeqParsed{x})}};
     end
 end
+selfNotExist = cellfun(@isempty,SelfSeqParsed);
+selfId1 = find(selfNotExist==1);
+for i = 1:length(selfId1)
+   SelfSeqParsed{selfId1(i)}=cell(0,2); 
+end
+
+
 N_Self = cellfun(@(x) length(x), SelfSeqParsed);
 clear row Flip_Identity Self_Flip_Identity
-    %this is slow 
+  
                
 for i=FinalProbeSet
     for j=FinalProbeSet
@@ -232,20 +237,12 @@ end
 clear row Flip_Identity1 Flip_Identity2 Cross_Flip_Identity1 Cross_Flip_Identity2 row1 row2
 
 crossNotExist = cellfun(@isempty,CrossDimerSeqParsed);
-selfNotExist = cellfun(@isempty,SelfSeqParsed);
 [crossId1,crossId2] = find(crossNotExist==1);
-selfId1 = find(selfNotExist==1);
-for i = 1:length(selfId1)
-   SelfSeqParsed{selfId1(i)}=cell(0,2); 
-end
 for i = 1:length(crossId1)
    CrossDimerSeqParsed{crossId1(i),crossId2(i)}=cell(0,2);
 end
-
 CrossDimerSeqParsed = cellfun(@(x) x(sum(cellfun(@isempty,x),2)'==0,1:2), CrossDimerSeqParsed,'Un',0);
 N_Cross = cellfun(@(x) size(x,1), CrossDimerSeqParsed);
-
-
 
 start2 = tic;
 %Initialize matrix for storing binding affinity calculations

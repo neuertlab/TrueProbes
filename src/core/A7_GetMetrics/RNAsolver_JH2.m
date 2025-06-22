@@ -64,15 +64,8 @@ GeneTarget = settings.transcript_IDs;
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
-if (strcmp(settings.referenceType,'RefSeq'))
-    RNA_IDs_1 = find(contains(gene_table.Name,'NM_'));
-    RNA_IDs_2 = find(contains(gene_table.Name,'NR_'));
-    RNA_IDs_3 = find(contains(gene_table.Name,'XM_'));
-    RNA_IDs_4 = find(contains(gene_table.Name,'XR_'));
-    contains_RNA = union(union(union(RNA_IDs_1,RNA_IDs_2),RNA_IDs_3),RNA_IDs_4);
-elseif (strcmp(settings.referenceType,'ENSEMBL'))
-    contains_RNA = find(contains(gene_table.Name,settings.EMBL_RNAparser(Organism)));
-end
+gene_table_NamesZ = convertCharsToStrings(gene_table.Name);
+contains_RNA = find(ismember(gene_table_NamesZ,settings.RNAdbParser));
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
 gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
 gene_table.Ax = min(gene_table.SubjectIndices,[],2);
@@ -80,26 +73,27 @@ gene_table.Bx = max(gene_table.SubjectIndices,[],2);
 gene_table = sortrows(gene_table,[7 13],'ascend');
 Names = unique(gene_table.Name);
 Names = convertCharsToStrings(Names);
-uniNames = extractBefore(Names,'.');
-if (sum(ismissing(uniNames))>0)
-    uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+if (and(strcmp(settings.referenceType,"ENSEMBL"),max(double(contains(extractBefore(Names,' '),'ENS')))==0))
+    uniNames = extractBefore(Names,' ');
+else
+    uniNames = extractBefore(Names,'.');
+    if (sum(ismissing(uniNames))>0)
+        uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+    end
+end
+if (settings.BLASTdna)
+DNA_IDs = find(~ismember(Names,settings.DNAdbParser));%IDs
+else
+DNA_IDs = [];
+end
+if (settings.BLASTrna)
+NonDNA_IDs = find(ismember(Names,settings.RNAdbParser));%IDs
+else
+NonDNA_IDs =[];
 end
 ON_IDs_specific = find(ismember(uniNames,extractBefore(settings.transcript_IDs{:},'.')));
 ON_IDs_agnostic = find(ismember(uniNames,extractBefore(settings.transcript_IDs_desired{:},'.')));
 OFF_IDs = find(~ismember(uniNames,extractBefore(settings.transcript_IDs_desired{:},'.')));
-if (strcmp(settings.referenceType,'RefSeq'))
-DNA_IDs_1 = find(contains(uniNames,'NC_'));%IDs
-DNA_IDs_2 = find(contains(uniNames,'NT_'));%IDs
-DNA_IDs_3 = find(contains(uniNames,'NW_'));%IDs
-NonDNA_IDs_1 = find(~contains(uniNames,'NC_'));%IDs
-NonDNA_IDs_2 = find(~contains(uniNames,'NT_'));%IDs
-NonDNA_IDs_3 = find(~contains(uniNames,'NW_'));%IDs
-DNA_IDs =union(union(DNA_IDs_1,DNA_IDs_2),DNA_IDs_3).';
-NonDNA_IDs = intersect(intersect(NonDNA_IDs_1,NonDNA_IDs_2),NonDNA_IDs_3).';
-elseif (strcmp(settings.referenceType,'ENSEMBL'))
-DNA_IDs = find(~contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
-NonDNA_IDs = find(contains(uniNames,settings.EMBL_RNAparser(Organism)));%IDs
-end
 if (ndims(dHeq_Complement)~=3)%error quick fix
     dHeq_Complement =  permute(repmat(dHeq_Complement, [1 1 size(dHeq_mod,3)]),[1 3 2]);
     dSeq_Complement = permute(repmat(dSeq_Complement, [1 1 size(dHeq_mod,3)]),[1 3 2]);

@@ -74,8 +74,14 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             end
             outputRoot_temp = strrep(outputRoot,' ','_');
             outputDatabaseDNA_temp = strrep(outputDatabaseDNA,' ','_');
-            args = sprintf('%s -dbtype %s -title %s -in %s -out %s -max_file_sz %d -parse_seqids', "makeblastdb",dbtype, BLASTdbDNA_Title, inputFileDNA,  outputDatabaseDNA_temp,filesizeDNA);
-            [status,msg] = system(args);
+            argsDNA = sprintf('%s -dbtype %s -title %s -in %s -out %s -max_file_sz %d', "makeblastdb",dbtype, BLASTdbDNA_Title, inputFileDNA,  outputDatabaseDNA_temp,filesizeDNA);
+            if or(strcmp('true',settings.MakeblastdbParameters.parse_seqids),isequal(settings.MakeblastdbParameters.parse_seqids,1))
+                 argsDNA = strcat(argsDNA,' -parse_seqids');
+            end
+            if or(strcmp('true',settings.MakeblastdbParameters.hash_index),isequal(settings.MakeblastdbParameters.hash_index,1))
+                argsDNA = strcat(argsDNA,' -hash_index');
+            end
+            [status,msg] = system(argsDNA);
             if status
                 error(msg)
                 fprintf('\n')
@@ -116,8 +122,14 @@ if (or(~BLASTdb_DNAexists,~BLASTdb_RNAexists))
             end
             outputRoot_temp = strrep(outputRoot,' ','_');
             outputDatabaseRNA_temp = strrep(outputDatabaseRNA,' ','_');
-            args = sprintf('%s -dbtype %s -title %s -in %s -out %s -max_file_sz %d -parse_seqids', "makeblastdb",dbtype, BLASTdbRNA_Title, inputFileRNA, outputDatabaseRNA_temp,filesizeRNA);
-            [status,msg] = system(args);
+            argsRNA = sprintf('%s -dbtype %s -title %s -in %s -out %s -max_file_sz %d', "makeblastdb",dbtype, BLASTdbRNA_Title, inputFileRNA, outputDatabaseRNA_temp,filesizeRNA);
+            if or(strcmp('true',settings.MakeblastdbParameters.parse_seqids),isequal(settings.MakeblastdbParameters.parse_seqids,1))
+                 argsRNA = strcat(argsRNA,' -parse_seqids');
+            end
+            if or(strcmp('true',settings.MakeblastdbParameters.hash_index),isequal(settings.MakeblastdbParameters.hash_index,1))
+                argsRNA = strcat(argsRNA,' -hash_index');
+            end
+            [status,msg] = system(argsRNA);
             if status
                 error(msg)
                 fprintf('\n')

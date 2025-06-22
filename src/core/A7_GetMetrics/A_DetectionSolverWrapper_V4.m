@@ -104,9 +104,9 @@ switch ModelSolverFunctions.solverType
 end
 pAnyBindSiteCM0(pAnyBindSiteCM0>1) = 1;
 tHit = find(squeeze(sum(sum(pAnyBindSiteCM0,2),3))>0);
-pON_IDs = find(ismember(tHit,ON_IDs_specific));
-pOFF_IDs = find(ismember(tHit,OFF_IDs));
-pON_IDs_other = find(ismember(tHit,setdiff(ON_IDs_agnostic,ON_IDs_specific)));
+pON_IDs = ismember(tHit,ON_IDs_specific);
+pOFF_IDs = ismember(tHit,OFF_IDs);
+pON_IDs_other = ismember(tHit,setdiff(ON_IDs_agnostic,ON_IDs_specific));
 if (~isempty(tHit))  
     Pt_ModelCellVector = F_DiscretePossionBinomialMultiCell(pAnyBindSiteCM0(tHit,:,:));
     Ct = permute(repmat(nExpressionMatrix(tHit,Cvec),[1 1 size(Pt_ModelCellVector,2)]),[1 3 2]).*Pt_ModelCellVector;

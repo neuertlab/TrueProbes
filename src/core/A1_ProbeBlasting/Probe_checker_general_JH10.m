@@ -184,20 +184,23 @@ batch_nums_to_check2 = union(probes_to_check2,probes_to_check4);
 fprintf("Generating probe batch fasta files")
 fprintf('\n')
 fprintf('\n')
+% probe_List = parallel.pool.Constant(probe);
+% Batch_List = parallel.pool.Constant(Batch);
 wb = parwaitbar(N_Batches,'WaitMessage', 'generating');
 for i = 1:N_Batches
     pause(0.1);
     data = [];
     %% For local blast on server
-    if exist([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
-        delete([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) '.fa'])
+    if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
+        delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'])
     end
-    for v = 1:length(Batch{i})
-        data(v).Sequence = probes{Batch{i}(v),2};  %gets the sequence
-        data(v).Header = ['p' num2str(Batch{i}(v))];
-    end
-    fastawrite([FolderRootName filesep '(' TranscriptName ')' settings.designerName 'probebatch' num2str(i) '.fa'],data);
-    wb.progress();
+    % for v = 1:length(Batch{i})
+    %     data(v).Sequence = probes{Batch{i}(v),2};  %gets the sequence
+    %     data(v).Header = ['p' num2str(Batch{i}(v))];
+    % end
+    data = struct('Sequence', probes(Batch{i},2)','Header',arrayfun(@(v) ['p' num2str(v)],Batch{i},'Un',0));
+    fastawrite([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'],data);
+    progress(wb);
 end
 wb.delete();
 fprintf('\n')
@@ -308,7 +311,11 @@ if (~isempty(batch_nums_to_check2))
                 temp_hits_subnode = squeeze(struct2cell([temp_hits_all.Hit_hsps]));
                 for v = 1:length(temp_hits_subnode)
                     [temp_hits_subnode{v}.align_num] = deal(temp_hits_all(v).Hit_num);
-                    [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
+                    if (contains(temp_hits_all(v).Hit_id,'BL_ORD_ID'))
+                        [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
+                    else
+                        [temp_hits_subnode{v}.Name] = deal(strcat(temp_hits_all(v).Hit_id," ",temp_hits_all(v).Hit_def));
+                    end
                     [temp_hits_subnode{v}.ProbeNum] = deal(probe_ids(v));
                     [temp_hits_subnode{v}.ProbeSequence] = deal(pSeq(probe_ord(v)).Sequence);
                     S2 = [temp_hits_subnode{v}.Hsp_align_len];
@@ -355,7 +362,11 @@ if (~isempty(batch_nums_to_check2))
                     sub_neststruc = squeeze(struct2cell([temp_hits_subnode.Hit(:).Hit_hsps]));
                     for v = 1:length(sub_neststruc)
                         [sub_neststruc{v}.align_num] = deal(temp_hits_subnode.Hit(v).Hit_num);
-                        [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
+                        if (contains(temp_hits_subnode.Hit(v).Hit_id,'BL_ORD_ID'))
+                            [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
+                        else
+                            [sub_neststruc{v}.Name] = deal(strcat(temp_hits_subnode.Hit(v).Hit_id," ",temp_hits_subnode.Hit(v).Hit_def));
+                        end
                         [sub_neststruc{v}.ProbeNum] = deal(Batch_List.Value{i}(w));
                         [sub_neststruc{v}.ProbeSequence] = deal(pSeq(w).Sequence);
                     end
@@ -414,7 +425,11 @@ if (~isempty(batch_nums_to_check2))
                 temp_hits_subnode = squeeze(struct2cell([temp_hits_all.Hit_hsps]));
                 for v = 1:length(temp_hits_subnode)
                     [temp_hits_subnode{v}.align_num] = deal(temp_hits_all(v).Hit_num);
-                    [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
+                    if (contains(temp_hits_all(v).Hit_id,'BL_ORD_ID'))
+                        [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
+                    else
+                        [temp_hits_subnode{v}.Name] = deal(strcat(temp_hits_all(v).Hit_id," ",temp_hits_all(v).Hit_def));
+                    end
                     [temp_hits_subnode{v}.ProbeNum] = deal(probe_ids(v));
                     [temp_hits_subnode{v}.ProbeSequence] = deal(pSeq(probe_ord(v)).Sequence);
                     S2 = [temp_hits_subnode{v}.Hsp_align_len];
@@ -461,7 +476,11 @@ if (~isempty(batch_nums_to_check2))
                     sub_neststruc = squeeze(struct2cell([temp_hits_subnode.Hit(:).Hit_hsps]));
                     for v = 1:length(sub_neststruc)
                         [sub_neststruc{v}.align_num] = deal(temp_hits_subnode.Hit(v).Hit_num);
-                        [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
+                        if (contains(temp_hits_subnode.Hit(v).Hit_id,'BL_ORD_ID'))
+                            [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
+                        else
+                            [sub_neststruc{v}.Name] = deal(strcat(temp_hits_subnode.Hit(v).Hit_id," ",temp_hits_subnode.Hit(v).Hit_def));
+                        end
                         [sub_neststruc{v}.ProbeNum] = deal(Batch_List.Value{i}(w));
                         [sub_neststruc{v}.ProbeSequence] = deal(pSeq(w).Sequence);
                     end

@@ -4,6 +4,7 @@ Organism = settings.Organism;
 runDNA = settings.BLASTdna;
 runRNA = settings.BLASTrna;
 NamesZ = gene_table.Name;
+A1_MakeBlastDB_JH(settings)
 % if (settings.BLASTdna)
 % DNA_IDs = find(~ismember(Names,settings.dbDNAparser));%IDs
 % else
@@ -206,6 +207,7 @@ if (or(BLASTdb_DNAexists,BLASTdb_RNAexists))
             fprintf('Checked RNA BLAST database sseqids and header names')
             fprintf('\n')
             fprintf('\n')
+            %message = strcat('blastdbcmd -db', " ",inputDatabaseRNA,' -entry'," ",'''','gnl|BL_ORD_ID|23','''')
             RNAdb_sseqids_optsFile = detectImportOptions(outputRNAdb_sseqids,'FileType','delimitedtext','Delimiter',' | ');
             RNAdb_sseqids_optsFile.VariableNames = {'sseqid','seqlength','AccessionNumber','Name'};
             RNAdb_sseqids_Table = readtable(outputRNAdb_sseqids,RNAdb_sseqids_optsFile);
@@ -218,6 +220,7 @@ if (or(BLASTdb_DNAexists,BLASTdb_RNAexists))
             RNAdbParser = join(convertCharsToStrings(table2array(RNAdb_sseqids_Table(:,3:4)))," ");      
             else
             RNAdbParser = convertCharsToStrings(table2array(RNAdb_sseqids_Table(:,'Name')));     
+            %RNAdb_sseqids_Table(:,'AccessionNumber') = array2table(extractBefore(table2array(RNAdb_sseqids_Table(:,'Name')),' '));
             end
             if (~isfile([strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName,'_ProbeTarget_SequencesWithFlanking', settings.designerName,'.mat')]))
                 rna_entries = find(ismember(NamesZ,RNAdbParser));
@@ -243,7 +246,6 @@ if (or(BLASTdb_DNAexists,BLASTdb_RNAexists))
                     RNA_Hit_length_ranges = join(string([RNA_length_lower RNA_length_upper]),'-');
                     RNA_Hit_strands = convertCharsToStrings(lower(extractAfter(gene_table.Strand(corresponding_rows_RNA_i),'/')));
                     RNA_getflank_command_blocks = [RNA_sseq_ids'; RNA_Hit_length_ranges'; RNA_Hit_strands'];
-                    %RNA_getflank_command_blocks = [strcat(char(39),RNA_sseq_ids',char(39)); RNA_Hit_length_ranges'; RNA_Hit_strands'];
                     RNA_getflank_command = join(RNA_getflank_command_blocks," ",1)';
                     inputRNAFile = strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName, '_getflanksequencesRNA',settings.designerName,'.csv');
                     outputRNAFile = strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName,'_rnaFlanks', settings.designerName,'.fasta');

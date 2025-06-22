@@ -77,10 +77,15 @@ gene_table.Bx = max(gene_table.SubjectIndices,[],2);
 gene_table = sortrows(gene_table,[7 13],'ascend');
 Names = unique(gene_table.Name);
 Names = convertCharsToStrings(Names);
-uniNames = extractBefore(Names,'.');
-if (sum(ismissing(uniNames))>0)
-    uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+if (and(strcmp(settings.referenceType,"ENSEMBL"),max(double(contains(extractBefore(Names,' '),'ENS')))==0))
+uniNames = extractBefore(Names,' ');
+else
+    uniNames = extractBefore(Names,'.');
+    if (sum(ismissing(uniNames))>0)
+        uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+    end
 end
+
 %% Check if output file already exists
 try
     if (settings.clusterStatus == 1)
@@ -338,9 +343,13 @@ if (calcOnOff)
     %store results for on/off-target binding information matches to unique sequence pairs
     indices = 1:length(uniNames);
     idMap2 = dictionary(uniNames',indices);
-    uniNamesZ = extractBefore(NamesZ,'.');
-    if (sum(ismissing(uniNamesZ))>0)
-        uniNamesZ(ismissing(uniNamesZ)) = extractBefore(NamesZ(ismissing(uniNamesZ)),' ');
+    if (and(strcmp(settings.referenceType,"ENSEMBL"),max(double(contains(extractBefore(Names,' '),'ENS')))==0))
+        uniNamesZ = extractBefore(NamesZ,' ');
+    else
+        uniNamesZ = extractBefore(NamesZ,'.');
+        if (sum(ismissing(uniNamesZ))>0)
+            uniNamesZ(ismissing(uniNamesZ)) = extractBefore(NamesZ(ismissing(uniNamesZ)),' ');
+        end
     end
     if (~isfile([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_OnOffInfo' settings.designerName '.mat']))%check if temp file exists
         ResultsExist_OnOff_1D = zeros(1,N_Batches);
