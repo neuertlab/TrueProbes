@@ -8,7 +8,7 @@ Js_RNA = @(x)NonDNA_IDs(ismember(NonDNA_IDs,Js(x)));
 DoesTargetHaveSite = ndSparse(double(sum(DoesProbeBindSite,1)>0));
 c_alpha = ones(size(probes,1))+diag(diag(ones(size(probes,1))));
 [~,dHs_eq,dSs_eq,~,~,~,~,...
-    dCps_eq,~,dHd_eq,dSd_eq,~,~,~,~,dCpd_eq,~,~,Ns,Nc] = A_JH_GenerateSecondaryStructureInfo_V3(probes,Pset,settings);
+    dCps_eq,~,dHd_eq,dSd_eq,~,~,~,~,dCpd_eq,Ns,Nc,~,~] = A_JH_GenerateSecondaryStructureInfo_V3(probes,Pset,settings);
 Ns_val = zeros(size(probes,1),max(Ns(:)));
 Nc_val = zeros(size(probes,1),size(probes,1),max(Nc(:)));
 for i=1:length(Pset)

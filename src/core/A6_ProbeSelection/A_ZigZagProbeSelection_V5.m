@@ -52,19 +52,19 @@ fprintf('\n')
 fprintf("Generating matrix of allowed probe combinations given spacing")
 fprintf('\n')
 fprintf('\n')
-% NumRibosomalHits = zeros(1,size(probes,1)); 
+% NumRibosomalHits = zeros(1,size(probes,1));
 if (settings.RemoveProbesWithRibosomalHits)
-    if (strcmp(settings.referenceType,'RefSeq'))
-        Iz = find(ismember(uniNames,extractBefore(settings.ribosomal_IDs,'.')));
+    ribosomal_IDs = setdiff(settings.ribosomal_IDs,settings.transcript_IDs_desired{:});
+    if (and(strcmp(settings.referenceType,"ENSEMBL"),max(double(contains(extractBefore(Names,' '),'ENS')))==0))
+        Iz = find(ismember(uniNames,ribosomal_IDs));
     else
-        Iz = find(ismember(uniNames,settings.ribosomal_IDs));
+        Iz = find(ismember(uniNames,extractBefore(ribosomal_IDs,'.')));
     end
     ProbesWithRibosomalHits = unique(gene_table.ProbeNum(Iz));
 else
     ProbesWithRibosomalHits = [];
 end
 
-% RiboHits = gene_table3.ProbeNum(Iz);
 %% Allow Matrix
 spacing = settings.ProbeSpacing;
 AllowableProbes = setdiff(1:size(probes,1),ProbesWithRibosomalHits);
@@ -152,9 +152,9 @@ probe_Ks = zeros(1,size(probes,1));
 Tvec_sub_pick = arrayfun(@(x) Tvec_RNA{x},1:size(probes,1),'Un',0);
 Svec_sub_pick = arrayfun(@(x) Svec_RNA{x},1:size(probes,1),'Un',0);
 TvecID_sub_pick = cellfun(@(x) find(ismember(OFF_RNAIDs,x)),Tvec_sub_pick,'Un',0);
-TTvec_sub_pick = cellfun(@(x) cell2mat(arrayfun(@(y) repmat(OFF_RNAIDs(y),[1 length(TPvec_RNA{y})]),x,'Un',0)),TvecID_sub_pick,'Un',0);
+TTvec_sub_pick = cellfun(@(x) cell2mat(arrayfun(@(y) reshape(repmat(OFF_RNAIDs(y),[1 length(TPvec_RNA{y})]),[],1),x,'Un',0)),TvecID_sub_pick,'Un',0);
 TPvec_sub_pick = cellfun(@(x) [TPvec_RNA{x}],TvecID_sub_pick,'Un',0);
-TSvec_sub_pick = cellfun(@(x)cell2mat(arrayfun(@(y)TSvec_RNA{y}',x,'Un',0)),TvecID_sub_pick,'Un',0);
+TSvec_sub_pick = cellfun(@(x)cell2mat(arrayfun(@(y)reshape(TSvec_RNA{y},[],1),x,'Un',0)),TvecID_sub_pick,'Un',0);
 ProbesAtDifSites = arrayfun(@(x)cell2mat(arrayfun(@(y)TPvec_sub_pick{x}(TSvec_sub_pick{x}(TTvec_sub_pick{x}==Tvec_sub_pick{x}(y))~=Svec_sub_pick{x}(y)),1:length(Tvec_sub_pick{x}),'Un',0)),...
                             1:size(probes,1),'Un',0);                        
 ProbesAtSameSites = arrayfun(@(x)cell2mat(arrayfun(@(y)TPvec_sub_pick{x}(TSvec_sub_pick{x}(TTvec_sub_pick{x}==Tvec_sub_pick{x}(y))==Svec_sub_pick{x}(y)),1:length(Tvec_sub_pick{x}),'Un',0)),...
@@ -496,9 +496,9 @@ for vsk = 1:length(NumOffTargetOptions)
                 Tvec_sub_pick = arrayfun(@(x) Tvec_RNA{x},Pi,'Un',0);
                 Svec_sub_pick = arrayfun(@(x) Svec_RNA{x},Pi,'Un',0);
                 TvecID_sub_pick = cellfun(@(x) find(ismember(OFF_RNAIDs,x)),Tvec_sub_pick,'Un',0);
-                TTvec_sub_pick = cellfun(@(x) cell2mat(arrayfun(@(y) repmat(OFF_RNAIDs(y),[1 length(TPvec_RNA{y})]),x,'Un',0)),TvecID_sub_pick,'Un',0);
+                TTvec_sub_pick = cellfun(@(x) cell2mat(arrayfun(@(y) reshape(repmat(OFF_RNAIDs(y),[1 length(TPvec_RNA{y})]),[],1),x,'Un',0)),TvecID_sub_pick,'Un',0);
                 TPvec_sub_pick = cellfun(@(x) [TPvec_RNA{x}],TvecID_sub_pick,'Un',0);
-                TSvec_sub_pick = cellfun(@(x)cell2mat(arrayfun(@(y)TSvec_RNA{y}',x,'Un',0)),TvecID_sub_pick,'Un',0);   
+                TSvec_sub_pick = cellfun(@(x)cell2mat(arrayfun(@(y) reshape(TSvec_RNA{y},[],1),x,'Un',0)),TvecID_sub_pick,'Un',0);   
 %                 TPvec_logKOFF_RNA_sub_pick = cellfun(@(x) [TPvec_logKOFF_RNA{x}],TvecID_sub_pick,'Un',0);
 %                 TPvec_logKOFFdivON_RNA_sub_pick = cellfun(@(x) [TPvec_logKOFFdivON_RNA{x}],TvecID_sub_pick,'Un',0);
 %                 TPvec_logKONdivOFF_RNA_sub_pick = cellfun(@(x) [TPvec_logKONdivOFF_RNA{x}],TvecID_sub_pick,'Un',0);

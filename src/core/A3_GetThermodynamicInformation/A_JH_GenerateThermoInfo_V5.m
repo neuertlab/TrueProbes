@@ -65,6 +65,11 @@ else
     Batch{N_Batches} = [probeBatchSize*(N_Batches-1)+1:probeBatchSize*(N_Batches-1)+R];
 end
 %% Extract Gene Target Names
+% if (isfile(strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName,'_probetarget_flanking_sequences', settings.designerName,'.mat')));%save flanking sequence file if it does not exist already   
+% load([strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName,'_probetarget_flanking_sequences', settings.designerName,'.mat')],'probetarget_flanking_info');%save flanking sequence file if it does not exist already
+% gene_table(:,'Alignment') = array2table(arrayfun(@(n) strcat(probetarget_flanking_info.ProbeRevCompSequence_5primeTo3prime{n}',newline,'|',newline,probetarget_flanking_info.TargetSequence_5primeTo3prime{n}')',1:size(probetarget_flanking_info,1),'Un',0)');
+% %(link 1 is probe, line 3 is target)
+% end
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
@@ -75,6 +80,8 @@ gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
 gene_table.Ax = min(gene_table.SubjectIndices,[],2);
 gene_table.Bx = max(gene_table.SubjectIndices,[],2);
 gene_table = sortrows(gene_table,[7 13],'ascend');
+%either have seperate outpit fro mismatches, or switch to using flanking
+%sequences if those files exist, thne add step to remove mismatches
 Names = unique(gene_table.Name);
 Names = convertCharsToStrings(Names);
 if (and(strcmp(settings.referenceType,"ENSEMBL"),max(double(contains(extractBefore(Names,' '),'ENS')))==0))
@@ -117,6 +124,7 @@ if (calcOnOff)
     %gets sequences of probe and target in blast records
     targetMatch = arrayfun(@(x) strrep(gene_table.Alignment{x}(3,:),'-','N'),1:size(gene_table,1),'UniformOutput',false);%slow not so slow
     probeMatch = arrayfun(@(x) seqrcomplement(strrep(gene_table.Alignment{x}(1,:),'-','N')),1:size(gene_table,1),'UniformOutput',false);%slow
+    %probeMatch is reverse complement
     %N is to deal with insertions in alignment matches, that 
     %Find Unique Pairs  (Do Mapping and Reverse Mapping)
     CalcDictionary = unique([targetMatch(:)' probeMatch(:)']);
@@ -133,7 +141,37 @@ if (calcOnOff)
     MatchZ = gene_table.Match;
     clear gene_table CalcDictionary CalcDict2 idMap indices
     %Re-Map Energies to non-unique sites
-    %Unique_to_Original = @(x) find(strcmpi(targetMatch_Unique{x},targetMatch).*strcmpi(probeMatch_Unique{x},probeMatch));
+    %Unique_to_Original = @(x) find(strcmpi(targetMatch_Unique{x},targetMatch).*strcmpi(probeMatch_Unique{x},probeMatch));  
+    sequence_duplexes_thermo_generator_struct_Multi = struct();
+    sequence_duplexes_thermo_generator_struct_Multi.Model{1} = F_NearestNeighbors_Parser('Bres86','src/thirdparty/VarGibbs-4.1/P-BS86.par',[]);
+    sequence_duplexes_thermo_generator_struct_Multi.Model{2}  = F_NearestNeighbors_Parser('Sant96','src/thirdparty/VarGibbs-4.1/AOP-SL96.par',[]);
+    sequence_duplexes_thermo_generator_struct_Multi.Model{3}  = F_NearestNeighbors_Parser('Sant98','src/thirdparty/VarGibbs-4.1/AOP-SL98.par',[]);
+    sequence_duplexes_thermo_generator_struct_Multi.Model{4}   = F_NearestNeighbors_Parser('Sugi96','src/thirdparty/VarGibbs-4.1/P-SG96.par',[]);
+    sequence_duplexes_thermo_generator_struct_Multi.Model{5}   = F_NearestNeighbors_Parser('Sant04','src/thirdparty/VarGibbs-4.1/P-SL04.par',[]);
+    sequence_duplexes_thermo_generator_struct_Multi.Model{6}   = F_NearestNeighbors_Parser('Allawi97','src/thirdparty/VarGibbs-4.1/P-AL97.par',[]);
+    sequence_duplexes_thermo_generator_struct_Multi.Model{7}   = F_NearestNeighbors_Parser('Rejali21','src/thirdparty/VarGibbs-4.1/AOP-RJ21KE.par',[]);
+    sequence_duplexes_thermo_generator_struct_Multi.Model{8}   = F_NearestNeighbors_Parser('Martins24','src/thirdparty/VarGibbs-4.1/AOP-OW04-69.par','src/thirdparty/VarGibbs-4.1/AOP-MM-60.par');
+    sequence_duplexes_thermo_generator_structure = struct2table([sequence_duplexes_thermo_generator_struct_Multi.Model{:}]);
+    
+
+% parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/AOP-SL96.par';
+% parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/AOP-SL98.par';
+% parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/P-SL04.par';
+% parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/P-SL98.par';
+% parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/P-SL96.par';
+% parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/P-CH12.par';
+% %DNA-RNA
+% parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/AOP-DRVH.par';
+% parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/AOP-DRFT.par';
+% parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/AOP-DRLS.par';
+% parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/P-BN21.par';
+%parameter_file_noncanonical = 'src/thirdparty/VarGibbs-4.1/AOP-MM-60.par';
+%parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/AOP-OW04-69.par';
+     if (isfile(strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName,'_probetarget_flanking_sequences', settings.designerName,'.mat')))
+     %   Alignment_Target_Sequences = probetarget_flanking_info.TargetSequence_5primeTo3prime;
+      %  Alignment_Probe_Sequences = probetarget_flanking_info.ProbeRevCompSequence_5primeTo3prime;
+     end
+
     Kon = zeros(size(probes,1),N_methods);
     Tm_on = zeros(size(probes,1),N_methods3);
     dHeq_Match = zeros(length(targetMatch),N_methods);
@@ -171,7 +209,7 @@ if (calcOnOff)
         pause(0.1);
         [temp_dHeq{i}, temp_dSeq{i}, temp_dGeq{i}, ...
             temp_dHf{i}, temp_dSf{i}, ~, ...
-            temp_dHr{i}, temp_dSr{i}, ~,temp_dCpeq{i},temp_Tm{i}] = F_DeltaGibson_V3(lower(pi_seq{i}),seqrcomplement(lower(pi_seq{i})),SaltConcentration,T_hybrid,PrimerConcentration);
+            temp_dHr{i}, temp_dSr{i}, ~,temp_dCpeq{i},temp_Tm{i}] = F_DeltaGibson_V3(lower(pi_seq{i}),seqrcomplement(lower(pi_seq{i})),SaltConcentration,T_hybrid,PrimerConcentration,sequence_duplexes_thermo_generator_structure);
         dHon_eq(i,:) = temp_dHeq{i};
         dSon_eq(i,:) = temp_dSeq{i};
         dHon_f(i,:) = temp_dHf{i};
@@ -319,6 +357,10 @@ if (calcOnOff)
             progress(wb);
         end
         wb.delete();
+
+
+
+        
         save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_dHInfo' settings.designerName '.mat'],'dHon_f','dHon_r','dHon_eq','dHeq_Match','dHf_Match','dHr_Match','-v7.3');
         save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_dSInfo' settings.designerName '.mat'],'dSon_f','dSon_r','dSon_eq','dSeq_Match','dSf_Match','dSr_Match','-v7.3');
         save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_TmInfo' settings.designerName '.mat'],'Tm_on','Tm_Match','-v7.3');

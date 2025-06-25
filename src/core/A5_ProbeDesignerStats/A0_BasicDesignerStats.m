@@ -51,8 +51,8 @@ end
 %Finds Off-targets and off-target binding sites
 Js = @(x) find(sum(squeeze(sum(DoesProbeBindSite(x,:,:),1)),2)>0);
 Tp = @(x) find(sum(squeeze(DoesProbeBindSite(:,x,:)),2)>0);
-Sx =@(x,Z) arrayfun(@(y) find(squeeze(DoesProbeBindSite(x,y,:))==1)',Z,'Un',0);
 Tx2 =@(y,Z) arrayfun(@(x) find(squeeze(DoesProbeBindSite(x,y,:))==1)',Z,'Un',0);
+Sx =@(x,Z) arrayfun(@(y) find(squeeze(DoesProbeBindSite(x,y,:))==1),Z,'Un',0);
 Tx =@(y,Z) arrayfun(@(x) find(squeeze(DoesProbeBindSite(x,y,:))==1),Z,'Un',0);
 Js_OFFRNA = @(x)OFF_RNAIDs(ismember(OFF_RNAIDs,Js(x)));
 Js_OFFRNAi = @(x,y)OFF_RNAIDs(find(cumsum(ismember(OFF_RNAIDs,Js(x)))==y,1));
@@ -82,8 +82,8 @@ if (isRNA)
     for p = 1:size(DoesProbeBindSite,1)
         Nvec_RNAsingle(p) = length(Js_OFFRNA(p));
         Nvec_RNAmulti(p) = sum(cellfun(@length,Sx(p,Js_OFFRNA(p))));
-        Svec_RNA{p} = cell2mat(Sx(p,Js_OFFRNA(p)));
-        Tvec_RNA{p} = cell2mat(arrayfun(@(x) repmat(Js_OFFRNAi(p,x),[1 length(Sx(p,Js_OFFRNAi(p,x)))]),1:length(Js_OFFRNA(p)),'Un',0));
+        Svec_RNA{p} = cell2mat(Sx(p,Js_OFFRNA(p)));%size(N by 1)
+        Tvec_RNA{p} = cell2mat(arrayfun(@(x) repmat(Js_OFFRNAi(p,x),[1 cellfun(@length,Sx(p,Js_OFFRNAi(p,x)))]),1:length(Js_OFFRNA(p)),'Un',0));% 1 by N
         Tvec_logKOFF_RNA{p} = log10(diag(full(squeeze(Kb(p,Tvec_RNA{p},Svec_RNA{p}))))');
         Tvec_logKOFFdivON_RNA{p} = log10(diag(full(squeeze(Kb(p,Tvec_RNA{p},Svec_RNA{p}))))'/Kon(p));
         Tvec_logKONdivOFF_RNA{p} = log10(Kon(p)./diag(full(squeeze(Kb(p,Tvec_RNA{p},Svec_RNA{p}))))');
@@ -164,7 +164,7 @@ if (isDNA)
         Nvec_DNAsingle(p) = length(Js_OFFDNA(p));
         Nvec_DNAmulti(p) = sum(cellfun(@length,Sx(p,Js_OFFDNA(p))));
         Svec_DNA{p} =  cell2mat(Sx(p,Js_OFFDNA(p)));
-        Tvec_DNA{p} = cell2mat(arrayfun(@(x) repmat(Js_OFFDNAi(p,x),[1 length(Sx(p,Js_OFFDNAi(p,x)))]),1:length(Js_OFFDNA(p)),'Un',0));
+        Tvec_DNA{p} = cell2mat(arrayfun(@(x) repmat(Js_OFFDNAi(p,x),[1 cellfun(@length,Sx(p,Js_OFFDNAi(p,x)))]),1:length(Js_OFFDNA(p)),'Un',0));
         Tvec_logKOFF_DNA{p} = log10(diag(full(squeeze(Kb(p,Tvec_DNA{p},Svec_DNA{p}))))');
         Tvec_logKOFFdivON_DNA{p} = log10(diag(full(squeeze(Kb(p,Tvec_DNA{p},Svec_DNA{p}))))'/Kon(p));
         Tvec_logKONdivOFF_DNA{p} = log10(Kon(p)./diag(full(squeeze(Kb(p,Tvec_DNA{p},Svec_DNA{p}))))');

@@ -61,6 +61,7 @@ for i=1:Lh-Ll+1
                     fprintf("BioKey not found in reference genomes or transcriptomes.")
                     fprintf('\n')
                     fprintf(strcat("Trying to search for matches to ",extractBefore(AccessionNumbers{Acc_Num},'.')))
+                    fprintf('\n')
                     %BioKey version not found
                       isInBioIFobj = zeros(1,length(BioIFobj));
                       isInBioIFobj_loc = zeros(1,length(BioIFobj));

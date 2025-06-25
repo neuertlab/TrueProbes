@@ -3,6 +3,8 @@ function [Nvec_RNAmulti,RNAOFF_Score,RNASpecificity_Score,NumRNAOffTargetOptions
 most_recent_num_local = settings.num_parpool_local;
 designerName = settings.designerName;
 FolderRootName = settings.FolderRootName;
+TranscriptName = settings.GeneName;
+Organism = settings.Organism;
 Cout = cell(1,2);
 Cout{1} = cell(1,7);
 Cout{2} = cell(1,9);
@@ -61,17 +63,12 @@ if (removeUndesiredIsos)
 end
 %Finds Off-targets and off-target binding sites
 Js = @(x) find(sum(squeeze(sum(DoesProbeBindSite(x,:,:),1)),2)>0);
-Tp = @(x) find(sum(squeeze(DoesProbeBindSite(:,x,:)),2)>0);
-Sx =@(x,Z) arrayfun(@(y) find(squeeze(DoesProbeBindSite(x,y,:))==1)',Z,'Un',0);
-Tx2 =@(y,Z) arrayfun(@(x) find(squeeze(DoesProbeBindSite(x,y,:))==1)',Z,'Un',0);
-Tx =@(y,Z) arrayfun(@(x) find(squeeze(DoesProbeBindSite(x,y,:))==1),Z,'Un',0);
 Js_OFFRNA = @(x)OFF_RNAIDs(ismember(OFF_RNAIDs,Js(x)));
 Js_OFFRNAi = @(x,y)OFF_RNAIDs(find(cumsum(ismember(OFF_RNAIDs,Js(x)))==y,1));
 Js_OFFDNA = @(x)DNA_IDs(ismember(DNA_IDs,Js(x)));
 Js_OFFDNAi = @(x,y)DNA_IDs(find(cumsum(ismember(DNA_IDs,Js(x)))==y,1));
 % finds list of each off-target both number, site and location, as well as Koff and Kon equilibrium constants
 if (isRNA)
-    TPvec_RNA0 = cell(1,size(DoesProbeBindSite,1));
     Tvec_RNA = cell(1,size(DoesProbeBindSite,1));
     TSvec_RNA = cell(1,size(DoesProbeBindSite,1));
     TPvec_RNA = cell(1,size(DoesProbeBindSite,1));
@@ -86,10 +83,8 @@ if (isRNA)
     TPvec_logKOFF_RNA = cell(1,length(OFF_RNAIDs));
     TPvec_logKOFFdivON_RNA = cell(1,length(OFF_RNAIDs));
     TPvec_logKONdivOFF_RNA = cell(1,length(OFF_RNAIDs));
-
-
     if (~isfile([settings.FolderRootName filesep '(' TranscriptName ')' '_' settings.rootName '_BasicStats_RNA_ByProbe_Info' settings.designerName '.mat']))%check if temp file exists
-        N_Probes = size(probes,1);
+        N_Probes = size(DoesProbeBindSite,1);
         N_ProbeBatches = ceil(N_Probes/probeBatchSize);
         R = mod(N_Probes,probeBatchSize);
         probeBatch = cell(1,N_ProbeBatches);
@@ -140,17 +135,24 @@ if (isRNA)
         Kb_List = parallel.pool.Constant(Kb);
         Kon_List = parallel.pool.Constant(Kon);
         probeBatch_List = parallel.pool.Constant(probeBatch);
+        OFF_RNAIDs_List = parallel.pool.Constant(OFF_RNAIDs);
+        DoesProbeBindSite_List = parallel.pool.Constant(DoesProbeBindSite);
         fprintf("Computing probe batch RNA off-target statistics")
         fprintf('\n')
         fprintf('\n')
         wb = parwaitbar(length(batch_nums_to_check),'WaitMessage','Computing');
         parfor v = 1:length(batch_nums_to_check)
+            Js = @(x) find(sum(squeeze(sum(DoesProbeBindSite_List.Value(x,:,:),1)),2)>0);
+            Sx =@(x,Z) arrayfun(@(y) find(squeeze(DoesProbeBindSite_List.Value(x,y,:))==1),Z,'Un',0);
+            Js_OFFRNA = @(x)OFF_RNAIDs_List.Value(ismember(OFF_RNAIDs_List.Value,Js(x)));
+            Js_OFFRNAi = @(x,y)OFF_RNAIDs_List.Value(find(cumsum(ismember(OFF_RNAIDs_List.Value,Js(x)))==y,1));
+            temp_designer_stats_rna_p{v} = cell(1,length(probeBatch_List.Value{batch_nums_to_check(v)}));
             for w = 1:length(probeBatch_List.Value{batch_nums_to_check(v)})
                 p = probeBatch_List.Value{batch_nums_to_check(v)}(w);
                 temp_designer_stats_rna_p{v}{w}{1} = length(Js_OFFRNA(p));
                 temp_designer_stats_rna_p{v}{w}{2} = sum(cellfun(@length,Sx(p,Js_OFFRNA(p))));
                 temp_designer_stats_rna_p{v}{w}{3} = cell2mat(Sx(p,Js_OFFRNA(p)));
-                temp_designer_stats_rna_p{v}{w}{4} = cell2mat(arrayfun(@(x) repmat(Js_OFFRNAi(p,x),[1 length(Sx(p,Js_OFFRNAi(p,x)))]),1:length(Js_OFFRNA(p)),'Un',0));
+                temp_designer_stats_rna_p{v}{w}{4} = cell2mat(arrayfun(@(x) repmat(Js_OFFRNAi(p,x),[1 cellfun(@length,Sx(p,Js_OFFRNAi(p,x)))]),1:length(Js_OFFRNA(p)),'Un',0));
                 temp_designer_stats_rna_p{v}{w}{5} = log10(diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_rna_p{v}{w}{4},temp_designer_stats_rna_p{v}{w}{3}))))');
                 temp_designer_stats_rna_p{v}{w}{6} = log10(diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_rna_p{v}{w}{4},temp_designer_stats_rna_p{v}{w}{3}))))'/Kon_List.Value(p));
                 temp_designer_stats_rna_p{v}{w}{7} = log10(Kon_List.Value(p)./diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_rna_p{v}{w}{4},temp_designer_stats_rna_p{v}{w}{3}))))');
@@ -266,25 +268,28 @@ if (isRNA)
         Kon_List = parallel.pool.Constant(Kon);
         rnaTargetBatches_List = parallel.pool.Constant(rnaTargetBatches);
         OFF_RNAIDs_List = parallel.pool.Constant(OFF_RNAIDs);
+        DoesProbeBindSite_List = parallel.pool.Constant(DoesProbeBindSite);
         fprintf("Computing batch RNA off-target by probe statistics")
         fprintf('\n')
         fprintf('\n')
         wb = parwaitbar(length(batch_nums_to_check2),'WaitMessage','Computing');
         parfor v = 1:length(batch_nums_to_check2)
-            for w = 1:length(rnaTargetBatches_List.Value{batch_nums_to_check2(v)})
-                TPvec_RNA0{v}{w} = Tp(OFF_RNAIDs_List.Value(rnaTargetBatches_List.Value{batch_nums_to_check2(v)}(w)));%does not have multiplicity
-                temp_RNAV1b = Tx(OFF_RNAIDs_List.Value(rnaTargetBatches_List.Value{batch_nums_to_check2(v)}(w)),TPvec_RNA0{v}{w});
+                Tp = @(x) find(sum(squeeze(DoesProbeBindSite_List.Value(:,x,:)),2)>0);
+                Tx =@(y,Z) arrayfun(@(x) find(squeeze(DoesProbeBindSite_List.Value(x,y,:))==1),Z,'Un',0);
+            temp_designer_stats_rna_t{v} = cell(1,length(rnaTargetBatches_List.Value{batch_nums_to_check2(v)}));
+           for w = 1:length(rnaTargetBatches_List.Value{batch_nums_to_check2(v)})
+                temp_RNAV0b = Tp(OFF_RNAIDs_List.Value(rnaTargetBatches_List.Value{batch_nums_to_check2(v)}(w)));%does not have multiplicity
+                temp_RNAV1b = Tx(OFF_RNAIDs_List.Value(rnaTargetBatches_List.Value{batch_nums_to_check2(v)}(w)),temp_RNAV0b);
                 temp_RNAV2b = cellfun(@length,temp_RNAV1b);
-                temp_designer_stats_rna_t{v}{w}{1} = length(TPvec_RNA0{v}{w});
+                temp_designer_stats_rna_t{v}{w}{1} = length(temp_RNAV0b);
                 temp_designer_stats_rna_t{v}{w}{2} = sum(temp_RNAV2b);
-                temp_designer_stats_rna_t{v}{w}{3} = cell2mat(arrayfun(@(x) repmat(TPvec_RNA0{v}{w}(x),[1 temp_RNAV2b(x)]),1:length(TPvec_RNA0{v}{w}),'Un',0));
+                temp_designer_stats_rna_t{v}{w}{3} = cell2mat(arrayfun(@(x) repmat(temp_RNAV0b(x),[1 temp_RNAV2b(x)]),1:length(temp_RNAV0b),'Un',0));
                 temp_designer_stats_rna_t{v}{w}{4} = cell2mat(temp_RNAV1b);%site locations
                 temp_designer_stats_rna_t{v}{w}{5} = log10(diag(full(squeeze(Kb_List.Value(temp_designer_stats_rna_t{v}{w}{3},OFF_RNAIDs_List.Value(rnaTargetBatches_List.Value{batch_nums_to_check2(v)}(w)),temp_designer_stats_rna_t{v}{w}{4}))))');
                 temp_designer_stats_rna_t{v}{w}{6} = log10(diag(full(squeeze(Kb_List.Value(temp_designer_stats_rna_t{v}{w}{3},OFF_RNAIDs_List.Value(rnaTargetBatches_List.Value{batch_nums_to_check2(v)}(w)),temp_designer_stats_rna_t{v}{w}{4}))))'./Kon_List.Value(temp_designer_stats_rna_t{v}{w}{3}));
                 temp_designer_stats_rna_t{v}{w}{7} = log10(Kon_List.Value(temp_designer_stats_rna_t{v}{w}{3})./diag(full(squeeze(Kb_List.Value(temp_designer_stats_rna_t{v}{w}{3},OFF_RNAIDs_List.Value(rnaTargetBatches_List.Value{batch_nums_to_check2(v)}(w)),temp_designer_stats_rna_t{v}{w}{4}))))');
             end
             parsave_partial_designer_stats([FolderRootName filesep '(' TranscriptName ')' designerName '_basicStatsRNA_Info_targetbatch' num2str(batch_nums_to_check2(v)) '.mat'],temp_designer_stats_rna_t{v});
-            TPvec_RNA0{v} = [];
             temp_designer_stats_rna_t{v} = [];
             progress(wb);
         end
@@ -390,7 +395,7 @@ if (isDNA)
     TPvec_logKOFFdivCOMP_DNA = cell(1,length(DNA_IDs));
     TPvec_logKCOMPdivOFF_DNA = cell(1,length(DNA_IDs));
     if (~isfile([settings.FolderRootName filesep '(' TranscriptName ')' '_' settings.rootName '_BasicStats_DNA_ByProbe_Info' settings.designerName '.mat']))%check if temp file exists
-        N_Probes = size(probes,1);
+        N_Probes = size(DoesProbeBindSite,1);
         N_ProbeBatches = ceil(N_Probes/probeBatchSize);
         R = mod(N_Probes,probeBatchSize);
         probeBatch = cell(1,N_ProbeBatches);
@@ -442,17 +447,24 @@ if (isDNA)
         Kon_List = parallel.pool.Constant(Kon);
         Kb_Complement_List = parallel.pool.Constant(Kb_Complement);
         probeBatch_List = parallel.pool.Constant(probeBatch);
+        DNA_IDs_List = parallel.pool.Constant(DNA_IDs);
+        DoesProbeBindSite_List = parallel.pool.Constant(DoesProbeBindSite);
         fprintf("Computing probe batch DNA off-target statistics")
         fprintf('\n')
         fprintf('\n')
         wb = parwaitbar(length(batch_nums_to_check3),'WaitMessage','Computing');
         parfor v = 1:length(batch_nums_to_check3)
+                Js = @(x) find(sum(squeeze(sum(DoesProbeBindSite_List.Value(x,:,:),1)),2)>0);
+                Sx =@(x,Z) arrayfun(@(y) find(squeeze(DoesProbeBindSite_List.Value(x,y,:))==1),Z,'Un',0);
+                Js_OFFDNA = @(x)DNA_IDs_List.Value(ismember(DNA_IDs_List.Value,Js(x)));
+                Js_OFFDNAi = @(x,y)DNA_IDs_List.Value(find(cumsum(ismember(DNA_IDs_List.Value,Js(x)))==y,1));
+                temp_designer_stats_dna_p{v} = cell(1,length(probeBatch_List.Value{batch_nums_to_check3(v)}));
             for w = 1:length(probeBatch_List.Value{batch_nums_to_check3(v)})
                 p = probeBatch_List.Value{batch_nums_to_check3(v)}(w);
                 temp_designer_stats_dna_p{v}{w}{1} = length(Js_OFFDNA(p));
                 temp_designer_stats_dna_p{v}{w}{2} = sum(cellfun(@length,Sx(p,Js_OFFDNA(p))));
                 temp_designer_stats_dna_p{v}{w}{3} = cell2mat(Sx(p,Js_OFFDNA(p)));
-                temp_designer_stats_dna_p{v}{w}{4} = cell2mat(arrayfun(@(x) repmat(Js_OFFDNAi(p,x),[1 length(Sx(p,Js_OFFDNAi(p,x)))]),1:length(Js_OFFDNA(p)),'Un',0));
+                temp_designer_stats_dna_p{v}{w}{4} = cell2mat(arrayfun(@(x) repmat(Js_OFFDNAi(p,x),[1 cellfun(@length,Sx(p,Js_OFFDNAi(p,x)))]),1:length(Js_OFFDNA(p)),'Un',0));
                 temp_designer_stats_dna_p{v}{w}{5} = log10(diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{v}{4},temp_designer_stats_dna_p{v}{3}))))');
                 temp_designer_stats_dna_p{v}{w}{6} = log10(diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{v}{4},temp_designer_stats_dna_p{v}{3}))))'/Kon_List.Value(p));
                 temp_designer_stats_dna_p{v}{w}{7} = log10(Kon_List.Value(p)./diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{v}{4},temp_designer_stats_dna_p{v}{w}{3}))))');
@@ -576,18 +588,22 @@ if (isDNA)
         Kon_List = parallel.pool.Constant(Kon);
         dnaTargetBatches_List = parallel.pool.Constant(dnaTargetBatches);
         DNA_IDs_List = parallel.pool.Constant(DNA_IDs);
+        DoesProbeBindSite_List = parallel.pool.Constant(DoesProbeBindSite);
         fprintf("Computing batch RNA off-target by probe statistics")
         fprintf('\n')
         fprintf('\n')
         wb = parwaitbar(N_ProbeBatches,'WaitMessage','Computing');
         parfor v = 1:length(batch_nums_to_check4)
+            Tp = @(x) find(sum(squeeze(DoesProbeBindSite_List.Value(:,x,:)),2)>0);
+            Tx2 =@(y,Z) arrayfun(@(x) find(squeeze(DoesProbeBindSite_List.Value(x,y,:))==1)',Z,'Un',0);
+            temp_designer_stats_dna_t{v} = cell(1,length(dnaTargetBatches_List.Value{batch_nums_to_check4(v)}));
             for w = 1:length(dnaTargetBatches_List.Value{batch_nums_to_check4(v)})
-                TPvec_DNA0{v}{w} = Tp(DNA_IDs_List.Value(dnaTargetBatches_List.Value{batch_nums_to_check4(v)}(w)))';%does not have multiplicity
-                temp_DNAV1b = Tx2(DNA_IDs_List.Value(dnaTargetBatches_List.Value{batch_nums_to_check4(v)}(w)),TPvec_DNA0{v}{w});
+                temp_DNAV0b = Tp(DNA_IDs_List.Value(dnaTargetBatches_List.Value{batch_nums_to_check4(v)}(w)))';%does not have multiplicity
+                temp_DNAV1b = Tx2(DNA_IDs_List.Value(dnaTargetBatches_List.Value{batch_nums_to_check4(v)}(w)),temp_DNAV0b);
                 temp_DNAV2b = cellfun(@length,temp_DNAV1b);
-                temp_designer_stats_dna_t{v}{w}{1} = length(TPvec_DNA0{v}{w});
+                temp_designer_stats_dna_t{v}{w}{1} = length(temp_DNAV0b);
                 temp_designer_stats_dna_t{v}{w}{2} = sum(temp_DNAV2b);
-                temp_designer_stats_dna_t{v}{w}{3} = cell2mat(arrayfun(@(x) repmat(TPvec_DNA0{v}{w}(x),[1 temp_DNAV2b(x)]),1:length(TPvec_DNA0{v}{w}),'Un',0));
+                temp_designer_stats_dna_t{v}{w}{3} = cell2mat(arrayfun(@(x) repmat(temp_DNAV0b(x),[1 temp_DNAV2b(x)]),1:length(temp_DNAV0b),'Un',0));
                 temp_designer_stats_dna_t{v}{w}{4} = cell2mat(temp_DNAV1b);%site locations
                 temp_designer_stats_dna_t{v}{w}{5} = log10(diag(full(squeeze(Kb_List.Value(temp_designer_stats_dna_t{v}{w}{3},DNA_IDs_List.Value(dnaTargetBatches_List.Value{batch_nums_to_check4(v)}(w)),temp_designer_stats_dna_t{v}{w}{4}))))');
                 temp_designer_stats_dna_t{v}{w}{6} = log10(diag(full(squeeze(Kb_List.Value(temp_designer_stats_dna_t{v}{w}{3},DNA_IDs_List.Value(dnaTargetBatches_List.Value{batch_nums_to_check4(v)}(w)),temp_designer_stats_dna_t{v}{w}{4}))))'./Kon_List.Value(temp_designer_stats_dna_t{v}{w}{3}));
@@ -596,7 +612,6 @@ if (isDNA)
                 temp_designer_stats_dna_t{v}{w}{9} = log10(diag(full(squeeze(Kb_Complement_List.Value(DNA_IDs_List.Value(dnaTargetBatches_List.Value{batch_nums_to_check4(v)}(w)),temp_designer_stats_dna_t{v}{w}{4}))))'./diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_t{v}{w}{3},DNA_IDs_List.Value(dnaTargetBatches_List.Value{batch_nums_to_check4(v)}(w)),temp_designer_stats_dna_t{v}{w}{4}))))');
             end
             parsave_partial_designer_stats([FolderRootName filesep '(' TranscriptName ')' designerName '_basicStatsDNA_Info_targetbatch' num2str(batch_nums_to_check4(v)) '.mat'],temp_designer_stats_rna_t{v});
-            TPvec_DNA0{v} = [];
             temp_designer_stats_rna_t{v} = [];
             progress(wb);
         end

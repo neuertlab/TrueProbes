@@ -15,6 +15,7 @@ for i=1:size(probes,1)
    pi_seq{i} = RV(probes{i,2});
 end
 start = tic; 
+warning('off','bioinfo:oligoprop:SeqLengthTooShort');
 %Get Sequence for Hairpins and SelfDimers
 HairSeq = cellfun(@(x) oligoprop(RV(x),'Salt',SaltConcentration,'Temp',T_hybrid).Hairpins,{probes{FinalProbeSet,2}},'UniformOutput',false);
 locHair = cellfun(@(x) isstrprop(x,'upper'),{HairSeq{:}},'UniformOutput',false);
@@ -46,8 +47,6 @@ selfId1 = find(selfNotExist==1);
 for i = 1:length(selfId1)
    SelfSeqParsed{selfId1(i)}=cell(0,2); 
 end
-
-
 N_Self = cellfun(@(x) length(x), SelfSeqParsed);
 clear row Flip_Identity Self_Flip_Identity
   
@@ -264,13 +263,24 @@ dSd_f = ndSparse.build([size(probes,1),size(probes,1),max([max(N_Cross(:)) 1]),N
 dHd_r = ndSparse.build([size(probes,1),size(probes,1),max([max(N_Cross(:)) 1]),N_methods2],0);
 dSd_r = ndSparse.build([size(probes,1),size(probes,1),max([max(N_Cross(:)) 1]),N_methods2],0);
 %Compute binding affinity for self and cross-dimers (equilibrium, and transition-state forward/reverse rates)        
+sequence_duplexes_thermo_generator_struct_Multi = struct();
+sequence_duplexes_thermo_generator_struct_Multi.Model{1} = F_NearestNeighbors_Parser('Bres86','src/thirdparty/VarGibbs-4.1/P-BS86.par',[]);
+sequence_duplexes_thermo_generator_struct_Multi.Model{2}  = F_NearestNeighbors_Parser('Sant96','src/thirdparty/VarGibbs-4.1/AOP-SL96.par',[]);
+sequence_duplexes_thermo_generator_struct_Multi.Model{3}  = F_NearestNeighbors_Parser('Sant98','src/thirdparty/VarGibbs-4.1/AOP-SL98.par',[]);
+sequence_duplexes_thermo_generator_struct_Multi.Model{4}   = F_NearestNeighbors_Parser('Sugi96','src/thirdparty/VarGibbs-4.1/P-SG96.par',[]);
+sequence_duplexes_thermo_generator_struct_Multi.Model{5}   = F_NearestNeighbors_Parser('Sant04','src/thirdparty/VarGibbs-4.1/P-SL04.par',[]);
+sequence_duplexes_thermo_generator_struct_Multi.Model{6}   = F_NearestNeighbors_Parser('Allawi97','src/thirdparty/VarGibbs-4.1/P-AL97.par',[]);
+sequence_duplexes_thermo_generator_struct_Multi.Model{7}   = F_NearestNeighbors_Parser('Rejali21','src/thirdparty/VarGibbs-4.1/AOP-RJ21KE.par',[]);
+sequence_duplexes_thermo_generator_struct_Multi.Model{8}   = F_NearestNeighbors_Parser('Martins24','src/thirdparty/VarGibbs-4.1/AOP-OW04-69.par','src/thirdparty/VarGibbs-4.1/AOP-MM-60.par');
+sequence_duplexes_thermo_generator_structure = struct2table([sequence_duplexes_thermo_generator_struct_Multi.Model{:}]);
+
 for i=FinalProbeSet
     v = find(FinalProbeSet==i);
     for j=1:N_Self(v)
          [temp_dHeq, temp_dSeq, temp_dGeq, ...
           temp_dHf, temp_dSf, ~, ...
           temp_dHr, temp_dSr, ~,temp_dCpeq,~] = ...
-          F_DeltaGibson_V3(strrep(SelfSeqParsed{v}{j},'-','N'),strrep(SelfSeqParsed{v}{j},'-','N'),SaltConcentration,T_hybrid,PrimerConcentration);
+          F_DeltaGibson_V3(strrep(SelfSeqParsed{v}{j},'-','N'),strrep(SelfSeqParsed{v}{j},'-','N'),SaltConcentration,T_hybrid,PrimerConcentration,sequence_duplexes_thermo_generator_structure);
           dHs_eq(i,j,:) = temp_dHeq;
           dSs_eq(i,j,:) = temp_dSeq;
           Ks_eq(i,j,:) = exp(-temp_dGeq/(kb*(T_hybrid+273.15)));
@@ -288,7 +298,7 @@ for i=FinalProbeSet
                 [temp_dHeq, temp_dSeq, temp_dGeq, ...
                  temp_dHf, temp_dSf, ~, ...
                  temp_dHr, temp_dSr, ~,temp_dCpeq, ~] = ...
-                 F_DeltaGibson_V3(strrep(CrossDimerSeqParsed{v,w}{k,1},'-','N'),reverse(strrep(CrossDimerSeqParsed{v,w}{k,2},'-','N')),SaltConcentration,T_hybrid,PrimerConcentration);
+                 F_DeltaGibson_V3(strrep(CrossDimerSeqParsed{v,w}{k,1},'-','N'),reverse(strrep(CrossDimerSeqParsed{v,w}{k,2},'-','N')),SaltConcentration,T_hybrid,PrimerConcentration,sequence_duplexes_thermo_generator_structure);
                  dHd_eq(i,j,k,:) = temp_dHeq;
                  dSd_eq(i,j,k,:) = temp_dSeq;
                  Kd_eq(i,j,k,:) = exp(-temp_dGeq/(kb*(T_hybrid+273.15)));

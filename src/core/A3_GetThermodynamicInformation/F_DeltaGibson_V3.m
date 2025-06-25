@@ -1,9 +1,8 @@
-function [dHeq, dSeq, dGeq, dHf, dSf, dGf, dHr, dSr, dGr, dCpeq, Tm] = F_DeltaGibson_V3(seq1,seq2,C,T,P)
+function [dHeq, dSeq, dGeq, dHf, dSf, dGf, dHr, dSr, dGr, dCpeq, Tm] = F_DeltaGibson_V3(seq1,seq2,C,T,P,varagin)
 % This function computes terms for DeltaGibson Free energy changes for any two pairs of DNA sequences binding.
 % This function compute DeltaGibson for both binding equilibrium and forward/reverse transition-state rates.
 % Additionally this compute Tm for DNA sequence binding.
 % Additionally includeded are meso-scale mechanistic model which explicity includes terms for mismatches.
-
 
 N_models = 8;
 dGeq = zeros(N_models,1);
@@ -42,6 +41,45 @@ RV = @(x) (seqrcomplement(x));
 SaltConcentration = C;
 Temperature = T;
 PrimerConc = P;
+
+
+if (nargin>5)
+    sequence_duplexes_thermo_generator_structure = varagin;
+    %5' target 3'
+    %3' probe 5'   
+    %low, mid ,and high, thermo_delta or relative to middle
+    %seq1 target seqyebcem abd seq2 is target alignment?
+    seq1_w = upper(convertCharsToStrings({seq1 seq1}));
+    seq2_w = upper(convertCharsToStrings({RV(seq2) RV(seq2)}));
+    %starting point is alignment sequence which is different from seq1 and
+    %seq2
+
+    %for cross dimer sequences before input given seq2 is reversed.
+    % 5' seq 1   3'    (RNA)                        input 5' seq1 3', bottom sequence 5' to 3' 
+    %3'  seq 2 Pre Reversal  5' 
+
+    % bottom sequence effectvely is the probe 5' to 3', means 
+    % convention says seq1 is target
+
+    % 
+    % probe used reverse complement of [but convention inside is that RNA
+    % is sequence 1. and probe be sequence 2
+    n_mod = 8;
+    dH = sequence_duplexes_thermo_generator_structure.States{n_mod,1}(seq1_w,seq2_w,1);
+    dS = sequence_duplexes_thermo_generator_structure.States{n_mod,2}(seq1_w,seq2_w,1);
+    dG = sequence_duplexes_thermo_generator_structure.States{n_mod,3}(seq1_w,seq2_w,1);
+    % dH = sequence_duplexes_thermo_generator_structure.States_Salt_Corrected_DNA_DNA{n_mod,1}(seq1_w,seq2_w,1,sequence_duplexes_thermo_generator_structure.Salt_NN_ModelReference_Molarity(n_mod),SaltConcentration)
+    % dS = sequence_duplexes_thermo_generator_structure.States_Salt_Corrected_DNA_DNA{n_mod,2}(seq1_w,seq2_w,1,sequence_duplexes_thermo_generator_structure.Salt_NN_ModelReference_Molarity(n_mod),SaltConcentration)
+    % dG = sequence_duplexes_thermo_generator_structure.States_Salt_Corrected_DNA_DNA{n_mod,3}(seq1_w,seq2_w,1,Temperature,sequence_duplexes_thermo_generator_structure.Salt_NN_ModelReference_Molarity(1),SaltConcentration)
+    % % feeding in cross-dimer seqs
+    % dH = sequence_duplexes_thermo_generator_structure.States_Salt_Corrected_DNA_RNA{n_mod,1}(seq1_w,seq2_w,1,sequence_duplexes_thermo_generator_structure.Salt_NN_ModelReference_Molarity(n_mod),SaltConcentration)
+    % dS = sequence_duplexes_thermo_generator_structure.States_Salt_Corrected_DNA_RNA{n_mod,2}(seq1_w,seq2_w,1,sequence_duplexes_thermo_generator_structure.Salt_NN_ModelReference_Molarity(n_mod),SaltConcentration)
+    % dG = sequence_duplexes_thermo_generator_structure.States_Salt_Corrected_DNA_RNA{n_mod,3}(seq1_w,seq2_w,1,Temperature,sequence_duplexes_thermo_generator_structure.Salt_NN_ModelReference_Molarity(n_mod),SaltConcentration)
+    %     % top 5' to 3' bottom reveres match
+    dHeq(N_models) = dH(2);
+    dSeq(N_models) = dS(2);
+    dGeq(N_models) = dG(2);
+end
 if (strcmp(seq1,seq2))%for when they are the same
     seq1 = strip(seq1,'N');%remove insertions
     seq2 = strip(seq2,'N');%remove insertions
@@ -68,27 +106,38 @@ seq2Matched = seq2c(MatchedLoc);
 %delta Sd wrong?  correct sometimes also incorrect double
 %wrong for more gcs?
 
+%Model 1:Bres86,   P-BS86, 1000mM  (only historical
+%Model 2:SantaLucia96 1000mM
+% Model 3: SantaLucia98, 1000 mM
+% Model 4:Sugimoto96, 
+% Model 5:SantaLucia04,  1000
+% Model 6: Allawi97,     
+% Model 7: Rejali21, 
+% Model 8: Martins24.  69 mM
+	
 
 if (~isempty(MatchedLoc))
     seq1_Data = F_NearestNeighborWrapper_V2(RV(seq1Matched),SaltConcentration,Temperature,PrimerConc);
     seq2_Data = F_NearestNeighborWrapper_V2(RV(seq2Matched),SaltConcentration,Temperature,PrimerConc);
     dHseq1 = seq1_Data.Thermo(:,1);
     dHseq2 = seq2_Data.Thermo(:,1);
-    dSseq1 = seq1_Data.Thermo(:,2)./1000;
-    dSseq2 = seq2_Data.Thermo(:,2)./1000;
-    dGseq1 = seq1_Data.Thermo(:,3);
-    dGseq2 = seq2_Data.Thermo(:,3);
+    dSseq1 = (seq1_Data.Thermo(:,2)+0.368*length(MatchedLoc)*log(SaltConcentration))./1000;
+    dSseq2 = (seq2_Data.Thermo(:,2)+0.368*length(MatchedLoc)*log(SaltConcentration))./1000;
+    dGseq1 = (seq1_Data.Thermo(:,3)-0.114*length(MatchedLoc)*log(SaltConcentration));
+    dGseq2 = (seq2_Data.Thermo(:,3)-0.114*length(MatchedLoc)*log(SaltConcentration));
     seq1_TData = F_NearestNeighborTransitionWrapper_V2(RV(seq1Matched),SaltConcentration,Temperature,PrimerConc);
     seq2_TData = F_NearestNeighborTransitionWrapper_V2(RV(seq2Matched),SaltConcentration,Temperature,PrimerConc); 
     dHseq1_T = seq1_TData.Thermo(:,1);
     dHseq2_T = seq2_TData.Thermo(:,1);
-    dSseq1_T = seq1_TData.Thermo(:,2)./1000;
-    dSseq2_T = seq2_TData.Thermo(:,2)./1000;
-    dGseq1_T = seq1_TData.Thermo(:,3);
-    dGseq2_T = seq2_TData.Thermo(:,3);
+    dSseq1_T = (seq1_TData.Thermo(:,2)+0.368*length(MatchedLoc)*log(SaltConcentration))./1000;
+    dSseq2_T = (seq2_TData.Thermo(:,2)+0.368*length(MatchedLoc)*log(SaltConcentration))./1000;
+    dGseq1_T = (seq1_TData.Thermo(:,3)-0.114*length(MatchedLoc)*log(SaltConcentration));
+    dGseq2_T = (seq2_TData.Thermo(:,3)-0.114*length(MatchedLoc)*log(SaltConcentration));
     dHeq(1:N_models-1) = 0.5*(dHseq1 + dHseq2);   
-    dSeq(1:N_models-1) = 0.5*(dSseq1 + dSseq2);   
-    dGeq(1:N_models-1) = 0.5*(dGseq1 + dGseq2);   
+    dSeq(1:N_models-1) = 0.5*(dSseq1 + dSseq2);  %+ salt adjustment  0.31538*length(MatchedLoc)*log(SaltTarget_Concentration/Salt_NN_ModelReference);  if seq has U
+    dGeq(1:N_models-1) = 0.5*(dGseq1 + dGseq2);  %+ salt adjustment -0.1016*length(MatchedLoc)*log(SaltTarget_Concentration/Salt_NN_ModelReference
+    dSeq(1:N_models-1) = 0.5*(dSseq1 + dSseq2);  %+ salt adjustment  0.368*length(MatchedLoc)*log(SaltTarget_Concentration/Salt_NN_ModelReference);
+    dGeq(1:N_models-1) = 0.5*(dGseq1 + dGseq2);  %+ salt adjustment -0.114*length(MatchedLoc)*log(SaltTarget_Concentration/Salt_NN_ModelReference
     dHt = 0.5*(dHseq1_T + dHseq2_T);   
     dSt = 0.5*(dSseq1_T + dSseq2_T);   
     dGt = 0.5*(dGseq1_T + dGseq2_T);   

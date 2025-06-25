@@ -102,6 +102,7 @@ function oligo = F_NearestNeighborWrapper_V2(sequence,SaltConcentration,Temperat
 %SantaLucia04
 %Allawi97
 %Rejali21
+warning('off','bioinfo:oligoprop:SeqLengthTooShort');
 oligo = oligoprop(sequence,'Salt',SaltConcentration,'Temp',Temperature,'PrimerConc',PrimerConc);
 TmBlock = oligo.Tm;
 TmDeltaBlock = oligo.Tmdelta;
@@ -145,8 +146,8 @@ oligo.Tmdelta = TmDelta;
 oligo.Thermo = Thermo;
 oligo.Thermodelta = ThermoDelta;
 oligo = rmfield(oligo,{'Hairpins','Dimers'});
-%NN(:,2) = NN(:,2) + 0.368*(length(seq)-1)*log(salt);
-%NN(:,3) = NN(:,3) - 0.114*(length(seq)-1)*log(salt);
+%NN(:,2) = NN(:,2) + 0.368*(length(seq))*log(salt);
+%NN(:,3) = NN(:,3) - 0.114*(length(seq))*log(salt);
 %dG =dH - T*dS
 %  dS(1M) + 0.368*N/2*log(Na+)
 %length(seq)

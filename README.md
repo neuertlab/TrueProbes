@@ -64,37 +64,31 @@ Main Arguement:
 	design_file: An excel spreadsheet file with the input files and parameter settings for the probe design
 		Inputs1 Table: inputs1 is the table with the list of targets probes will be designed for. The table row has nine column entries. 
 		Input table columns:
-			1. Included target accession IDs. Designs probes shared across all accession numbers 
-			2. Text Sequence Files to Include (files). Default empty
-			3. Text Sequence Files to Exclude (files). Default Empty
-			4. Organism to design probes for.
-			5. Gene Name 1.
-			6. Gene Name 2. Second potential gene name to use instead of the first.
-			7. Chromosome. The chromosome number.
-			8. Excluded target accession IDs. Removes probes in exclusion accession numbers.
-			9. Strand. Which strand to design probes against for RNA default is ‘plus’.
+			1. Organism to design probes for.
+			2. Included target accession IDs. Designs probes shared across all accession numbers 
+			3. Excluded target accession IDs. Removes probes in exclusion accession numbers.			
+			4. Text Sequence Files to Include (files). Default empty
+			5. Text Sequence Files to Exclude (files). Default Empty
+
 	
-	Example: {{NM_000805.5'},{},{}, 'Human','(GAST)','(GAST)','17',{},1  ;}...    
+	Example: {'Human',{NM_000805.5'},{},{},{},;}...    
 
 Settings.
 	Below the inputs1 table is a list of primary and secondary settings which can be configured to determine how the probes are designed and evaluated.
 
-Main Input Parameters:
-	Locations
-		SaveRoot: [Location where files are to be saved]
-		customBlastDatabase_DNA:[Location of user-custom DNA blast database if user wants to use their own custom database, default N/A]
-		customBlastDatabase_RNA:[Location of user-custom RNA blast database if user wants to use their own custom database, default N/A]
+Input Parameters:
 
 Main Probe Design Parameters:
-	max_probes:	[Max number of probes to design, default 96]
-	minProbeSize: [min nt length of potential probes, default 20]
+	minProbeSize:[min nt length of potential probes, default 20]
 	maxProbeSize: [max nt length of potential probes, default 20]
-	MininumProbeSpacing: [min spacing between probes, default 3]
-	BLASTrna: [Will BLAST include reference transcriptomic sequences, default 1]
-	BLASTdna: [Will BLAST include reference genomic sequences, default 0]
-	HybridizationTemperature: [Hybridization temperature used in probe evaluation default 37C]
-	ExpressionReferenceForDesigningProbes: [Which expression from expression data is used for designing probes, default 0] no expression (0).
-	
+	MinProbeSpacing [min spacing between probes, default 3]
+	MaxNumberOfProbes: [Max number of probes to design, default 96]
+	targetStrand: [which strand to of target to design probes against, default 1 for ‘plus’, with 0 for ‘minus’]
+	MinHomologySearchTargetSize:[Minimum homology length for BLAST alignments to be recorded and used in probe design and evaluation, default 15]
+	BLASTrna:[decide to blast RNA sequences, default 1]
+	BLASTdna:[decide to blast DNA sequences, default 0]
+	ExpressionReferenceForProbeDesign:[which row across all expression reference files to use in probe design, with 0 meaning to not use expression data to design probes, default 0]
+
 Secondary Parameters:
 	Nmodel:	[Which thermodynamic model to use for probe design and evaluation, default 4]
 	SaltConcentration: [Salt Concentration mM, default 0.05]
@@ -105,6 +99,19 @@ Secondary Parameters:
 	UseSelfProb: [When designing probes consider probe self-hybridization when ranking probes based on binding affinity, default 1]
 	RemoveMisMatches: [When desinging probes remove mismatches from nearest neighbor quantification of probe binding, default 1]
 	RunOffline: [When getting probe sequences use reference genome in database data instead of going online to access genbank record, default 1]
+
+Thermodynamic Settings:
+	Gibbs_model:[Which thermodynamic model to use for probe design and evaluation, default 4](Model 1:Bres86,Model 2:SantaLucia96, Model 3: SantaLucia98, Model 4:Sugimoto96, Model 5:SantaLucia04, Model 6: Allawi97, Model 7: Rejali21, Model 8: Martins24)
+	HybridizationTemperature:[Hybridization temperature, default 37C]
+	HeatCapacityReferenceTemperature:[Reference temperature for Cp measurement and Gibbs model, default 37C]
+	SaltConcentration:[Salt Concentration M, default 0.05]
+	PrimerConcentration:[Primer Concentration M, default 50e-6]
+	RemoveMisMatches:[Remove sequence mismatched base pairs before evaluating probe-target binding affinity, default 1,  including adds flanking sequences to alignments and uses Gibbs model 8 with mismatch base pair inclusion]
+
+Design Filtering Settings
+	RemoveProbesBindingOffTargetRibosomalHits:[Filter out probes with off-targets to ribosomal proteins, default 1]
+	packOptimal_ProbesWithNoOffTargets: [When designing probes without off-target use optimal packing to get as many probes with no off-targets as possible as opposed to normal sequential selection, default 1]
+	IncludeSelfHybridizationInProbeSelection:[When designing probes consider probe self-hybridization when ranking probes based on binding affinity, default 1]
 
 Parallelization Parameters: (Usually only changed when using longer genes)
 	Parallization_probeBatchSize: [number of probes to evaluate in a single batch when performing parallelized calculations, default 20]
@@ -117,6 +124,14 @@ Gene Expression Parameters:
 	UseRegularDNAExpression:[(0) use DNA expression from gene expression track in expression data, (1) set expression to 2 for DNA, default 1]
 	nullRNAcopynumber: [number of RNA copy when not using reference expression levels, default 100]
 	nullDNAcopynumber: [number of DNA copy number when not using reference expression levels, default 2]
+	TMM_LogRatioTrim:[when normalizing TPM expression data using TMM set log ratio trim threshold cutoff, default 0.3]
+	TMM_SumTrim:[when normalizing TPM expression data using TMM set sum trim threshold cutoff, default 0.05]
+	TMM_Acutoff:[when normalizing TPM expression data using TMM set A cutoff value, default -1e10]
+	TMM_doWeighting:[when normalizing TPM expression data weight terms using inverse of approximate asymptotic variance of the M-values to account for genes with higher read counts having lower variance on log scale and more reliable mean estimation, default 1]
+	
+Make Blast Database Settings:
+	Parse_seqids: [when making blastdb in software decision to parse sequence ids from fasta files as blastdb ids, useful for blastdbcmd sequence retrieval, default true]
+	Hash_index:[when making blastdb make sequence hash indexes leads to faster exact match retrieval but less accurate range matches, default false]
 
 BLAST Parameters:
 	evalue:[Expectation value cutoff, default 1000]
@@ -127,6 +142,28 @@ BLAST Parameters:
 	Penalty:[penalty for a nucleotide mismatch, default -3]
 	Reward:[reward for a nucleotide match, default 1]
 	Word_size:[word size for wordfinder algorithm, default 7]
+
+Model Simulation Settings
+	removeUndesiredIsoformsFromPrediction: [when evaluating main on/off-target binding should alternate isoforms of desired targets be removed and not included in off-target quantification, default 1] 
+	ProbeConcentration_MicroMolar:[probe concentration in uM, default 5e-6]
+	CellRadius_Micron: [cell radius in microns for converting RNA molecule counts into concentration for solving binding equilibrium, default 10]
+	Dilution_Vector: [vector of probe dilutions to evaluate binding equilibrium and predictions at, default 1,1e-2,1e-4]
+	Gibbs_Model_Vector: [vector of gibbs thermodynamic models to use for evaluating binding equilibrium and predictions at,  default 1,2,3,4] 
+	Temperature_Celsius_Model_Vector: [vector of hybridization temperatures in Celsius to use for evaluating binding equilibrium and predictions at, default 37,42,50,60]
+	InitialFreeSolutionGuessConcentration_MicroMolar:[initial solution guess for steady state free probe concentration in uM, default 1e-10] 
+	SolutionErrorTolerance: [total tolerance level for error in final equilibrium solution, default 1]
+	MaxRecursiveEquilibriiumIterations: [max number of equilibrium equation iterations stopping at final calculated steady state, overrides solution error tolerance]
+	CellDiameter_Pixels: [cell pixel diameter for background predictions, default 50]
+	SpotRadius_Pixels: [ spot pixel radius for predictions, default 5] 
+	NumberOfReferenceZStacks:[ number of z-stacks to spread background across for intensity predictions, default 67]
+	SignalStepSize: [step size for signal intensity bins in signal predictions, default 1e-1] 
+	SignalMaxValue: [max intensity value for ranges in solution, default 3000] 
+	AutoFluoresenceBackground_MEAN:[reference mean autofluorescence, default 278]
+	AutoFluoresenceBackground_STD: [reference autofluorescence standard deviation, default 33]
+	NumberOfProbesInReferenceSpots:[ number of probes in reference spot intensity for calibrating intensity predictions, default 48]
+	ReferenceSpotIntensity_MEAN: [mean reference spot intensity , default 827 ]
+	ReferenceSpotIntensity_STD: [reference spot intensity standard deviation, default 28]
+
 
 TrueProbe Design Software Output Files: 
 	(GeneName)_TranscriptID_probes_TrueProbes.mat: [structure with probe sequences, location on on-target]
