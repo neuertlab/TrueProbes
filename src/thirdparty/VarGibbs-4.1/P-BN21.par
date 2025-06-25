@@ -1,0 +1,43 @@
+banerjee21-table2-corrigendum
+# original table 2 of banerjee20 (doi:10.1093/nar/gkaa572) has errors
+# corrections were published in table 2 (banerjee21 doi:10.1093/nar/gkab780)
+Na+:concentration 100
+dTrA_dTrA:enthalpy -7.8  #rAA/dTT same as P-SG96
+dGrC_dTrA:enthalpy -10.1 #rAC/dGT
+dCrG_dTrA:enthalpy -9.4  #rAG/dCT
+dArU_dTrA:enthalpy -5.8  #rAU/dAT
+dTrA_dGrC:enthalpy -9.8  #rCA/dTG
+dGrC_dGrC:enthalpy -9.5  #rCC/dGG
+dCrG_dGrC:enthalpy -9.0  #rCG/dCG
+dArU_dGrC:enthalpy -6.1  #rCU/dAG
+dTrA_dCrG:enthalpy -8.6  #rGA/dTC
+dGrC_dCrG:enthalpy -10.6 #rGC/dGC
+dCrG_dCrG:enthalpy -13.3 #rGG/dCC
+dArU_dCrG:enthalpy -9.3  #rGU/dAC
+dTrA_dArU:enthalpy -6.6  #rUA/dTA
+dGrC_dArU:enthalpy -6.5  #rUC/dGA
+dCrG_dArU:enthalpy -8.9  #rUG/dCA
+dArU_dArU:enthalpy -7.4  #rUU/dAA
+dTrA_dTrA:entropy -22.9  #rAA/dTT
+dGrC_dTrA:entropy -27.7  #rAC/dGT Corrected
+dCrG_dTrA:entropy -26.1  #rAG/dCT Corrected
+dArU_dTrA:entropy -17.4  #rAU/dAT Corrected
+dTrA_dGrC:entropy -27.7  #rCA/dTG Corrected
+dGrC_dGrC:entropy -25.1  #rCC/dGG Corrected
+dCrG_dGrC:entropy -24.5  #rCG/dCG Corrected
+dArU_dGrC:entropy -18.4  #rCU/dAG Corrected
+dTrA_dCrG:entropy -22.9  #rGA/dTC Corrected
+dGrC_dCrG:entropy -27.7  #rGC/dGC
+dCrG_dCrG:entropy -35.5  #rGG/dCC Corrected
+dArU_dCrG:entropy -25.5  #rGU/dAC
+dTrA_dArU:entropy -19.7  #rUA/dTA 
+dGrC_dArU:entropy -16.4  #rUC/dGA Corrected
+dCrG_dArU:entropy -23.5  #rUG/dCA Corrected
+dArU_dArU:entropy -24.5  #rUU/dAA Corrected
+#banerjee20-table2: "Initiation parameters for the duplexes that contains at least one rG−dC or rC−dG base pair in any terminal."
+Terminal_dCrG_dGrC_enthalpy 0
+Terminal_dCrG_dGrC_entropy  -6.4 #Corrected
+#banerjee20-table2: "Initiation parameters for the duplexes that contains only rA−dT or rU−dA base pairs in both terminal"
+Terminal_dArU_dTrA_only_enthalpy 0
+Terminal_dArU_dTrA_only_entropy  -8.4 #Corrected
+

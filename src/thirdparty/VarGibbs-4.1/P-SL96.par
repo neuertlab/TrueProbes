@@ -1,0 +1,26 @@
+santalucia96
+Na+:concentration 1000
+AT_AT:entropy     -23.6
+AT_AT:enthalpy    -8.4
+AT_TA:entropy     -18.8
+AT_TA:enthalpy    -6.5
+TA_AT:entropy     -18.5
+TA_AT:enthalpy    -6.3
+CG_AT:entropy     -19.3
+CG_AT:enthalpy    -7.4
+AT_CG:GC_TA:entropy     -23.0
+AT_CG:GC_TA:enthalpy    -8.6
+AT_GC:CG_TA:entropy     -16.1
+AT_GC:CG_TA:enthalpy    -6.1
+GC_AT:entropy     -20.3
+GC_AT:enthalpy    -7.7
+CG_GC:entropy     -25.5
+CG_GC:enthalpy    -10.1
+GC_CG:entropy     -28.4
+GC_CG:enthalpy    -11.1
+CG_CG:GC_GC:entropy     -15.6
+CG_CG:GC_GC:enthalpy    -6.7
+initiation_CG_entropy   -5.9
+initiation_AT_entropy   -9.0
+terminal_5TA3_enthalpy   0.4
+symmetry_correction_entropy     -1.4

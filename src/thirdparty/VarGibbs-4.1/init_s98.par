@@ -1,0 +1,8 @@
+init-s98
+*:entropy     -23
+*:enthalpy    -8
+terminal_CG_enthalpy 2.0
+terminal_CG_entropy -5.0
+terminal_AT_enthalpy 5.0
+terminal_AT_entropy 10.0
+symmetry_correction_entropy -1.0

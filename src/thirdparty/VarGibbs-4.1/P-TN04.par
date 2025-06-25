@@ -1,0 +1,31 @@
+P-TN04
+#table 3 of tanaka04 doi:10.1021/bi036188r
+Na+:concentration 1000
+#column Delta H (kcal/mol)
+AT_AT:enthalpy    -8.3  #AA/TT
+AT_TA:enthalpy    -8.5  #AT/TA
+AT_CG:enthalpy    -9.5  #AC/TG
+AT_GC:enthalpy    -8.2  #AG/TC
+TA_AT:enthalpy    -6.5  #TA/AT
+GC_AT:enthalpy    -8.7  #GA/CT=TC/AG
+CG_AT:enthalpy    -8.9  #CA/GT=TG/AC
+CG_CG:enthalpy    -8.8  #CC/GG
+CG_GC:enthalpy    -11.4 #CG/GC
+GC_CG:enthalpy    -10.1 #GC/CG
+initiation_AT_enthalpy   4.4
+initiation_CG_enthalpy   1.7
+symmetry_correction_enthalpy     0
+#column Delta S (eu)
+AT_AT:entropy     -23.3 #AA/TT
+AT_TA:entropy     -24.6 #AT/TA
+AT_CG:entropy     -26.0 #AC/TG
+AT_GC:entropy     -22.3 #AG/TC
+TA_AT:entropy     -19.0 #TA/AT
+GC_AT:entropy     -23.6 #GA/CT=TC/AG
+CG_AT:entropy     -24.3 #CA/GT=TG/AC
+CG_CG:entropy     -21.7 #CC/GG
+CG_GC:entropy     -29.7 #CG/GC
+GC_CG:entropy     -25.4 #GC/CG
+initiation_AT_entropy    10.7
+initiation_CG_entropy    2.4
+symmetry_correction_entropy     -1.4

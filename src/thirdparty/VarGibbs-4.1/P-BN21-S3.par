@@ -1,0 +1,39 @@
+banerjee21-s3-corrigendum
+# original table s3 of banerjee20 (doi:10.1093/nar/gkaa572) has errors
+# corrections were published in table s3 (banerjee21 doi:10.1093/nar/gkab780)
+Na+:concentration 1000
+dTrA_dTrA:enthalpy -7.5  #rAA/dTT
+dGrC_dTrA:enthalpy -8.5  #rAC/dGT
+dCrG_dTrA:enthalpy -8.6  #rAG/dCT
+dArU_dTrA:enthalpy -7.5  #rAU/dAT
+dTrA_dGrC:enthalpy -8.4  #rCA/dTG
+dGrC_dGrC:enthalpy -7.9  #rCC/dGG
+dCrG_dGrC:enthalpy -14.8 #rCG/dCG
+dArU_dGrC:enthalpy -4.4  #rCU/dAG
+dTrA_dCrG:enthalpy -9.4  #rGA/dTC
+dGrC_dCrG:enthalpy -10.5 #rGC/dGC
+dCrG_dCrG:enthalpy -12.5 #rGG/dCC
+dArU_dCrG:enthalpy -9.5  #rGU/dAC
+dTrA_dArU:enthalpy -9.5  #rUA/dTA
+dGrC_dArU:enthalpy -8.1  #rUC/dGA
+dCrG_dArU:enthalpy -8.6  #rUG/dCA
+dArU_dArU:enthalpy -5.6  #rUU/dAA
+dTrA_dTrA:entropy -21.0  #rAA/dTT ERR
+dGrC_dTrA:entropy -21.6  #rAC/dGT
+dCrG_dTrA:entropy -22.6  #rAG/dCT
+dArU_dTrA:entropy -21.9  #rAU/dAT ERR
+dTrA_dGrC:entropy -22.9  #rCA/dTG ERR
+dGrC_dGrC:entropy -19.0  #rCC/dGG
+dCrG_dGrC:entropy -41.6  #rCG/dCG ERR
+dArU_dGrC:entropy -10.6  #rCU/dAG ERR
+dTrA_dCrG:entropy -24.5  #rGA/dTC ERR
+dGrC_dCrG:entropy -25.5  #rGC/dGC ERR
+dCrG_dCrG:entropy -31.6  #rGG/dCC
+dArU_dCrG:entropy -25.8  #rGU/dAC ERR
+dTrA_dArU:entropy -28.4  #rUA/dTA ERR
+dGrC_dArU:entropy -22.2  #rUC/dGA ERR
+dCrG_dArU:entropy -23.2  #rUG/dCA
+dArU_dArU:entropy -16.8  #rUU/dAA ERR
+initiation_enthalpy 1.9  #same as P-SG95
+initiation_entropy -3.9  #same as P-SG95
+

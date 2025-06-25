@@ -1,0 +1,101 @@
+P-OW11-T2
+#owczarzy11 table 2 doi:10.1021/bi200904e
+#Double LNA
+Na+:concentration 1000
+WT_WT:enthalpy -9.991 #+A+A/TT
+WT_WT:entropy -27.175
+WT_ZG:enthalpy -11.389 #+A+C/TG
+WT_ZG:entropy -28.963
+WT_NC:enthalpy -12.793 #+A+G/TC
+WT_NC:entropy -31.607
+WT_RA:enthalpy -14.703 #+A+T/TA
+WT_RA:entropy -40.750
+ZG_WT:enthalpy -14.177 #+C+A/GT
+ZG_WT:entropy -35.498
+ZG_ZG:enthalpy -15.399 #+C+C/GG
+ZG_ZG:entropy -36.375
+ZG_NC:enthalpy -14.558 #+C+G/GC
+ZG_NC:entropy -35.239
+ZG_RA:enthalpy -15.737 #+C+T/GA
+ZG_RA:entropy -41.218
+NC_WT:enthalpy -13.959 #+G+A/CT
+NC_WT:entropy -35.097
+NC_ZG:enthalpy -16.109 #+G+C/CG
+NC_ZG:entropy -40.738
+NC_NC:enthalpy -13.022 #+G+G/CC
+NC_NC:entropy -29.673
+NC_RA:enthalpy -17.361 #+G+T/CA
+NC_RA:entropy -45.858
+RA_WT:enthalpy 10.318 #+T+A/AT
+RA_WT:entropy -26.108
+RA_ZG:enthalpy -9.166 #+T+C/AG
+RA_ZG:entropy -21.535
+RA_NC:enthalpy -10.046 #+T+G/AC
+RA_NC:entropy -22.591
+RA_RA:enthalpy -10.419 #+T+T/AA
+RA_RA:entropy -27.683
+#Single LNA
+WT_AT:TA_TW:enthalpy -7.193 #+AA/TT
+WT_AT:TA_TW:entropy -19.723 
+WT_CG:GC_TW:enthalpy -7.269 #+AC/TG
+WT_CG:GC_TW:entropy -18.336
+WT_GC:CG_TW:enthalpy -7.536 #+AG/TC
+WT_GC:CG_TW:entropy -18.387
+WT_TA:AT_TW:enthalpy -4.918 #+AT/TA
+WT_TA:AT_TW:entropy -12.943
+ZG_AT:TA_GZ:enthalpy -7.451 #+CA/AT
+ZG_AT:TA_GZ:entropy -18.380
+ZG_CG:GC_GZ:enthalpy -5.904 #+CC/GG
+ZG_CG:GC_GZ:entropy -11.904
+ZG_GC:CG_GZ:enthalpy -9.815 #+CG/GC
+ZG_GC:CG_GZ:entropy -23.491
+ZG_TA:AT_GZ:enthalpy -7.092 #+CT/GA
+ZG_TA:AT_GZ:entropy -16.825
+NC_AT:TA_CN:enthalpy -5.038 #+GA/CT
+NC_AT:TA_CN:entropy -11.656
+NC_CG:GC_CN:enthalpy -10.160 #+GC/CG
+NC_CG:GC_CN:entropy -24.651
+NC_GC:CG_CN:enthalpy -10.844 #+GG/CC
+NC_GC:CG_CN:entropy -26.580
+NC_TA:AT_CN:enthalpy -8.612 #+GT/CA
+NC_TA:AT_CN:entropy -22.327
+RA_AT:TA_AR:enthalpy -7.246 #+TA/AT
+RA_AT:TA_AR:entropy -19.738
+RA_CG:GC_AR:enthalpy -6.307 #+TC/AG
+RA_CG:GC_AR:entropy -15.515
+RA_GC:CG_AR:enthalpy -10.040 #+TG/AC
+RA_GC:CG_AR:entropy -25.744
+RA_TA:AT_AR:enthalpy -6.372 #+TT/AA
+RA_TA:AT_AR:entropy -16.902
+AT_WT:TW_TA:enthalpy -6.908 #A+A/TT
+AT_WT:TW_TA:entropy -18.135
+AT_ZG:GZ_TA:enthalpy -5.510 #A+C/TG
+AT_ZG:GZ_TA:entropy -11.824
+AT_NC:CN_TA:enthalpy -9.000 #A+G/TC
+AT_NC:CN_TA:entropy -22.826
+AT_RA:AR_TA:enthalpy -5.384 #A+T/TA
+AT_RA:AR_TA:entropy -13.537
+CG_WT:TW_GC:enthalpy -7.142 #C+A/GT
+CG_WT:TW_GC:entropy -18.333
+CG_ZG:GZ_GC:enthalpy -5.937 #C+C/GG
+CG_ZG:GZ_GC:entropy -12.335
+CG_NC:CN_GC:enthalpy -10.876 #C+G/GC
+CG_NC:CN_GC:entropy -27.918
+CG_RA:AR_GC:enthalpy -9.471 #C+T/GA
+CG_RA:AR_GC:entropy -25.070
+GC_WT:TW_CG:enthalpy -7.756 #G+A/CT
+GC_WT:TW_CG:entropy -19.302
+GC_ZG:GZ_CG:enthalpy -10.725 #G+C/CG
+GC_ZG:GZ_CG:entropy -25.511
+GC_NC:CN_CG:enthalpy -8.943 #G+G/CC
+GC_NC:CN_CG:entropy -20.833
+GC_RA:AR_CG:enthalpy -9.035 #G+T/CA
+GC_RA:AR_CG:entropy -22.742
+TA_WT:TW_AT:enthalpy -5.609 #T+A/AT
+TA_WT:TW_AT:entropy -16.019
+TA_ZG:GZ_AT:enthalpy -7.591 #T+C/AG
+TA_ZG:GZ_AT:entropy -19.031
+TA_NC:CN_AT:enthalpy -6.335 #T+G/AC
+TA_NC:CN_AT:entropy -15.537
+TA_RA:AR_AT:enthalpy -5.574 #T+T/AA
+TA_RA:AR_AT:entropy -14.149

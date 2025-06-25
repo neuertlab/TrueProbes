@@ -1,0 +1,25 @@
+allawi97-original-table5
+#G.T mismatches doi: 10.1021/bi962590c
+Na+:concentration 1000
+AT_GT:TG_TA:enthalpy 1.0
+AT_GT:TG_TA:entropy 0.9
+AT_TG:GT_TA:enthalpy -2.5
+AT_TG:GT_TA:entropy -8.3
+CG_GT:TG_GC:enthalpy -4.1
+CG_GT:TG_GC:entropy -11.7
+CG_TG:GT_GC:enthalpy -2.8
+CG_TG:GT_GC:entropy -8.0
+GC_GT:TG_CG:enthalpy 3.3
+GC_GT:TG_CG:entropy 10.4
+GT_GT:TG_TG:enthalpy 5.8
+GT_GT:TG_TG:entropy 16.3
+GC_TG:GT_CG:enthalpy -4.4 
+GC_TG:GT_CG:entropy -12.3
+GT_TG:enthalpy 4.1
+GT_TG:entropy 9.5
+TA_GT:TG_AT:enthalpy -0.1
+TA_GT:TG_AT:entropy -1.7
+TG_GT:enthalpy -1.4
+TG_GT:entropy -6.2
+TA_TG:GT_AT:enthalpy -1.3
+TA_TG:GT_AT:entropy -5.3

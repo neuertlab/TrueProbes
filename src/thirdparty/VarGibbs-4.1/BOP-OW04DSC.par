@@ -1,0 +1,27 @@
+test
+Na+:concentration 1000
+AT_AT:enthalpy -8.42387
+AT_AT:entropy -23.4716
+AT_CG:enthalpy -8.29987
+AT_CG:entropy -22.0632
+AT_GC:enthalpy -6.47899
+AT_GC:entropy -17.0663
+AT_TA:enthalpy -3.75527
+AT_TA:entropy -10.3256
+CG_AT:enthalpy -8.48235
+CG_AT:entropy -22.8137
+CG_CG:enthalpy -7.78288
+CG_CG:entropy -20.1271
+CG_GC:enthalpy -12.1066
+CG_GC:entropy -31.5113
+GC_AT:enthalpy -11.7702
+GC_AT:entropy -32.3388
+GC_CG:enthalpy -12.6585
+GC_CG:entropy -32.7666
+TA_AT:enthalpy -12.9086
+TA_AT:entropy -37.0955
+terminal_AT_enthalpy 12.3747
+terminal_AT_entropy 34.0274
+terminal_CG_enthalpy 10.5385
+terminal_CG_entropy 28.368
+symmetry_correction_entropy -0.587328

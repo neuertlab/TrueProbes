@@ -1,0 +1,24 @@
+freier86-original-table2
+Na+:concentration 1000
+AU_AU:enthalpy    -6.6
+AU_AU:entropy     -18.4
+AU_UA:enthalpy    -5.7
+AU_UA:entropy     -15.5
+UA_AU:enthalpy    -8.1
+UA_AU:entropy     -22.6
+CG_UA:AU_GC:enthalpy    -7.6
+CG_UA:AU_GC:entropy     -19.2
+CG_AU:UA_GC:enthalpy    -10.5
+CG_AU:UA_GC:entropy     -27.8
+GC_UA:AU_CG:enthalpy    -10.2
+GC_UA:AU_CG:entropy     -26.2
+GC_AU:UA_CG:enthalpy    -13.3
+GC_AU:UA_CG:entropy     -35.5
+CG_GC:enthalpy    -8.0
+CG_GC:entropy     -19.4
+GC_GC:CG_CG:enthalpy    -12.2
+GC_GC:CG_CG:entropy     -29.7
+GC_CG:enthalpy    -14.2
+GC_CG:entropy     -34.9
+initiation_entropy   -10.8
+symmetry_correction_entropy -1.4

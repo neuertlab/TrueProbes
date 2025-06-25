@@ -1,0 +1,19 @@
+allawi98b-t4-ph7-original
+#A.C mismatch doi:10.1021/bi9803729
+Na+:concentration 1000
+AT_AC:CA_TA:enthalpy  2.3
+AT_AC:CA_TA:entropy   4.6
+AT_CA:AC_TA:enthalpy  5.3
+AT_CA:AC_TA:entropy   14.6
+CG_AC:CA_GC:enthalpy  1.9
+CG_AC:CA_GC:entropy   3.7
+CG_CA:AC_GC:enthalpy  0.6
+CG_CA:AC_GC:entropy  -0.6
+GC_AC:CA_CG:enthalpy  5.2
+GC_AC:CA_CG:entropy  14.2
+GC_CA:AC_CG:enthalpy -0.7
+GC_CA:AC_CG:entropy  -3.8
+TA_AC:CA_AT:enthalpy  3.4
+TA_AC:CA_AT:entropy   8.0
+TA_CA:AC_AT:enthalpy  7.6
+TA_CA:AC_AT:entropy  20.2

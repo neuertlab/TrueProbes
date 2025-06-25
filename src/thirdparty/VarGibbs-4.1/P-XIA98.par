@@ -1,0 +1,28 @@
+xia98-original-table4
+#xia98 doi:10.1021/bi9809425
+Na+:concentration 1000
+AU_AU:enthalpy    -6.82 #5AA3/3UU5
+AU_AU:entropy     -19.0 #5AA3/3UU5
+AU_UA:enthalpy    -9.38 #5AU3/3UA5
+AU_UA:entropy     -26.7 #5AU3/3UA5
+UA_AU:enthalpy    -7.69 #5UA3/3AU5
+UA_AU:entropy     -20.5 #5UA3/3AU5
+CG_UA:AU_GC:enthalpy    -10.48 #5CU3/3GA5
+CG_UA:AU_GC:entropy     -27.1  #5CU3/3GA5
+CG_AU:UA_GC:enthalpy    -10.44 #5CA3/3GU5
+CG_AU:UA_GC:entropy     -26.9  #5CA3/3GU5
+GC_UA:AU_CG:enthalpy    -11.40 #5GU3/3CA5
+GC_UA:AU_CG:entropy     -29.5  #5GU3/3CA5
+GC_AU:UA_CG:enthalpy    -12.44 #5GA3/3CU5
+GC_AU:UA_CG:entropy     -32.5  #5GA3/3CU5
+CG_GC:enthalpy    -10.64  #5CG3/3GC5
+CG_GC:entropy     -26.7   #5CG3/3GC5
+GC_GC:CG_CG:enthalpy    -13.39  #5GG3/3CC5
+GC_GC:CG_CG:entropy     -32.7   #5GG3/3CC5
+GC_CG:enthalpy    -14.88  #5GC3/3CG5
+GC_CG:entropy     -36.9   #5GC3/3CG5
+initiation_entropy   -1.5
+initiation_enthalpy   3.61
+terminal_AU_enthalpy 3.72  #per terminal AU pair
+terminal_AU_entropy 10.5   #per terminal AU pair
+symmetry_correction_entropy -1.4

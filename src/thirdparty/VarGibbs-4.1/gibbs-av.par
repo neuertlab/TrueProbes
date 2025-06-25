@@ -1,0 +1,7 @@
+gibbs
+*:entropy     -23.6
+*:enthalpy    -8.4
+initiation_CG_entropy   -5.9
+initiation_AT_entropy   -20
+terminal_5TA3_enthalpy   0.4
+symmetry_correction_entropy     -20

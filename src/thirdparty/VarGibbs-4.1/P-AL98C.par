@@ -1,0 +1,19 @@
+allawi98c-t4-original
+#G.A mismatches doi:10.1021/bi9803729
+Na+:concentration 1000
+AT_AG:enthalpy   -0.6
+AT_AG:entropy    -2.3
+AT_GA:AG_TA:enthalpy -0.7
+AT_GA:AG_TA:entropy  -2.3
+CG_AG:enthalpy  -0.7
+CG_AG:entropy   -2.3
+CG_GA:AG_GC:enthalpy -4.0
+CG_GA:AG_GC:entropy  -13.2
+GC_AG:GA_CG:enthalpy -0.6
+GC_AG:GA_CG:entropy  -1.0
+GC_GA:AG_CG:enthalpy 0.5
+GC_GA:AG_CG:entropy  3.2
+TA_AG:GA_AT:enthalpy 0.7
+TA_AG:GA_AT:entropy  0.7
+TA_GA:AG_AT:enthalpy 3.0
+TA_GA:AG_AT:entropy  7.4

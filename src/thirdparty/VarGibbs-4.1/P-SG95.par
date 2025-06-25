@@ -1,0 +1,37 @@
+sugimoto95-table3
+#doi: 10.1021/bi00035a029
+Na+:concentration 1000
+dTrA_dTrA:enthalpy -7.8  #rAA/dTT
+dGrC_dTrA:enthalpy -5.9  #rAc/dTG
+dCrG_dTrA:enthalpy -9.1  #rAG/dTC
+dArU_dTrA:enthalpy -8.3  #rAU/dTA
+dTrA_dGrC:enthalpy -9.0  #rCA/dGT
+dGrC_dGrC:enthalpy -9.3  #rCC/dGG
+dCrG_dGrC:enthalpy -16.3 #rCG/dGC
+dArU_dGrC:enthalpy -7.0  #rCU/dGA
+dTrA_dCrG:enthalpy -5.5  #rGA/dCT
+dGrC_dCrG:enthalpy -8.0  #rGC/dCG
+dCrG_dCrG:enthalpy -12.8 #rGG/dCC
+dArU_dCrG:enthalpy -7.8  #rGU/dCA
+dTrA_dArU:enthalpy -7.8  #rUA/dAT
+dGrC_dArU:enthalpy -8.6  #rUC/dAG
+dCrG_dArU:enthalpy -10.4 #rUG/dAC
+dArU_dArU:enthalpy -11.5 #rUU/dAA
+dTrA_dTrA:entropy -21.9
+dGrC_dTrA:entropy -12.3
+dCrG_dTrA:entropy -23.5
+dArU_dTrA:entropy -23.9
+dTrA_dGrC:entropy -26.1
+dGrC_dGrC:entropy -23.2
+dCrG_dGrC:entropy -47.1
+dArU_dGrC:entropy -19.7
+dTrA_dCrG:entropy -13.5
+dGrC_dCrG:entropy -17.1
+dCrG_dCrG:entropy -31.9
+dArU_dCrG:entropy -21.6
+dTrA_dArU:entropy -23.2
+dGrC_dArU:entropy -22.9
+dCrG_dArU:entropy -28.4
+dArU_dArU:entropy -36.4
+initiation_enthalpy 1.9
+initiation_entropy -3.9

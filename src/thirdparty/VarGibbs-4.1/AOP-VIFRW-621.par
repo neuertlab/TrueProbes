@@ -1,0 +1,27 @@
+average-std
+Na+:concentration 621
+AU_AU:enthalpy -5.067301 0.791723
+AU_AU:entropy -13.795851 2.536966
+AU_CG:enthalpy -13.141762 0.426016
+AU_CG:entropy -34.769902 1.263533
+AU_GC:enthalpy -11.644572 0.360675
+AU_GC:entropy -30.822406 1.085066
+AU_UA:enthalpy -12.008558 0.887586
+AU_UA:entropy -33.598744 3.064211
+CG_AU:enthalpy -12.398820 0.409360
+CG_AU:entropy -36.057672 1.233684
+CG_CG:enthalpy -11.464072 0.333532
+CG_CG:entropy -27.882243 0.885538
+CG_GC:enthalpy -11.799966 0.368039
+CG_GC:entropy -31.539551 1.088705
+GC_AU:enthalpy -11.992959 0.599281
+GC_AU:entropy -33.471312 1.894184
+GC_CG:enthalpy -13.134072 0.328398
+GC_CG:entropy -32.663222 0.936355
+UA_AU:enthalpy -9.433129 0.857589
+UA_AU:entropy -29.126119 2.786073
+initiation_enthalpy 2.038135 0.414282
+initiation_entropy -0.735501 1.446729
+terminal_AU_enthalpy 4.762377 0.439205
+terminal_AU_entropy 12.685984 1.315847
+symmetry_correction_entropy     -1.4

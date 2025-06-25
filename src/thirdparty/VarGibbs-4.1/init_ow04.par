@@ -1,0 +1,7 @@
+gibbs
+*:entropy     -23.6
+*:enthalpy    -8.4
+terminal_CG_enthalpy 0.1
+terminal_CG_entropy -2.8
+terminal_AT_enthalpy 2.3
+terminal_AT_entropy 4.1

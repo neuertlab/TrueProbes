@@ -1,0 +1,20 @@
+allawi98-t4-original
+#C.T mismatches 10.1093/nar/26.11.2694
+Na+:concentration 1000
+AT_CT:TC_TA:enthalpy  0.7
+AT_CT:TC_TA:entropy   0.2
+AT_TC:CT_TA:enthalpy -1.2
+AT_TC:CT_TA:entropy  -6.2
+CG_CT:TC_GC:enthalpy -0.8
+CG_CT:TC_GC:entropy  -4.5
+CG_TC:CT_GC:enthalpy -1.5
+CG_TC:CT_GC:entropy  -6.1
+GC_CT:TC_CG:enthalpy  2.3
+GC_CT:TC_CG:entropy   5.4
+GC_TC:CT_CG:enthalpy 5.2
+GC_TC:CT_CG:entropy 13.5
+TA_CT:TC_AT:enthalpy  1.2
+TA_CT:TC_AT:entropy   0.7
+TA_TC:CT_AT:enthalpy 1.0
+TA_TC:CT_AT:entropy  0.7
+

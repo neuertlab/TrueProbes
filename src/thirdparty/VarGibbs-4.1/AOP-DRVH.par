@@ -1,0 +1,37 @@
+average-std
+#doi: 10.1016/j.bpc.2019.106189
+Na+:concentration 1000
+dArU_dArU:enthalpy -7.720637 0.441373
+dArU_dArU:entropy -23.876743 1.417427
+dArU_dCrG:enthalpy -11.459480 0.227588
+dArU_dCrG:entropy -31.673063 0.720904
+dArU_dGrC:enthalpy -10.570639 0.212695
+dArU_dGrC:entropy -30.022535 0.677362
+dArU_dTrA:enthalpy -9.859069 0.268380
+dArU_dTrA:entropy -28.510069 0.845548
+dCrG_dArU:enthalpy -10.694222 0.201190
+dCrG_dArU:entropy -29.023287 0.641610
+dCrG_dCrG:enthalpy -11.372838 0.215584
+dCrG_dCrG:entropy -26.542190 0.674542
+dCrG_dGrC:enthalpy -13.010792 0.291908
+dCrG_dGrC:entropy -35.169547 0.907559
+dCrG_dTrA:enthalpy -12.175100 0.232163
+dCrG_dTrA:entropy -32.961179 0.732847
+dGrC_dArU:enthalpy -11.652191 0.264349
+dGrC_dArU:entropy -32.957190 0.842990
+dGrC_dCrG:enthalpy -14.058336 0.316607
+dGrC_dCrG:entropy -35.711209 0.982719
+dGrC_dGrC:enthalpy -12.438300 0.258563
+dGrC_dGrC:entropy -32.949724 0.806325
+dGrC_dTrA:enthalpy -10.593549 0.252365
+dGrC_dTrA:entropy -27.348377 0.800143
+dTrA_dArU:enthalpy -10.242789 0.263960
+dTrA_dArU:entropy -30.861393 0.826532
+dTrA_dCrG:enthalpy -9.599264 0.364799
+dTrA_dCrG:entropy -24.424472 1.144654
+dTrA_dGrC:enthalpy -10.735814 0.186654
+dTrA_dGrC:entropy -29.865437 0.594229
+dTrA_dTrA:enthalpy -9.926840 0.146326
+dTrA_dTrA:entropy -28.605809 0.475837
+initiation_enthalpy 1.594662 0.207120
+initiation_entropy -8.645461 0.632052

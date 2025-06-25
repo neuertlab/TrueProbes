@@ -1,0 +1,25 @@
+chen12-t3-original
+#chen12 doi:10.1021/bi3002709 Table 3
+Na+:concentration 1000
+GU_UG:enthalpy -13.83
+GU_UG:entropy  -46.9
+GU_GU:enthalpy -17.82
+GU_GU:entropy  -56.7
+AU_GU:enthalpy -3.96
+AU_GU:entropy  -11.6
+UA_GU:enthalpy -0.96
+UA_GU:entropy  -1.8
+UA_UG:GU_AU:enthalpy -10.38
+UA_UG:GU_AU:entropy  -31.8
+UG_GU:enthalpy -12.64
+UG_GU:entropy  -38.9
+AU_UG:enthalpy -7.39
+AU_UG:entropy  -21.0
+CG_GU:enthalpy -5.56
+CG_GU:entropy  -13.9
+CG_UG:enthalpy -9.44
+CG_UG:entropy  -24.7
+GC_GU:enthalpy -7.03
+GC_GU:entropy  -16.8
+GC_UG:enthalpy -11.09
+GC_UG:entropy  -28.8

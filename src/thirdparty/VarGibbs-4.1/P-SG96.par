@@ -1,0 +1,25 @@
+sugimoto96-table1
+Na+:concentration 1000
+AT_AT:enthalpy -8.0
+AT_AT:entropy -21.9
+AT_TA:enthalpy -5.6
+AT_TA:entropy -15.2
+TA_AT:enthalpy -6.6
+TA_AT:entropy -18.4
+CG_AT:enthalpy -8.2
+CG_AT:entropy -21.0
+AT_GC:enthalpy -6.6
+AT_GC:entropy -16.4
+GC_AT:enthalpy -8.8
+GC_AT:entropy -23.5
+AT_CG:enthalpy -9.4
+AT_CG:entropy -25.5
+CG_GC:enthalpy -11.8
+CG_GC:entropy -29.0
+GC_CG:enthalpy -10.5
+GC_CG:entropy -26.4
+CG_CG:enthalpy -10.9
+CG_CG:entropy -28.4
+initiation_enthalpy 0.6
+initiation_entropy -9.0
+symmetry_correction_entropy -1.4
