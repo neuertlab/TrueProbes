@@ -77,7 +77,7 @@ if (nargin>5)
     % dG = sequence_duplexes_thermo_generator_structure.States_Salt_Corrected_DNA_RNA{n_mod,3}(seq1_w,seq2_w,1,Temperature,sequence_duplexes_thermo_generator_structure.Salt_NN_ModelReference_Molarity(n_mod),SaltConcentration)
     %     % top 5' to 3' bottom reveres match
     dHeq(N_models) = dH(2);
-    dSeq(N_models) = dS(2);
+    dSeq(N_models) = dS(2)./1000;
     dGeq(N_models) = dG(2);
 end
 if (strcmp(seq1,seq2))%for when they are the same
@@ -121,8 +121,8 @@ if (~isempty(MatchedLoc))
     seq2_Data = F_NearestNeighborWrapper_V2(RV(seq2Matched),SaltConcentration,Temperature,PrimerConc);
     dHseq1 = seq1_Data.Thermo(:,1);
     dHseq2 = seq2_Data.Thermo(:,1);
-    dSseq1 = seq1_Data.Thermo(:,2);
-    dSseq2 = seq2_Data.Thermo(:,2);
+    dSseq1 = seq1_Data.Thermo(:,2)./1000;
+    dSseq2 = seq2_Data.Thermo(:,2)./1000;
     dGseq1 = seq1_Data.Thermo(:,3);
     dGseq2 = seq2_Data.Thermo(:,3);
     % dSseq1 = (seq1_Data.Thermo(:,2)+0.368*length(MatchedLoc)*log(SaltConcentration))./1000;
@@ -133,8 +133,8 @@ if (~isempty(MatchedLoc))
     seq2_TData = F_NearestNeighborTransitionWrapper_V2(RV(seq2Matched),SaltConcentration,Temperature,PrimerConc); 
     dHseq1_T = seq1_TData.Thermo(:,1);
     dHseq2_T = seq2_TData.Thermo(:,1);
-    dSseq1_T = seq1_TData.Thermo(:,2);
-    dSseq2_T = seq2_TData.Thermo(:,2);
+    dSseq1_T = seq1_TData.Thermo(:,2)./1000;
+    dSseq2_T = seq2_TData.Thermo(:,2)./1000;
     dGseq1_T = seq1_TData.Thermo(:,3);
     dGseq2_T = seq2_TData.Thermo(:,3);
     % dSseq1_T = (seq1_TData.Thermo(:,2)+0.368*length(MatchedLoc)*log(SaltConcentration))./1000;
