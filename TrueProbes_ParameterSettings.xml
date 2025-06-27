@@ -20,7 +20,7 @@
 		<RemoveMisMatches> 1 </RemoveMisMatches>
 	</Thermodynamic_Settings>
 	<DesignFiltering_Settings>
-		<RemoveProbesBindingRibosomalHits> 1 </RemoveProbesBindingRibosomalHits>
+		<RemoveProbesBindingOffTargetRibosomalHits> 1 </RemoveProbesBindingOffTargetRibosomalHits>
 		<packOptimal_ProbesWithNoOffTargets> 1 </packOptimal_ProbesWithNoOffTargets>
 		<IncludeSelfHybridizationInProbeSelection> 1 </IncludeSelfHybridizationInProbeSelection>
 	</DesignFiltering_Settings>

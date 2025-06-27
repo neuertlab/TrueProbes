@@ -77,7 +77,7 @@ if (nargin>5)
     % dG = sequence_duplexes_thermo_generator_structure.States_Salt_Corrected_DNA_RNA{n_mod,3}(seq1_w,seq2_w,1,Temperature,sequence_duplexes_thermo_generator_structure.Salt_NN_ModelReference_Molarity(n_mod),SaltConcentration)
     %     % top 5' to 3' bottom reveres match
     dHeq(N_models) = dH(2);
-    dSeq(N_models) = dS(2)./1000;
+    dSeq(N_models) = dS(2)/1000;
     dGeq(N_models) = dG(2);
 end
 if (strcmp(seq1,seq2))%for when they are the same

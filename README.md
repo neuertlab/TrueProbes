@@ -4,18 +4,23 @@ Quantitative RNA-FISH Probe Design Software
 
 
 ## Dependencies
-[MATLAB 2023b (or higher)](https://www.mathworks.com/products/get-matlab.html?s_tid=gn_getml)
+[MATLAB 2022b (or higher)](https://www.mathworks.com/products/get-matlab.html?s_tid=gn_getml)
 [MATLAB Parallel Computing Toolbox](https://www.mathworks.com/products/parallel-computing.html)
 [MATLAB Bioinformatics Toolbox](https://www.mathworks.com/products/bioinfo.html)
 [MATLAB Symbolic Math Toolbox](https://www.mathworks.com/products/symbolic.html)
 [MATLAB Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html)
 [MATLAB Signal Processing Toolbox](https://www.mathworks.com/products/signal.html)
 [MATLAB Curve Fitting Toolbox](https://www.mathworks.com/products/curvefitting.html)
-[BLAST+ Support Package for Bioinformatics Toolbox](https://www.mathworks.com/matlabcentral/fileexchange/156414-blast-support-package-for-bioinformatics-toolbox)
+[NCBI-BLAST+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/)
 
 ### Project Directories:
 
-To run the `data` needs to be included in the main TrueProbes folder.
+To run the `data/DatabaseData` needs to be included in the main TrueProbes folder.
+Directory: `DatabaseData` contains the following: 
+1. **Metadata**
+   - Metadata annotation files for each organism
+
+
 Directory: `src` contains the following: 
 1. **Metadata**
    - Metadata annotation files for each organism
@@ -23,22 +28,17 @@ Directory: `src` contains the following:
    - Database annotation files for each organism with Blast Databases, Reference Genome/Transcriptome, and Expression Data
    
 Directory: `src` contains the following: 
-1. **built-in-functions**
-   - built in MATLAB functions used
+1. **blast**
+   - installers for blast+
 2. **core:**
    - MATLAB codes for generating each step of the TrueProbes pipeline
    - steps: (Probe Generation, Probe Blasting, Gene Expression, Thermodynamic Information,
-     Binding Site Mapping, ProbeDesignerStats, Probe Selection, Probe Metrics)
-3. **modified-matlab-functions:**
-   - Modified MATLAB functions to add additional outputs 
-
-4. **third-party:**
-   - NCBI Blast scripts, and other MATLAB software scripts and packages  
-
-5. **util:**
+     Binding Site Mapping, ProbeDesignerStats, Probe Selection, Probe Metrics) 
+3. **third-party:**
+   - Other MATLAB and linux software scripts and packages  
+4. **util:**
    - general MATLAB functions utilized throughout software
-   
-6. **wrappers:**
+5. **wrappers:**
    - general MATLAB wrapper functions
 
 The TrueProbes software runs by performing eight steps sequentially.
@@ -88,20 +88,17 @@ Main Probe Design Parameters:
 	BLASTrna:[decide to blast RNA sequences, default 1]
 	BLASTdna:[decide to blast DNA sequences, default 0]
 	ExpressionReferenceForProbeDesign:[which row across all expression reference files to use in probe design, with 0 meaning to not use expression data to design probes, default 0]
-
-Secondary Parameters:
-	Nmodel:	[Which thermodynamic model to use for probe design and evaluation, default 4]
-	SaltConcentration: [Salt Concentration mM, default 0.05]
-	RemoveRibosomalHits: [Filter out probes with targets to ribosomal proteins, default 1]
-	MinHomologySearchTargetSize: [Minimum homology length for BLAST alignments to be recorded and used in probe design and evaluation, default 15]
-	removeUndesiredIsos: [When getting probe target statistics used in designing probes omit from computation other isoforms of target transcript, default 1]
-	packOptimal: [When designing probes without off-target use optimal packing to get as many probes with no off-targets as possible as opposed to normal sequential selection, default 1]
-	UseSelfProb: [When designing probes consider probe self-hybridization when ranking probes based on binding affinity, default 1]
-	RemoveMisMatches: [When desinging probes remove mismatches from nearest neighbor quantification of probe binding, default 1]
-	RunOffline: [When getting probe sequences use reference genome in database data instead of going online to access genbank record, default 1]
-
+	
 Thermodynamic Settings:
-	Gibbs_model:[Which thermodynamic model to use for probe design and evaluation, default 4](Model 1:Bres86,Model 2:SantaLucia96, Model 3: SantaLucia98, Model 4:Sugimoto96, Model 5:SantaLucia04, Model 6: Allawi97, Model 7: Rejali21, Model 8: Martins24)
+	Gibbs_model:[Which thermodynamic model to use for probe design and evaluation, default 4]
+		Model 1:Breslauer86. Breslauer K.J., Frank R., Blocker H., Marky L.A., (1986) Predicting DNA duplex stability from the base sequence Proc Natl Acad Sci U S A 83, 3746-3750 
+		Model 2:SantaLucia96. SantaLucia, J., Allawi, H. T., and Seneviratne, P. A. (1996) Improved nearest-neighbor parameters for predicting DNA duplex stability Biochemistry 35, 3555-3562
+		Model 3: SantaLucia98. SantaLucia, J. (1998) A unified view of polymer, dumbbell, and oligonucleotide DNA nearest-neighbor thermodynamics Proc Natl Acad Sci U S A 95, 1460-1465
+		Model 4:Sugimoto96. Sugimoto, N., Nakano, S., Yoneyama, M., and Honda, K. (1996) Improved thermodynamic parameters and helix initiation factor to predict stability of DNA duplexes Nucleic Acids Res 24, 4501-4505
+		Model 5:SantaLucia04. SantaLucia Jr, J., and Hicks, D. (2004) The thermodynamics of DNA structural motifs Annu Rev Biophys Biomol Struct 33, 415-440
+		Model 6: Allawi97. Allawi, H. T., and SantaLucia, J. (1997) Thermodynamics and NMR of internal G.T mismatches in DNA Biochemistry 36, 10581-10594
+		Model 7: Rejali21. Rejali, N. A., Ye, F. D., Zuiter, A. M., Keller, C. C., and Wittwer, C. T. (2021) Nearest-neighbour transition-state analysis for nucleic acid kinetics Nucleic Acids Res 49, 4574-4585
+		Model 8: Martins24. de Oliveira Martins, E., and Weber, G. (2024) Nearest-neighbour parametrization of DNA single, double and triple mismatches at low sodium concentration Biophys Chem 306, 107156
 	HybridizationTemperature:[Hybridization temperature, default 37C]
 	HeatCapacityReferenceTemperature:[Reference temperature for Cp measurement and Gibbs model, default 37C]
 	SaltConcentration:[Salt Concentration M, default 0.05]
@@ -164,20 +161,22 @@ Model Simulation Settings
 	ReferenceSpotIntensity_MEAN: [mean reference spot intensity , default 827 ]
 	ReferenceSpotIntensity_STD: [reference spot intensity standard deviation, default 28]
 
-
 TrueProbe Design Software Output Files: 
-	(GeneName)_TranscriptID_probes_TrueProbes.mat: [structure with probe sequences, location on on-target]
-	(GeneName)_TranscriptID_hits_table_TrueProbes.mat:[structure with information on BLAST hits]
-	(GeneName)_TranscriptID_ExpressionInfo_TrueProbes.mat:[Structure with expression in TCGA and GTEX]
-	(GeneName)_TranscriptID_Tm37_OnOffThermoInfo_TrueProbes.mat:[Structure with binding energy of all hits]
-	(GeneName) _TranscriptID _dCpInfo_TrueProbes.mat:[Structure with heat capacity for all target binding reactions]
-	(GeneName)_TranscriptID_dHInfo_TrueProbes.mat:[Structure with enthalpy for all target bindings reactions]
-	(GeneName)_TranscriptID_dSInfo_TrueProbes.mat:[Structure with entropy for all target binding reactions]	
-	(GeneName)_binding_hits_map_TrueProbes	[binding site map]
-	(GeneName)_TranscriptID_Tm37_BindingEnergyMatrix_TrueProbes.mat: [Equilibrium Binding Energy in binding site map format]
-	(GeneName)_RefSeqID_BindingMatricies_TrueProbes.mat: [Entropy, Enthalphy, and heat capacity in binding site map format for RNA]
-	(GeneName)_RefSeqID_BindingMatricies_TrueProbes.mat: [Entropy, Enthalphy, and heat capacity in binding site map format for complementary strand DNA binding]
-	(GeneName)_RefSeqID_Tm37_BasicDesignerStats_TrueProbes.mat:[Index information on stats used for design probes]
-	(GeneName)_RefSeqID_chosen.mat: [List of chosen probe indexes]
-	(GeneName)_RefSeqID_probes_final_96max.xlsx:[Excel spreadsheet with final probes, and some stats]
-	(GeneName)_RefSeqID_Tm37_ModelMetrics_TrueProbes.mat:[Structure with binding affinity calculations and probe design metrics]
+	(GeneName)_AccessionID_probes_TrueProbes.mat [structure with probe sequences, location on on-target]
+	(GeneName)_AccessionID_hits_table_TrueProbes.mat [structure with information on BLAST hits]
+	(GeneName)_AccessionID_ExpressionInfo_TrueProbes.mat [Structure with expression data]
+	(GeneName)_AccessionID_dKbInfo_TrueProbes.mat [Structure with heat capacity for all target binding reactions]
+	(GeneName)_AccessionID_dCpInfo_TrueProbes.mat [Structure with heat capacity for all target binding reactions]
+	(GeneName)_AccessionID_dHInfo_TrueProbes.mat [Structure with enthalpy for all target bindings reactions]
+	(GeneName)_AccessionID_dSInfo_TrueProbes.mat [Structure with entropy for all target binding reactions]
+	(GeneName)_AccessionID_TmInfo_TrueProbes.mat [Structure with entropy for all target binding reactions]
+	(GeneName)_AccessionID_Tm[HybridizationTemperature]_OnOffThermoInfo_TrueProbes.mat [Structure with binding energy of all hits]
+	(GeneName)_binding_hits_map_TrueProbes [binding site map]
+	(GeneName)_AccessionID_BindingMatricies_TrueProbes.mat [Entropy, Enthalphy, and heat capacity in binding site map format for RNA]
+	(GeneName)_AccessionID_Tm[HybridizationTemperature]__BindingEnergyMatrix_TrueProbes.mat [Equilibrium Binding Energy in binding site map format]
+	(GeneName)_AccessionID_BindingMatricies2_TrueProbes.mat [Entropy, Enthalphy, and heat capacity in binding site map format for complementary DNA strand binding]
+	(GeneName)_AccessionID_Tm[HybridizationTemperature]__BindingEnergyMatrix2_TrueProbes.mat [Complementary DNA strand Equilibrium Binding Energy in binding site map format]
+	(GeneName)_AccessionID_Tm[HybridizationTemperature]_BasicDesignerStats_TrueProbes.mat [Index information on stats used for design probes]
+	(GeneName)_AccessionID_chosen.mat [List of chosen probe indexes]
+	(GeneName)_AccessionID_probes_final_MaxProbeNumber_max.xlsx [Excel spreadsheet with final probes, and some stats]
+	(GeneName)_AccessionID_Tm[HybridizationTemperature]_ModelMetrics_TrueProbes.mat [Structure with binding affinity calculations and probe design metrics]

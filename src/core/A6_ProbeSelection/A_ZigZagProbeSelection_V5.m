@@ -53,7 +53,7 @@ fprintf("Generating matrix of allowed probe combinations given spacing")
 fprintf('\n')
 fprintf('\n')
 % NumRibosomalHits = zeros(1,size(probes,1));
-if (settings.RemoveProbesWithRibosomalHits)
+if (settings.RemoveProbesBindingOffTargetRibosomalHits)
     ribosomal_IDs = setdiff(settings.ribosomal_IDs,settings.transcript_IDs_desired{:});
     if (and(strcmp(settings.referenceType,"ENSEMBL"),max(double(contains(extractBefore(Names,' '),'ENS')))==0))
         Iz = find(ismember(uniNames,ribosomal_IDs));

@@ -91,7 +91,7 @@ ExpressionReferenceForProbeDesign = inputsParameterSettings.MainProbe_Settings.E
 targetStrand = inputsParameterSettings.MainProbe_Settings.targetStrand; %Target strand to design probes against. 1 for RNA
 
 %% Design Filtering Settings (You Usually will not change)
-RemoveProbesBindingRibosomalHits = inputsParameterSettings.DesignFiltering_Settings.RemoveProbesBindingRibosomalHits;% Filter out probes with targets hits to ribosomal proteins
+RemoveProbesBindingOffTargetRibosomalHits = inputsParameterSettings.DesignFiltering_Settings.RemoveProbesBindingOffTargetRibosomalHits;% Filter out probes with targets hits to ribosomal proteins
 packOptimal_ProbesWithNoOffTargets = inputsParameterSettings.DesignFiltering_Settings.packOptimal_ProbesWithNoOffTargets;%when designing probes without off-targets do optimal packing to get the most or normal selection not considering packing efficiency
 IncludeSelfHybridizationInProbeSelection = inputsParameterSettings.DesignFiltering_Settings.IncludeSelfHybridizationInProbeSelection;%when designing probes consider probe self-hybridization when ranking probes on binding affinity
 
@@ -100,7 +100,6 @@ Gibbs_Model = inputsParameterSettings.Thermodynamic_Settings.Gibbs_Model; %Which
 SaltConcentration = inputsParameterSettings.Thermodynamic_Settings.SaltConcentration; %Concentration of Salt in thermodynamic calculations mol/L
 HybridizationTemperatureCelsius = inputsParameterSettings.Thermodynamic_Settings.HybridizationTemperature_Celsius; % Temperature for Evaluating Probe Design and Simulations
 PrimerConcentration = inputsParameterSettings.Thermodynamic_Settings.PrimerConcentration; % Temperature for Evaluating Probe Design and Simulations
-
 Tref = inputsParameterSettings.Thermodynamic_Settings.HeatCapacityReferenceTemperature_Celsius;
 RemoveMisMatches = inputsParameterSettings.Thermodynamic_Settings.RemoveMisMatches;%remove mismatches from nearest neighbor quantification of probe binding
 
@@ -498,7 +497,7 @@ settings.isOffline = RunOffline;
 
 %% Selecting Probes Specifications
 settings.maxProbes = maxNumberOfProbes;
-settings.RemoveProbesWithRibosomalHits = RemoveProbesBindingRibosomalHits;
+settings.RemoveProbesBindingOffTargetRibosomalHits = RemoveProbesBindingOffTargetRibosomalHits;
 
 %% Simulation Settings
 settings.SimulationConfiguration.Temperature_Celsius_Model_Vector = Temperature_Celsius_Model_Vector;
