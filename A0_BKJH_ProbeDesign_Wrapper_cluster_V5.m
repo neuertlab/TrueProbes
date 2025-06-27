@@ -149,9 +149,23 @@ errThreshold = inputsParameterSettings.ModelSimulation_Settings.SolutionErrorTol
 MaxIter = inputsParameterSettings.ModelSimulation_Settings.MaxRecursiveEquilibriiumIterations;
 InitialGuessConc = inputsParameterSettings.ModelSimulation_Settings.InitialFreeSolutionGuessConcentration_MicroMolar;
 ProbeConcentration = inputsParameterSettings.ModelSimulation_Settings.ProbeConcentration_MicroMolar;%5uM
-Dilution_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector,','));
-Temperature_Celsius_Model_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector,','));
-Gibbs_Model_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Gibbs_Model_Vector ,','));
+if (isnumeric(inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector))
+     Dilution_Vector =  inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector;
+else
+    Dilution_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector,','));
+end
+if (isnumeric(inputsParameterSettings.ModelSimulation_Settings.Temperature_Celsius_Model_Vector))
+    Temperature_Celsius_Model_Vector =  inputsParameterSettings.ModelSimulation_Settings.Temperature_Celsius_Model_Vector;
+else
+    Temperature_Celsius_Model_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Temperature_Celsius_Model_Vector,','));
+end
+if (isnumeric(inputsParameterSettings.ModelSimulation_Settings.Gibbs_Model_Vector))
+    Gibbs_Model_Vector =  inputsParameterSettings.ModelSimulation_Settings.Gibbs_Model_Vector; 
+else
+Gibbs_Model_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Gibbs_Model_Vector ,',')); 
+end
+
+
 Signal_StepSize = inputsParameterSettings.ModelSimulation_Settings.SignalStepSize;
 Signal_MaxValue = inputsParameterSettings.ModelSimulation_Settings.SignalMaxValue;
 
