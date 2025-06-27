@@ -5,7 +5,7 @@ DNASpecificity_Score = zeros(1,size(DoesProbeBindSite,1));DNAOFF_Score = zeros(1
 NumRNAOffTargetOptions = [];Probes_WithNRNAOFF = [];
 NumDNAOffTargetOptions = [];Probes_WithNDNAOFF = [];
 isRNA = targetTypes(1);isDNA = targetTypes(2);
-AllowableProbes = 1:size(DoesProbeBindSite,1);
+AllowableProbes = 1:size(DoesProbeBindSite,1);%this can currently generate complex numbers
 Cout = cell(1,2);
 Cout{1} = cell(1,7);
 Cout{2} = cell(1,9);

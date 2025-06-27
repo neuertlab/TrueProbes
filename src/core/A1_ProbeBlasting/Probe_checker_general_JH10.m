@@ -314,7 +314,7 @@ if (~isempty(batch_nums_to_check2))
                     if (contains(temp_hits_all(v).Hit_id,'BL_ORD_ID'))
                         [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
                     else
-                        [temp_hits_subnode{v}.Name] = deal(strcat(temp_hits_all(v).Hit_id," ",temp_hits_all(v).Hit_def));
+                        [temp_hits_subnode{v}.Name] = deal(strcat(extractBetween(temp_hits_all(v).Hit_id,'|','|')," ",temp_hits_all(v).Hit_def));
                     end
                     [temp_hits_subnode{v}.ProbeNum] = deal(probe_ids(v));
                     [temp_hits_subnode{v}.ProbeSequence] = deal(pSeq(probe_ord(v)).Sequence);
@@ -365,7 +365,7 @@ if (~isempty(batch_nums_to_check2))
                         if (contains(temp_hits_subnode.Hit(v).Hit_id,'BL_ORD_ID'))
                             [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
                         else
-                            [sub_neststruc{v}.Name] = deal(strcat(temp_hits_subnode.Hit(v).Hit_id," ",temp_hits_subnode.Hit(v).Hit_def));
+                            [sub_neststruc{v}.Name] = deal(strcat(extractBetween(temp_hits_subnode.Hit(v).Hit_id,'|','|')," ",temp_hits_subnode.Hit(v).Hit_def));
                         end
                         [sub_neststruc{v}.ProbeNum] = deal(Batch_List.Value{i}(w));
                         [sub_neststruc{v}.ProbeSequence] = deal(pSeq(w).Sequence);
@@ -428,7 +428,7 @@ if (~isempty(batch_nums_to_check2))
                     if (contains(temp_hits_all(v).Hit_id,'BL_ORD_ID'))
                         [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
                     else
-                        [temp_hits_subnode{v}.Name] = deal(strcat(temp_hits_all(v).Hit_id," ",temp_hits_all(v).Hit_def));
+                        [temp_hits_subnode{v}.Name] = deal(strcat(extractBetween(temp_hits_all(v).Hit_id,'|','|')," ",temp_hits_all(v).Hit_def));
                     end
                     [temp_hits_subnode{v}.ProbeNum] = deal(probe_ids(v));
                     [temp_hits_subnode{v}.ProbeSequence] = deal(pSeq(probe_ord(v)).Sequence);
@@ -479,7 +479,7 @@ if (~isempty(batch_nums_to_check2))
                         if (contains(temp_hits_subnode.Hit(v).Hit_id,'BL_ORD_ID'))
                             [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
                         else
-                            [sub_neststruc{v}.Name] = deal(strcat(temp_hits_subnode.Hit(v).Hit_id," ",temp_hits_subnode.Hit(v).Hit_def));
+                            [sub_neststruc{v}.Name] = deal(strcat(extractBetween(temp_hits_subnode.Hit(v).Hit_id,'|','|')," ",temp_hits_subnode.Hit(v).Hit_def));
                         end
                         [sub_neststruc{v}.ProbeNum] = deal(Batch_List.Value{i}(w));
                         [sub_neststruc{v}.ProbeSequence] = deal(pSeq(w).Sequence);

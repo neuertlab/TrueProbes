@@ -1,4 +1,5 @@
 Organism,Target Accession Numbers,Exclusion Accession Numbers,Inclusion Sequences,Exclusion Sequences
+Human,NM_001660.4,,,
 Human,NM_000805.5,,,
 Human,NM_181604.2,,,
 Human,NM_181602.2,,,
@@ -7,6 +8,7 @@ Yeast,NM_001179952.1,,,
 Human,ENST00000818900.1,,,
 Mouse,ENSMUST00000181020.10,,,
 Yeast,NM_001181217.1,,,
+Yeast,YFL014W_mRNA,,,
 Zebrafish,ENSDART00000056457.5,,,
 Zebrafish,XM_021476774.1,,,
 Mouse,ENSMUST00000001538.9,,,

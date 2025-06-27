@@ -334,6 +334,8 @@ if (calcOnOff)
             fprintf('\n')
             fprintf('\n')
         end
+        clear temp_indx uniquePair_temp_dHeq uniquePair_temp_dSeq uniquePair_temp_dGeq uniquePair_temp_dHf uniquePair_temp_dSf
+        clear uniquePair_temp_dHr uniquePair_temp_dSr uniquePair_temp_dCpeq uniquePair_temp_Tm temp_GibsonInfo
         fprintf("Aggregating probe target batch thermodynamic information")
         fprintf('\n')
         fprintf('\n')
@@ -342,7 +344,7 @@ if (calcOnOff)
             if isfile([settings.FolderRootName filesep '(' TranscriptName ')' designerName '_deltaGibsonInfo_batch' num2str(v) '.mat'])
                 load([settings.FolderRootName filesep '(' TranscriptName ')' designerName '_deltaGibsonInfo_batch' num2str(v) '.mat'],'partial_delta_gibson_tmp');
                 for w = 1:length(Batch_uniqueCalcPairs{v})
-                    Kb_Match(partial_delta_gibson_tmp{w}{1},:) = repmat(partial_delta_gibson_tmp{w}{2}'/(kb*(T_hybrid+273.15)),[length(partial_delta_gibson_tmp{w}{1}) 1]);
+                    Kb_Match(partial_delta_gibson_tmp{w}{1},:) = repmat(exp(-partial_delta_gibson_tmp{w}{2}'/(kb*(T_hybrid+273.15))),[length(partial_delta_gibson_tmp{w}{1}) 1]);
                     dHeq_Match(partial_delta_gibson_tmp{w}{1},:) = repmat(partial_delta_gibson_tmp{w}{3},[length(partial_delta_gibson_tmp{w}{1}) 1]);
                     dSeq_Match(partial_delta_gibson_tmp{w}{1},:) = repmat(partial_delta_gibson_tmp{w}{4},[length(partial_delta_gibson_tmp{w}{1}) 1]);
                     dHf_Match(partial_delta_gibson_tmp{w}{1},:) = repmat(partial_delta_gibson_tmp{w}{5},[length(partial_delta_gibson_tmp{w}{1}) 1]);
@@ -357,10 +359,6 @@ if (calcOnOff)
             progress(wb);
         end
         wb.delete();
-
-
-
-        
         save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_dHInfo' settings.designerName '.mat'],'dHon_f','dHon_r','dHon_eq','dHeq_Match','dHf_Match','dHr_Match','-v7.3');
         save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_dSInfo' settings.designerName '.mat'],'dSon_f','dSon_r','dSon_eq','dSeq_Match','dSf_Match','dSr_Match','-v7.3');
         save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_TmInfo' settings.designerName '.mat'],'Tm_on','Tm_Match','-v7.3');

@@ -170,10 +170,10 @@ Sites_List = Js_Sites(Pset);
 [~,tList_DNA,sList_DNA] = ind2sub(size(DoesProbeBindSite(Pset,Target_List_DNA,Sites_List)),find(DoesProbeBindSite(Pset,Target_List_DNA,Sites_List)));
 tList_RNA = Target_List_RNA(tList_RNA);
 sList_RNA = Sites_List(sList_RNA);
-tsList_RNA = unique([tList_RNA; sList_RNA]','rows','stable')';
+tsList_RNA = unique([reshape(tList_RNA,1,[]); reshape(sList_RNA,1,[])]','rows','stable')';
 tList_DNA = Target_List_DNA(tList_DNA);
 sList_DNA = Sites_List(sList_DNA);
-tsList_DNA = unique([tList_DNA; sList_DNA]','rows','stable')';
+tsList_DNA = unique([reshape(tList_DNA,1,[]); reshape(sList_DNA,1,[])]','rows','stable')';
 
 linearIndexed = struct();
 linearIndexed.solverType=0;

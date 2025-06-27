@@ -67,9 +67,9 @@
 		<SpotRadius_Pixels> 5 </SpotRadius_Pixels>
 		<NumberOfReferenceZStacks> 67 </NumberOfReferenceZStacks>
 		<CellRadius_Micron> 10 </CellRadius_Micron>
-		<Dilution_Vector> 1,1e-2,1e-4 </Dilution_Vector>
-		<Gibbs_Model_Vector> 1,2,3,4 </Gibbs_Model_Vector>
-		<Temperature_Celsius_Model_Vector> 37,42,50,60 </Temperature_Celsius_Model_Vector>
+		<Dilution_Vector> 1 </Dilution_Vector>
+		<Gibbs_Model_Vector> 1,2,3,4,5,6,7,8 </Gibbs_Model_Vector>
+		<Temperature_Celsius_Model_Vector> 37 </Temperature_Celsius_Model_Vector>
 		<MaxRecursiveEquilibriiumIterations> 40 </MaxRecursiveEquilibriiumIterations>
 		<SolutionErrorTolerance> 1 </SolutionErrorTolerance>
 		<SignalStepSize> 1e-1 </SignalStepSize>

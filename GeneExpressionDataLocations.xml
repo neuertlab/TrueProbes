@@ -12,7 +12,6 @@
     <row>
         <Organism>Mouse</Organism>
         <SingleCellAtlas>data/DatabaseData/Gene_Expression_Data/Mouse/tabulamuris_barChart.bed</SingleCellAtlas>
-		
     </row>
     <row>
         <Organism>Rat</Organism>
@@ -28,7 +27,35 @@
     </row>
     <row>
         <Organism>Yeast</Organism>
-    </row>
+	</row>
+    <schema>
+        <Organism>Human</Organism>
+        <GTEx_Gene>data/DatabaseData/Gene_Expression_Data/Human/gtexGeneV8_samples.txt</GTEx_Gene>
+        <GTEx_Transcript>data/DatabaseData/Gene_Expression_Data/Human/gtexTranscExpr_samples.txt</GTEx_Transcript>
+        <TCGA_Gene>data/DatabaseData/Gene_Expression_Data/Human/tcgaGeneExpr_samples.txt</TCGA_Gene>
+        <TCGA_Transcript>data/DatabaseData/Gene_Expression_Data/Human/tcgaTranscExpr_samples.txt</TCGA_Transcript>
+		<SingleCellAtlas>data/DatabaseData/Gene_Expression_Data/Human/tabulasapiens_tissue_cell_type_samples.txt</SingleCellAtlas>
+		<SingleCellAtlasMerged>data/DatabaseData/Gene_Expression_Data/Human/SingleCellMerged_samples.txt</SingleCellAtlasMerged>
+    </schema>
+    <schema>
+        <Organism>Mouse</Organism>
+        <SingleCellAtlas>data/DatabaseData/Gene_Expression_Data/Mouse/tabulamuris_barChart_samples.txt</SingleCellAtlas>
+    </schema>
+    <schema>
+        <Organism>Rat</Organism>
+    </schema>
+    <schema>
+        <Organism>Zebrafish</Organism>
+    </schema>
+    <schema>
+        <Organism>Fruitfly</Organism>
+    </schema>
+    <schema>
+        <Organism>Worm</Organism>
+    </schema>
+    <schema>
+        <Organism>Yeast</Organism>
+    </schema>
 	<tracks>
 		<bed>
 			<columns>chrom,chromStart,chromEnd,name,score,strand,name2,expCount,expScores,dataOffset,dataLen </columns>
