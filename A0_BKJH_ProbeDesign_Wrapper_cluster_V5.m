@@ -57,17 +57,25 @@ IncludeAccessionNumbers = split(inputs1{gene_num,2},',');
 ExcludeAccessionNumbers = split(inputs1{gene_num,3},',');
 InclusionSequenceFiles = split(inputs1{gene_num,4},',');
 ExcludeSequenceFiles = split(inputs1{gene_num,5},',');
-if (isempty(IncludeAccessionNumbers{:}))
+if (sum(cellfun(@isempty,IncludeAccessionNumbers))>0)
     IncludeAccessionNumbers = {};
+else
+    IncludeAccessionNumbers = reshape(IncludeAccessionNumbers,1,[]);
 end
-if (isempty(ExcludeAccessionNumbers{:}))
+if (sum(cellfun(@isempty,ExcludeAccessionNumbers))>0)
     ExcludeAccessionNumbers = {};
+else
+    ExcludeAccessionNumbers = reshape(ExcludeAccessionNumbers,1,[]);
 end
-if (isempty(ExcludeSequenceFiles{:}))
+if (sum(cellfun(@isempty,ExcludeSequenceFiles))>0)
     ExcludeSequenceFiles = {};
+else
+    ExcludeSequenceFiles = reshape(ExcludeSequenceFiles,1,[]);
 end
-if (isempty(InclusionSequenceFiles{:}))
+if (sum(cellfun(@isempty,InclusionSequenceFiles))>0)
     InclusionSequenceFiles= {};
+else
+    InclusionSequenceFiles = reshape(InclusionSequenceFiles,1,[]);
 end
 RunOffline = 1;%Is Design Run Offline using databases or looks online to get genbank record
 
@@ -349,11 +357,15 @@ if (strcmp(settings.referenceType,'RefSeq'))
     geneChrNum = ReferenceToChromosome(extractBefore(string(geneInfo_Table.Reference),'.'));
     geneReference_ID = extractBefore(string(geneInfo_Table.Reference),'.');
 elseif (strcmp(settings.referenceType,'ENSEMBL'))
+    if (sum(contains(IncludeAccessionNumbers,'ENS'))>0)
     if (sum(ismember(extractBefore(IncludeAccessionNumbers,'.'),getTranscriptNames(GTFobj)))>0)
         geneInfo_Table = getGenes(GTFobj,"Transcript",extractBefore(IncludeAccessionNumbers,'.'));
+        ts = 1;
     else
         geneInfo_Table = getGenes(GTFobj,"Transcript",IncludeAccessionNumbers);
+        ts = 0;
     end
+    else
     try
         geneInfo_Table = getGenes(GTFobj,"Transcript",IncludeAccessionNumbers);
         ts = 0;
@@ -361,6 +373,8 @@ elseif (strcmp(settings.referenceType,'ENSEMBL'))
         geneInfo_Table = getGenes(GTFobj,"Transcript",extractBefore(IncludeAccessionNumbers,'.'));
         ts = 1;
     end
+    end
+
     geneNames = char(join(convertCharsToStrings(unique(geneInfo_Table.GeneName)),'_'));
     ids_gff_loc = find(contains(GFFobj.Attributes,'Alias').*contains(GFFobj.Attributes,'NC')); 
     if (isempty(ids_gff_loc))
@@ -539,7 +553,7 @@ settings.rootName = strjoin(IncludeAccessionNumbers,'_');
 settings.TargetLists = strjoin(IncludeAccessionNumbers,', ');
 
 %% Generate Probes
-fprintf(strcat("Designing probes for"," ",geneNames," ","transcript id:"," ",settings.TargetLists))
+fprintf(strcat("Designing probes for"," ",strrep(geneNames,'_',', ')," ","transcript id:"," ",settings.TargetLists))
 fprintf('\n')
 fprintf('\n')
 try
@@ -751,7 +765,7 @@ catch
     fprintf('\n')
     tic
     [Nvec_RNAmulti,RNAOFF_Score,RNASpecificity_Score,NumRNAOffTargetOptions,Probes_WithNRNAOFF,DNAOFF_Score,DNASpecificity_Score,NumDNAOffTargetOptions,Probes_WithNDNAOFF,Cout] = ...
-        A0_BasicDesignerStats([settings.BLASTrna settings.BLASTdna],removeUndesiredIsoformsFromPredictionOffTargets,gene_table,settings,settings.FolderRootName,DoesProbeBindSite,Kon,Kb_mod,Kb_Complement,EKernel);
+        A0_BasicDesignerStats_V2([settings.BLASTrna settings.BLASTdna],removeUndesiredIsoformsFromPredictionOffTargets,gene_table,settings,settings.FolderRootName,DoesProbeBindSite,Kon,Kb_mod,Kb_Complement,EKernel);
     Tvec_RNA = Cout{1}{1};Svec_RNA = Cout{1}{2};TPvec_RNA = Cout{1}{3};TSvec_RNA = Cout{1}{4};
     TPvec_logKOFF_RNA = Cout{1}{5};TPvec_logKOFFdivON_RNA = Cout{1}{6};TPvec_logKONdivOFF_RNA = Cout{1}{7};
     Tvec_DNA = Cout{2}{1};Svec_DNA = Cout{2}{2};TPvec_DNA = Cout{2}{3};TSvec_DNA = Cout{2}{4};
@@ -759,10 +773,6 @@ catch
     TPvec_logKOFFdivCOMP_DNA = Cout{2}{8};TPvec_logKCOMPdivOFF_DNA = Cout{2}{9};
     Off_Score = RNAOFF_Score+DNAOFF_Score;
     Specificity_Score = RNASpecificity_Score+DNASpecificity_Score;
-    save([saveRoot filesep settings.FolderName filesep settings.FolderName '_Tm' num2str(T_hybrid) '_BasicDesignerStats' designerName '.mat'],...
-        'Tvec_RNA','Svec_RNA','TPvec_RNA','TSvec_RNA','TPvec_logKOFF_RNA','TPvec_logKOFFdivON_RNA','TPvec_logKONdivOFF_RNA',...
-        'Tvec_DNA','Svec_DNA','TPvec_DNA','TSvec_DNA','TPvec_logKOFF_DNA','TPvec_logKOFFdivON_DNA','TPvec_logKONdivOFF_DNA','TPvec_logKOFFdivCOMP_DNA','TPvec_logKCOMPdivOFF_DNA',...
-        'Nvec_RNAmulti','Off_Score','Specificity_Score','NumRNAOffTargetOptions','Probes_WithNRNAOFF','NumDNAOffTargetOptions','Probes_WithNDNAOFF','-v7.3')
     tEnd = toc;
     fprintf("Time elapsed to compute probe target statistics %g seconds",round(tEnd,3,"significant"))
     fprintf('\n')
