@@ -2,8 +2,7 @@ function [Kb_mod,Kb_Complement,DoesProbeBindSite2,Num_of_Molecule_Sites,MolProbe
 N_methods = 8;
 N_methods2 = 3;
 N_methods3 = 9;
-Organism = settings.Organism;
-
+load_files = 1;
 nascentInfo = [];
 kb = 0.001987204259;%boltzman constant
 %Jason Hughes code to parsing gene_table to get sites where probes bind
@@ -17,14 +16,12 @@ most_recent_num_local = settings.num_parpool_local;
 T_hybrid = settings.HybridizationTemperature;
 SaltConcentration = settings.SaltConcentration;
 PrimerConcentration = settings.PrimerConcentration;
-
-
 TranscriptName = settings.GeneName;
 designerName = settings.designerName;
 FolderRootName = settings.FolderRootName;
 targetBatchSize = settings.TargetBatchSize;
 if (settings.clusterStatus)
-    most_recent_num = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
+    most_recent_num = double(string(getenv('SLURM_JOB_CPUS_PER_NODE')));
 else
     most_recent_num = most_recent_num_local;
 end
@@ -39,7 +36,7 @@ MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
 gene_table_NamesZ = convertCharsToStrings(gene_table.Name);
 contains_RNA = find(ismember(gene_table_NamesZ,settings.RNAdbParser));clear gene_table_NamesZ
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);clear contains_RNA
-gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
+gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);clear RNA_MissedFilteredHits
 gene_table.Ax = min(gene_table.SubjectIndices,[],2);
 gene_table.Bx = max(gene_table.SubjectIndices,[],2);
 gene_table = sortrows(gene_table,[7 13],'ascend');
@@ -85,7 +82,7 @@ catch
 end
 try
     load([settings.FolderRootName filesep '(' TranscriptName ')_Tm' num2str(T_hybrid) '_BindingEnergyMatrix2' settings.designerName '.mat'],'Kb_Complement')
-    load([settings.FolderRootName filesep '(' TranscriptName ')_BindingMatrices2' settings.designerName '.mat'],'dHeq_Complement','dSeq_Complement','dHf_Complement','dSf_Complement','dHr_Complement','dSr_Complement','Tm__Complement')
+    load([settings.FolderRootName filesep '(' TranscriptName ')_BindingMatrices2' settings.designerName '.mat'],'dHeq_Complement','dSeq_Complement','dHf_Complement','dSf_Complement','dHr_Complement','dSr_Complement','Tm_Complement')
     calcEnergyMatrix2 = 0;
 catch
     calcEnergyMatrix2 = 1;
@@ -100,13 +97,13 @@ if (calcSiteMap > 0)
     Batch_siteMapping = cell(1,N_siteMappingBatches);
     if (R==0)
         for k = 1:N_siteMappingBatches
-            Batch_siteMapping{k} = [targetBatchSize*(k-1)+1:targetBatchSize*k];
+            Batch_siteMapping{k} = targetBatchSize*(k-1)+1:targetBatchSize*k;
         end
     else
         for k = 1:N_siteMappingBatches-1
-            Batch_siteMapping{k} = [targetBatchSize*(k-1)+1:targetBatchSize*k];
+            Batch_siteMapping{k} = targetBatchSize*(k-1)+1:targetBatchSize*k;
         end
-        Batch_siteMapping{N_siteMappingBatches} = [targetBatchSize*(N_siteMappingBatches-1)+1:targetBatchSize*(N_siteMappingBatches-1)+R];
+        Batch_siteMapping{N_siteMappingBatches} = targetBatchSize*(N_siteMappingBatches-1)+1:targetBatchSize*(N_siteMappingBatches-1)+R;
     end
     ResultsExist = zeros(1,N_siteMappingBatches);
     ResultsDate = cell(1,N_siteMappingBatches);
@@ -143,7 +140,6 @@ if (calcSiteMap > 0)
     end
     batch_nums_to_check = union(Results_NotMade,results_check1);
     MolProbesAtEvents = cell(1,length(Names));
-    Num_of_Molecule_Sites = zeros(1,length(Names));
     Mol_ProbesAtEventsID = cell(1,length(Names));
     MolN_ProbesAtEvents = cell(1,length(Names));
     %MolN_SitesBoundaryMax = cell(1,length(Names));
@@ -354,8 +350,6 @@ if (calcSiteMap > 0)
     dSr_mod_vector =struct('dSr_mod_vector',cell(1,N_siteMappingBatches));
     Tm_mod_vector = struct('Tm_mod_vector',cell(1,N_siteMappingBatches));
     dCp_mod_vector = struct('dCp_mod_vector',cell(1,N_siteMappingBatches));
-
-    load_files = 1;
     wb = parwaitbar(N_siteMappingBatches+14,'WaitMessage','Aggregating');
     parfor w = 1:N_siteMappingBatches
         pause(0.1);
@@ -524,9 +518,6 @@ if (calcSiteMap > 0)
     save([settings.FolderRootName filesep '(' TranscriptName ')_binding_hits_map' settings.designerName '.mat'],'DoesProbeBindSite','DoesProbeBindSite2','MolN_ProbesAtEvents','Num_of_Molecule_Sites','Mol_ProbesAtEventsID','MolProbesAtEvents','-v7.3')
     save([settings.FolderRootName filesep '(' TranscriptName  ')_Tm' num2str(T_hybrid) '_BindingEnergyMatrix' settings.designerName '.mat'],'Kb_mod','-v7.3')
     save([settings.FolderRootName filesep '(' TranscriptName ')_BindingMatrices' settings.designerName '.mat'],'dHeq_mod','dSeq_mod','dHf_mod','dSf_mod','dHr_mod','dSr_mod','Tm_mod','dCp_mod','-v7.3')
-    
-    
-    
     fprintf('\n')
     fprintf('\n')
     fprintf("Deleting temporary probe-target batch binding site map files")
@@ -584,7 +575,6 @@ if (calcEnergyMatrix2)
         sequence_duplexes_thermo_generator_struct_Multi.Model{7}   = F_NearestNeighbors_Parser('Rejali21','src/thirdparty/VarGibbs-4.1/AOP-RJ21KE.par',[]);
         sequence_duplexes_thermo_generator_struct_Multi.Model{8}   = F_NearestNeighbors_Parser('Martins24','src/thirdparty/VarGibbs-4.1/AOP-OW04-69.par','src/thirdparty/VarGibbs-4.1/AOP-MM-60.par');
         sequence_duplexes_thermo_generator_structure = struct2table([sequence_duplexes_thermo_generator_struct_Multi.Model{:}]);
-
         fprintf("Getting binding affinity of DNA probe targets complementary reactions")
         fprintf('\n')
         fprintf('\n')

@@ -48,7 +48,7 @@ oligo.dGeq = dGE;
 
 end
 % calculate melting temperature and thermo values (37 degrees C)
-function [tm tmdelta NN NNdelta]  = get_tm_NN(numSeq, salt, primerConc, nFlag)
+function [tm, tmdelta, NN, NNdelta]  = get_tm_NN(numSeq, salt, primerConc, nFlag)
 % melting temperatures and thermodynamic values are returned as average +/- delta level.
 % If no ambiguous symbols are present, the delta level is zero.
 
@@ -104,7 +104,7 @@ NNdelta = NNdelta([1 4 7 2 5 8 3 6 9],:);
 end
 % compute thermo values using Nearest Neighbor methods
 %one typo in energy eq. for GG/CC
-function [NN NNdelta] = near_neigh(seq, seq_length, selfCompFlag, nFlag,bounded)
+function [NN, NNdelta] = near_neigh(seq, seq_length, selfCompFlag, nFlag,bounded)
 %AA/TT AT/TA TA/AT CA/GT GT/CA CT/GA GA/CT CG/GC GC/CG GG/CC Initiation Terminal_AT    
 DeltaFm_H = zeros(1,12);%kcal/mol
 DeltaFm_HErr = zeros(1,12);%kcal/mol
@@ -170,63 +170,81 @@ else
     % rows corresponds to A,C,G,T,N respectively; columns correspond to
     % A,C,G,T,N respectively
     
-    MethodF_H(1,5) = mean(DeltaF_H(corrs(1,:)));
-    MethodF_H(2,5) = mean(DeltaF_H(corrs(2,:)));
-    MethodF_H(3,5) = mean(DeltaF_H(corrs(3,:)));
-    MethodF_H(4,5) = mean(DeltaF_H(corrs(4,:)));
-    MethodF_H(5,1) = mean(DeltaF_H(corrs(:,1)));
-    MethodF_H(5,2) = mean(DeltaF_H(corrs(:,2)));    
-    MethodF_H(5,3) = mean(DeltaF_H(corrs(:,3)));
-    MethodF_H(5,4) = mean(DeltaF_H(corrs(:,4)));   
+    % MethodF_H(1,5) = mean(DeltaF_H(corrs(1,:)));
+    % MethodF_H(2,5) = mean(DeltaF_H(corrs(2,:)));
+    % MethodF_H(3,5) = mean(DeltaF_H(corrs(3,:)));
+    % MethodF_H(4,5) = mean(DeltaF_H(corrs(4,:)));
+    % MethodF_H(5,1) = mean(DeltaF_H(corrs(:,1)));
+    % MethodF_H(5,2) = mean(DeltaF_H(corrs(:,2)));    
+    % MethodF_H(5,3) = mean(DeltaF_H(corrs(:,3)));
+    % MethodF_H(5,4) = mean(DeltaF_H(corrs(:,4)));   
+    % MethodF_H(5,5) = mean(DeltaF_H(corrs(:)));
+    % MethodF_S(1,5) = mean(DeltaF_S(corrs(1,:)));
+    % MethodF_S(2,5) = mean(DeltaF_S(corrs(2,:)));
+    % MethodF_S(3,5) = mean(DeltaF_S(corrs(3,:)));
+    % MethodF_S(4,5) = mean(DeltaF_S(corrs(4,:)));
+    % MethodF_S(5,1) = mean(DeltaF_S(corrs(:,1)));
+    % MethodF_S(5,2) = mean(DeltaF_S(corrs(:,2)));    
+    % MethodF_S(5,3) = mean(DeltaF_S(corrs(:,3)));
+    % MethodF_S(5,4) = mean(DeltaF_S(corrs(:,4)));   
+    % MethodF_S(5,5) = mean(DeltaF_S(corrs(:)));
+    % 
+    % MethodR_H(1,5) = mean(DeltaR_H(corrs(1,:)));
+    % MethodR_H(2,5) = mean(DeltaR_H(corrs(2,:)));
+    % MethodR_H(3,5) = mean(DeltaR_H(corrs(3,:)));
+    % MethodR_H(4,5) = mean(DeltaR_H(corrs(4,:)));
+    % MethodR_H(5,1) = mean(DeltaR_H(corrs(:,1)));
+    % MethodR_H(5,2) = mean(DeltaR_H(corrs(:,2)));    
+    % MethodR_H(5,3) = mean(DeltaR_H(corrs(:,3)));
+    % MethodR_H(5,4) = mean(DeltaR_H(corrs(:,4)));   
+    % MethodR_H(5,5) = mean(DeltaR_H(corrs(:)));
+    % MethodR_S(1,5) = mean(DeltaR_S(corrs(1,:)));
+    % MethodR_S(2,5) = mean(DeltaR_S(corrs(2,:)));
+    % MethodR_S(3,5) = mean(DeltaR_S(corrs(3,:)));
+    % MethodR_S(4,5) = mean(DeltaR_S(corrs(4,:)));
+    % MethodR_S(5,1) = mean(DeltaR_S(corrs(:,1)));
+    % MethodR_S(5,2) = mean(DeltaR_S(corrs(:,2)));    
+    % MethodR_S(5,3) = mean(DeltaR_S(corrs(:,3)));
+    % MethodR_S(5,4) = mean(DeltaR_S(corrs(:,4)));   
+    % MethodR_S(5,5) = mean(DeltaR_S(corrs(:)));
+    
+    % MethodE_H(1,5) = mean(DeltaE_H(corrs(1,:)));
+    % MethodE_H(2,5) = mean(DeltaE_H(corrs(2,:)));
+    % MethodE_H(3,5) = mean(DeltaE_H(corrs(3,:)));
+    % MethodE_H(4,5) = mean(DeltaE_H(corrs(4,:)));
+    % MethodE_H(5,1) = mean(DeltaE_H(corrs(:,1)));
+    % MethodE_H(5,2) = mean(DeltaE_H(corrs(:,2)));    
+    % MethodE_H(5,3) = mean(DeltaE_H(corrs(:,3)));
+    % MethodE_H(5,4) = mean(DeltaE_H(corrs(:,4)));   
+    % MethodE_H(5,5) = mean(DeltaE_H(corrs(:)));
+    % MethodE_S(1,5) = mean(DeltaE_S(corrs(1,:)));
+    % MethodE_S(2,5) = mean(DeltaE_S(corrs(2,:)));
+    % MethodE_S(3,5) = mean(DeltaE_S(corrs(3,:)));
+    % MethodE_S(4,5) = mean(DeltaE_S(corrs(4,:)));
+    % MethodE_S(5,1) = mean(DeltaE_S(corrs(:,1)));
+    % MethodE_S(5,2) = mean(DeltaE_S(corrs(:,2)));    
+    % MethodE_S(5,3) = mean(DeltaE_S(corrs(:,3)));
+    % MethodE_S(5,4) = mean(DeltaE_S(corrs(:,4)));   
+    % MethodE_S(5,5) = mean(DeltaE_S(corrs(:)));
+
+    MethodF_H(1:4,5) = mean(DeltaF_H(corrs(1:4,:)),2);
+    MethodF_H(5,1:4) = mean(DeltaF_H(corrs(:,1:4)),1);
     MethodF_H(5,5) = mean(DeltaF_H(corrs(:)));
-    MethodF_S(1,5) = mean(DeltaF_S(corrs(1,:)));
-    MethodF_S(2,5) = mean(DeltaF_S(corrs(2,:)));
-    MethodF_S(3,5) = mean(DeltaF_S(corrs(3,:)));
-    MethodF_S(4,5) = mean(DeltaF_S(corrs(4,:)));
-    MethodF_S(5,1) = mean(DeltaF_S(corrs(:,1)));
-    MethodF_S(5,2) = mean(DeltaF_S(corrs(:,2)));    
-    MethodF_S(5,3) = mean(DeltaF_S(corrs(:,3)));
-    MethodF_S(5,4) = mean(DeltaF_S(corrs(:,4)));   
+    MethodF_S(1:4,5) = mean(DeltaF_S(corrs(1:4,:)),2);
+    MethodF_S(5,1:4) = mean(DeltaF_S(corrs(:,1:4)),1);
     MethodF_S(5,5) = mean(DeltaF_S(corrs(:)));
-    
-    MethodR_H(1,5) = mean(DeltaR_H(corrs(1,:)));
-    MethodR_H(2,5) = mean(DeltaR_H(corrs(2,:)));
-    MethodR_H(3,5) = mean(DeltaR_H(corrs(3,:)));
-    MethodR_H(4,5) = mean(DeltaR_H(corrs(4,:)));
-    MethodR_H(5,1) = mean(DeltaR_H(corrs(:,1)));
-    MethodR_H(5,2) = mean(DeltaR_H(corrs(:,2)));    
-    MethodR_H(5,3) = mean(DeltaR_H(corrs(:,3)));
-    MethodR_H(5,4) = mean(DeltaR_H(corrs(:,4)));   
+    MethodR_H(1:4,5) = mean(DeltaR_H(corrs(1:4,:)),2);
+    MethodR_H(5,1:4) = mean(DeltaR_H(corrs(:,1:4)),1);
     MethodR_H(5,5) = mean(DeltaR_H(corrs(:)));
-    MethodR_S(1,5) = mean(DeltaR_S(corrs(1,:)));
-    MethodR_S(2,5) = mean(DeltaR_S(corrs(2,:)));
-    MethodR_S(3,5) = mean(DeltaR_S(corrs(3,:)));
-    MethodR_S(4,5) = mean(DeltaR_S(corrs(4,:)));
-    MethodR_S(5,1) = mean(DeltaR_S(corrs(:,1)));
-    MethodR_S(5,2) = mean(DeltaR_S(corrs(:,2)));    
-    MethodR_S(5,3) = mean(DeltaR_S(corrs(:,3)));
-    MethodR_S(5,4) = mean(DeltaR_S(corrs(:,4)));   
+    MethodR_S(1:4,5) = mean(DeltaR_S(corrs(1:4,:)),2);
+    MethodR_S(5,1:4) = mean(DeltaR_S(corrs(:,1:4)),1);
     MethodR_S(5,5) = mean(DeltaR_S(corrs(:)));
-    
-    MethodE_H(1,5) = mean(DeltaE_H(corrs(1,:)));
-    MethodE_H(2,5) = mean(DeltaE_H(corrs(2,:)));
-    MethodE_H(3,5) = mean(DeltaE_H(corrs(3,:)));
-    MethodE_H(4,5) = mean(DeltaE_H(corrs(4,:)));
-    MethodE_H(5,1) = mean(DeltaE_H(corrs(:,1)));
-    MethodE_H(5,2) = mean(DeltaE_H(corrs(:,2)));    
-    MethodE_H(5,3) = mean(DeltaE_H(corrs(:,3)));
-    MethodE_H(5,4) = mean(DeltaE_H(corrs(:,4)));   
+    MethodE_H(1:4,5) = mean(DeltaE_H(corrs(1:4,:)),2);
+    MethodE_H(5,1:4) = mean(DeltaE_H(corrs(:,1:4)),1);
     MethodE_H(5,5) = mean(DeltaE_H(corrs(:)));
-    MethodE_S(1,5) = mean(DeltaE_S(corrs(1,:)));
-    MethodE_S(2,5) = mean(DeltaE_S(corrs(2,:)));
-    MethodE_S(3,5) = mean(DeltaE_S(corrs(3,:)));
-    MethodE_S(4,5) = mean(DeltaE_S(corrs(4,:)));
-    MethodE_S(5,1) = mean(DeltaE_S(corrs(:,1)));
-    MethodE_S(5,2) = mean(DeltaE_S(corrs(:,2)));    
-    MethodE_S(5,3) = mean(DeltaE_S(corrs(:,3)));
-    MethodE_S(5,4) = mean(DeltaE_S(corrs(:,4)));   
+    MethodE_S(1:4,5) = mean(DeltaE_S(corrs(1:4,:)),2);
+    MethodE_S(5,1:4) = mean(DeltaE_S(corrs(:,1:4)),1);
     MethodE_S(5,5) = mean(DeltaE_S(corrs(:)));
-    
     seq(seq==15)=5; % substitute numeric value of 'N' with 5
     ind = sub2ind([5 5],seq(1:seq_length-1),seq(2:seq_length));
 end

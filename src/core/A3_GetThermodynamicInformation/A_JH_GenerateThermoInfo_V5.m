@@ -74,9 +74,9 @@ gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
 gene_table_NamesZ = convertCharsToStrings(gene_table.Name);
-contains_RNA = find(ismember(gene_table_NamesZ,settings.RNAdbParser));
-RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
-gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
+contains_RNA = find(ismember(gene_table_NamesZ,settings.RNAdbParser));clear gene_table_NamesZ
+RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);clear contains_RNA
+gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);clear RNA_MissedFilteredHits
 gene_table.Ax = min(gene_table.SubjectIndices,[],2);
 gene_table.Bx = max(gene_table.SubjectIndices,[],2);
 gene_table = sortrows(gene_table,[7 13],'ascend');
@@ -100,7 +100,7 @@ try
         if (isempty(task_ID))
             task_ID = 0;
         else
-            task_ID = str2num(task_ID);
+            task_ID = double(string(task_ID));
         end
         sleepRate = sum(1:task_ID);
         pause(5*sleepRate)
@@ -108,7 +108,7 @@ try
 catch
 end
 if (settings.clusterStatus)
-    most_recent_num = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
+    most_recent_num = double(string(getenv('SLURM_JOB_CPUS_PER_NODE')));
 else
     most_recent_num = most_recent_num_local;
 end
@@ -191,7 +191,7 @@ if (calcOnOff)
     Tm_Match = zeros(length(targetMatch),N_methods3);
     Kb_Match = zeros(length(targetMatch),N_methods);
     try
-        n_cores = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
+        n_cores = double(string(getenv('SLURM_JOB_CPUS_PER_NODE')));
         p = parpool(n_cores);
         %p.IdleTimeout = Inf;
         spmd

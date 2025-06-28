@@ -36,7 +36,7 @@ evalue = settings.BlastParameters.evalue;
 num_alignments = settings.BlastParameters.num_alignments;
 dust = settings.BlastParameters.dust;
 if (settings.clusterStatus)
-    most_recent_num = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
+    most_recent_num = double(string(getenv('SLURM_JOB_CPUS_PER_NODE')));
 else
     most_recent_num = most_recent_num_local;
 end
@@ -74,13 +74,13 @@ R = mod(N_Probes,batchSize);
 Batch = cell(1,N_Batches);
 if (R==0)
     for k = 1:N_Batches
-        Batch{k} = [batchSize*(k-1)+1:batchSize*k];
+        Batch{k} = batchSize*(k-1)+1:batchSize*k;
     end
 else
     for k = 1:N_Batches-1
-        Batch{k} = [batchSize*(k-1)+1:batchSize*k];
+        Batch{k} = batchSize*(k-1)+1:batchSize*k;
     end
-    Batch{N_Batches} = [batchSize*(N_Batches-1)+1:batchSize*(N_Batches-1)+R];
+    Batch{N_Batches} = batchSize*(N_Batches-1)+1:batchSize*(N_Batches-1)+R;
 end
 ResultsExist = zeros(1,N_Batches);
 ResultsSize = zeros(1,N_Batches);
@@ -184,21 +184,22 @@ batch_nums_to_check2 = union(probes_to_check2,probes_to_check4);
 fprintf("Generating probe batch fasta files")
 fprintf('\n')
 fprintf('\n')
-% probe_List = parallel.pool.Constant(probe);
-% Batch_List = parallel.pool.Constant(Batch);
+probes_List = parallel.pool.Constant(probes);
+Batch_List = parallel.pool.Constant(Batch);
 wb = parwaitbar(N_Batches,'WaitMessage', 'generating');
-for i = 1:N_Batches
+parfor i = 1:N_Batches
     pause(0.1);
-    data = [];
     %% For local blast on server
     if exist([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'],'file')        %delete fasta if already exists
         delete([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'])
     end
+    %data = [];
     % for v = 1:length(Batch{i})
     %     data(v).Sequence = probes{Batch{i}(v),2};  %gets the sequence
     %     data(v).Header = ['p' num2str(Batch{i}(v))];
     % end
-    data = struct('Sequence', probes(Batch{i},2)','Header',arrayfun(@(v) ['p' num2str(v)],Batch{i},'Un',0));
+    %data = struct('Sequence', probes(Batch{i},2)','Header',arrayfun(@(v) ['p' num2str(v)],Batch{i},'Un',0));
+    data = struct('Sequence', probes_List.Value(Batch_List.Value{i},2)','Header',arrayfun(@(v) ['p' num2str(v)],Batch_List.Value{i},'Un',0));
     fastawrite([FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'],data);
     progress(wb);
 end
@@ -209,7 +210,7 @@ if (or(~isempty(batch_nums_to_check1),~isempty(batch_nums_to_check2)))
     try
         pc = parcluster('local');
         %pc.JobStorageLocation = strcat(getenv('SCRATCH'),filesep,getenv('SLURM_JOB_ID'));
-        parpool(pc,str2num(getenv('SLURM_JOB_CPUS_PER_NODE')));
+        parpool(pc,double(string(getenv('SLURM_JOB_CPUS_PER_NODE'))));
         spmd
             warning('off','all')
         end

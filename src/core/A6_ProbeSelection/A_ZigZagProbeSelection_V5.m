@@ -14,7 +14,7 @@ gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
 gene_table_NamesZ = convertCharsToStrings(gene_table.Name);
 contains_RNA = find(ismember(gene_table_NamesZ,settings.RNAdbParser));
-RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
+RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);clear contains_RNA
 gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
 gene_table.Ax = min(gene_table.SubjectIndices,[],2);
 gene_table.Bx = max(gene_table.SubjectIndices,[],2);

@@ -53,11 +53,8 @@ NN_Parameters = NN_canonical(:,{'Term','Value','Uncertainty'});
 elseif (and(~isempty(parameter_file_noncanonical),isempty(parameter_file_canonical)))
 NN_Parameters = NN_noncanonical(:,{'Term','Value','Uncertainty'});
 elseif (and(isempty(parameter_file_noncanonical),isempty(parameter_file_canonical)))
-    dG = NaN;
-    return;
-    fprintf('No Input parameter Files were specified');
-    fprintf('\n')
-    fprintf('\n')
+    msg = 'Error. No Input parameter Files were specified.';
+    error(msg)
 end
 check_parameters = {'initiation','initiation_CG','initiation_AT','terminal_5TA3','terminal_AU','terminal_AT','terminal_CG','symmetry_correction',...
     'terminal_dArU','terminal_dTrA','terminal_dCrG','terminal_dGrC','Terminal_dCrG_dGrC','Terminal_dArU_dTrA_only'};

@@ -125,15 +125,15 @@ end
 numSeq = double(nt2int(seq));
 baseNum = [sum(numSeq == 1) sum(numSeq == 2) sum(numSeq == 3) sum(numSeq == 4) sum(numSeq == 15)];
 if (~nFlag) % no ambiguous symbols 'N'
-    [tm tmdelta NN NNdelta]  = get_tm_NN(numSeq, baseNum, SaltConcentration, PrimerConc, nFlag);
+    [tm, tmdelta, NN, NNdelta]  = get_tm_NN(numSeq, baseNum, SaltConcentration, PrimerConc, nFlag);
     NN(:,3) = NN(:,1) - ((Temperature+273.15)  .* (NN(:,2)./1000)); % DeltaG
     NNdelta(:,3) = zeros(3,1);
 else % occurrences of ambiguous N symbols
     % warning('bioinfo:oligoprop:ambiguousCheck', 'Ambiguous symbols N in input sequence.');
     % average between case when all Ns are C/G and case when all Ns are A/T
-    [tm tmdelta NN NNdelta]  = get_tm_NN(numSeq, baseNum, SaltConcentration, PrimerConc, nFlag);
+    [tm, tmdelta, NN, NNdelta]  = get_tm_NN(numSeq, baseNum, SaltConcentration, PrimerConc, nFlag);
     NN(:,3) = NN(:,1) - ((Temperature+273.15)  .* (NN(:,2)./1000)); % DeltaG
-    NNdelta(:,3) = NNdelta(:,1) - ((Temperature+273.15)  .* (NNdelta(:,2) ./1000));
+    NNdelta(:,3) = NNdelta(:,1) - ((Temperature+273.15)  .* (NNdelta(:,2)./1000));
 end
         
 % This adds additional Gibson Free Energy Calculations from different NN models 
@@ -165,7 +165,7 @@ end
 % FUNCTIONS
 
 % calculate melting temperature and thermo values (37 degrees C)
-function [tm tmdelta NN NNdelta]  = get_tm_NN(numSeq, baseNum, salt, primerConc, nFlag)
+function [tm, tmdelta, NN, NNdelta]  = get_tm_NN(numSeq, baseNum, salt, primerConc, nFlag)
 % melting temperatures and thermodynamic values are returned as average +/- delta level.
 % If no ambiguous symbols are present, the delta level is zero.
 
@@ -190,12 +190,12 @@ else % occurrences of 'N'
     tmdelta(1:3)=(((NN(:,1)+ NNdelta(:,1)) * 1000 ./ ((NN(:,2)+ NNdelta(:,2)) + (1.9872 * log(primerConc./b)))) + (16.6 * log10(salt)) - 273.15 - ...
         (((NN(:,1)- NNdelta(:,1)) * 1000 ./ ((NN(:,2)- NNdelta(:,2)) + (1.9872 * log(primerConc./b)))) + (16.6 * log10(salt)) - 273.15)) * 1/2 ;
 end
-tm = [tm]';
+tm = (tm)';
 
 
 end
 % compute thermo values using Nearest Neighbor methods
-function [NN NNdelta] = near_neigh(seq, seq_length, selfCompFlag, nFlag)
+function [NN, NNdelta] = near_neigh(seq, seq_length, selfCompFlag, nFlag)
 Sant04H_Table = [-7.6 -7.2 -7.2 -8.5 -8.4 -7.8 -8.2 -10.6 -9.8 -8.0];%kcal/mol
 Sant04S_Table = [-21.3 -20.4 -21.3 -22.7 -22.4 -21.0 -22.2 -27.2 -24.4 -19.9];%cal/molK
 Sant04InitwTermGC = [0.2 -5.7];%H %S
