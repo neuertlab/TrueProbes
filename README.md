@@ -65,6 +65,13 @@ TrueProbes Probe Design uses four main input files for specifying probe design
 3. **DatabaseLocations.xml:** XML File with location of all database files needed in design when using NCBI or ENSEMBL reference genome, for any potential organism designed against
 4. **GeneExpressionDataFileLocation.xml:** XML File with location of all gene expression files, schema, and sample label for all reference gene expression desired in design
 
+| Name  | Description |
+| ----- | ----- | 
+| TrueProbes_DesignTargets.csv | File Specifying all targets for probe design |
+| ProbeDesignSettings_Parameters.xml | File Specifying how all probes for all targets in design target file should be designed | 
+| DatabaseLocations.xml | min spacing between probes | File Specifying where all gene annotation and database files needed for designing probes are located |   
+| GeneExpressionDataFileLocation | Max number of probes to design | File Specifying location of where any reference gene expression data included for designing probes are located |    
+
 Probe design is run via the command line using A0_BKJH_ProbeDesign_Wrapper_cluster_V5(id,cluster).
 
 The design file needs to be run with two inputs (id and cluster), with a table (inputs1) describing each target gene (inputs1), 
