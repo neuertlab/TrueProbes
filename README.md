@@ -69,8 +69,8 @@ TrueProbes Probe Design uses four main input files for specifying probe design
 | ----- | ----- | 
 | TrueProbes_DesignTargets.csv | File Specifying all targets for probe design |
 | ProbeDesignSettings_Parameters.xml | File Specifying how all probes for all targets in design target file should be designed | 
-| DatabaseLocations.xml | min spacing between probes | File Specifying where all gene annotation and database files needed for designing probes are located |   
-| GeneExpressionDataFileLocation | Max number of probes to design | File Specifying location of where any reference gene expression data included for designing probes are located |    
+| DatabaseLocations.xml | File Specifying where all gene annotation and database files needed for designing probes are located |   
+| GeneExpressionDataFileLocation | File Specifying location of where any reference gene expression data included for designing probes are located |    
 
 Probe design is run via the command line using A0_BKJH_ProbeDesign_Wrapper_cluster_V5(id,cluster).
 
