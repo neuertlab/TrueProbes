@@ -98,7 +98,7 @@ Settings.
 Parameters are specified in TrueProbes_ParameterSettings.xml and are grouped into different categories which can be configured to determine how the probes are designed and evaluated.
 
 **Main Probe Design Parameters:**    
-| Name  | Description | Default Value |
+| Name  | Description | Default |
 | ----- | ----- | ----- |
 | minProbeSize | min nt length of potential probes | 20 | 
 | maxProbeSize | max nt length of potential probes | 20 |    
@@ -111,7 +111,7 @@ Parameters are specified in TrueProbes_ParameterSettings.xml and are grouped int
 | ExpressionReferenceForProbeDesign | which row across all expression reference files to use in probe design, with 0 meaning to not use expression data to design probes | 0 |    
 	
 **Thermodynamic Settings:**    
-| Name  | Description | Default Value |
+| Name  | Description | Default |
 | ----- | ----- | ----- |
 | GibbsModel | Which thermodynamic model to use for probe design and evaluation | 4 |      
 | HybridizationTemperature | Hybridization temperature in Celcius | 37 |  
@@ -121,7 +121,7 @@ Parameters are specified in TrueProbes_ParameterSettings.xml and are grouped int
 | RemoveMisMatches | Remove sequence mismatched base pairs before evaluating probe-target binding affinity, (1) including adds flanking sequences to alignments and uses Gibbs model 8 with mismatch base pair inclusion | 1 |   
 
 **Gibbs Free Energy Models**
-| Model Number  | Abbreviation | Reference |
+| Model  | Abbreviation | Reference |
 | ----- | ----- | ----- |
 | 1 | Breslauer86 | Breslauer K.J., Frank R., Blocker H., Marky L.A., (1986) Predicting DNA duplex stability from the base sequence Proc Natl Acad Sci U S A 83, 3746-3750 |
 | 2 | SantaLucia96 | SantaLucia, J., Allawi, H. T., and Seneviratne, P. A. (1996) Improved nearest-neighbor parameters for predicting DNA duplex stability Biochemistry 35, 3555-3562 |   
@@ -133,21 +133,21 @@ Parameters are specified in TrueProbes_ParameterSettings.xml and are grouped int
 | 8 | Martins24 | de Oliveira Martins, E., and Weber, G. (2024) Nearest-neighbour parametrization of DNA single, double and triple mismatches at low sodium concentration Biophys Chem 306, 107156 |
 
 **Design Filtering Settings:**   
-| Name  | Description | Default Value |
+| Name  | Description | Default |
 | ----- | ----- | ----- |
 | RemoveProbesBindingOffTargetRibosomalHits | Filter out probes with off-targets to ribosomal proteins | 1 |   
 | packOptimal_ProbesWithNoOffTargets | When designing probes without off-target use optimal packing to get as many probes with no off-targets as possible as opposed to normal sequential selection | 1 |   
 | IncludeSelfHybridizationInProbeSelection | When designing probes consider probe self-hybridization when ranking probes based on binding affinity | 1 |    
 
 **Parallelization Parameters:**    (Usually only changed when using longer genes)   
-| Name  | Description | Default Value |
+| Name  | Description | Default |
 | ----- | ----- | ----- |
 | Parallization_probeBatchSize| number of probes to evaluate in a single batch when performing parallelized calculations | 20 |   
 | Parallization_targetBatchSize | number of targets to evaluate in a single batch when performing parallelized calculations | 200 |   
 | ParsingPreference | blast simultaneously in parallel(1) or blast probes sequentially (0) | 1 |   
   
 **Gene Expression Parameters:**   	
-| Name  | Description | Default Value |
+| Name  | Description | Default |
 | ----- | ----- | ----- |
 | UseGeneOverTranscLevelExpression | use gene level (1) or transcript isoform level (0) gene expression values | 0 |   
 | DoAllGenesHaveSameExpression | decide to assume equal expression for all genes (1) or to use gene expression reference (0) |  0 |   
@@ -160,13 +160,13 @@ Parameters are specified in TrueProbes_ParameterSettings.xml and are grouped int
 | TMM_doWeighting | when normalizing TPM expression data weight terms using inverse of approximate asymptotic variance of the M-values to account for genes with higher read counts having lower variance on log scale and more reliable mean estimation | 1 |   
 	
 **Make Blast Database Settings:**    
-| Name  | Description | Default Value |
+| Name  | Description | Default |
 | ----- | ----- | ----- |
 | Parse_seqids | when making blastdb in software decision to parse sequence ids from fasta files as blastdb ids, useful for blastdbcmd sequence retrieval | true |   
 | Hash_index | when making blastdb make sequence hash indexes leads to faster exact match retrieval but less accurate range matches | false |   
 
 **BLAST Parameters:**     
-| Name  | Description | Default Value |
+| Name  | Description | Default |
 | ----- | ----- | ----- |
 | evalue | expectation value cutoff | 1000 |    
 | Dust | filter query sequences with DUST | no |   
@@ -178,7 +178,7 @@ Parameters are specified in TrueProbes_ParameterSettings.xml and are grouped int
 | Word_size | word size for wordfinder algorithm | 7 |   
 
 **Model Simulation Settings:**       
-| Name  | Description | Default Value |
+| Name  | Description | Default |
 | ----- | ----- | ----- |
 | removeUndesiredIsoformsFromPrediction | when evaluating main on/off-target binding should alternate isoforms of desired targets be removed and not included in off-target quantification | 1 |  
 | ProbeConcentration_MicroMolar | probe concentration in uM | 5e-6 |   
