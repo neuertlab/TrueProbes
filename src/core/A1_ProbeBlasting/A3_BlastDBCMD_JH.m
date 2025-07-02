@@ -1,23 +1,6 @@
 function [RNAdbParser, DNAdbParser] = A3_BlastDBCMD_JH(settings,gene_table)
 %% This takes input data and gets flanking sequence of blast hits in blastdb
-NamesZ = gene_table.Name;
-gene_table_ANs = extractBefore(gene_table.Name,' ');
-% gene_table = sortrows(gene_table,[7 6],'ascend');
-% gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
-% MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
-% gene_table_NamesZ = convertCharsToStrings(gene_table.Name);
-% gene_table_uniNamesZ = extractBefore(gene_table_NamesZ,'.');
-% if (sum(ismissing(gene_table_uniNamesZ))>0)
-%     gene_table_uniNamesZ(ismissing(gene_table_uniNamesZ)) = extractBefore(gene_table_NamesZ(ismissing(gene_table_uniNamesZ)),' ');
-% end
-% contains_RNA = find(ismember(gene_table_uniNamesZ,settings.RNAparser));
-% RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);
-% gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
-% gene_table.Ax = min(gene_table.SubjectIndices,[],2);
-% gene_table.Bx = max(gene_table.SubjectIndices,[],2);
-% gene_table = sortrows(gene_table,[7 13],'ascend');
-
-doFlankCalc = 0;
+doFlankCalc = settings.UseFlankingInfo;
 runDNA = settings.BLASTdna;
 runRNA = settings.BLASTrna;
 most_recent_num_local = settings.num_parpool_local;
@@ -26,11 +9,19 @@ FolderRootName = settings.FolderRootName;
 TranscriptName = settings.GeneName;
 Organism = settings.Organism;
 targetBatchSize = settings.TargetBatchSize;
+SEQdbRoot = settings.SEQdbRoot;
 if (settings.clusterStatus)
-    most_recent_num = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'));
+    most_recent_num = double(string(getenv('SLURM_JOB_CPUS_PER_NODE')));
 else
     most_recent_num = most_recent_num_local;
 end
+gene_table = sortrows(gene_table,[7 6],'ascend');
+gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
+gene_table.Ax = min(gene_table.SubjectIndices,[],2);
+gene_table.Bx = max(gene_table.SubjectIndices,[],2);
+gene_table = sortrows(gene_table,[7 13],'ascend');
+gene_table_ANs = extractBefore(gene_table.Name,' ');
+NamesZ = gene_table.Name;
 A1_MakeBlastDB_JH(settings)
 if (isKey(settings.LocRoot_FASTA,Organism))
     if (runDNA)
@@ -62,28 +53,53 @@ else
 end
 DNAdbParser = [];
 RNAdbParser = [];
-
-SEQdbRoot = settings.SEQdbRoot;
-FNAFiles_FNA = dir([SEQdbRoot '**/*.fna']);
-FNAFiles_FA = dir([SEQdbRoot '**/*.fa']);
-if (~isempty(FNAFiles_FNA)&&~isempty(FNAFiles_FA))
-    FNAFiles = cat(1,FNAFiles_FNA,FNAFiles_FA);
-elseif (~isempty(FNAFiles_FNA))
-    FNAFiles = FNAFiles_FNA;
-elseif (~isempty(FNAFiles_FA))
-    FNAFiles = FNAFiles_FA;
-end
-FNAFileLoc = cell(1,length(FNAFiles));
-BioIFobj = cell(1,length(FNAFiles));
-BioKeys = cell(1,length(FNAFiles));
-for k=1:length(FNAFiles)
-    FNAFileLoc{k} = strcat(FNAFiles(k).folder,filesep,FNAFiles(k).name);
-    BioIFobj{k} = BioIndexedFile('FASTA',FNAFileLoc{k});
-    BioIFobj{k}.Interpreter = @(x)fastaread(x,'TRIMHEADERS',false);
-    BioKeys{k}{:} = getKeys(BioIFobj{k});
-end
-strand_dict = dictionary(["plus" "minus"],1:2);
 if (or(BLASTdb_DNAexists,BLASTdb_RNAexists))
+    FNAFiles_FNA = dir([SEQdbRoot '**/*.fna']);
+    FNAFiles_FA = dir([SEQdbRoot '**/*.fa']);
+    FNAFiles_FASTA = dir([SEQdbRoot '**/*.fasta']);
+    FNAFiles_FRN = dir([SEQdbRoot '**/*.frn']);
+    if (~isempty(FNAFiles_FNA)&&~isempty(FNAFiles_FA))
+        FNAFiles_1 = cat(1,FNAFiles_FNA,FNAFiles_FA);
+    elseif (~isempty(FNAFiles_FNA))
+        FNAFiles_1 = FNAFiles_FNA;
+    elseif (~isempty(FNAFiles_FA))
+        FNAFiles_1 = FNAFiles_FA;
+    else
+        FNAFiles_1 = [];
+    end
+    if (~isempty(FNAFiles_FASTA)&&~isempty(FNAFiles_FRN))
+        FNAFiles_2 = cat(1,FNAFiles_FASTA,FNAFiles_FRN);
+    elseif (~isempty(FNAFiles_FASTA))
+        FNAFiles_2 = FNAFiles_FNA;
+    elseif (~isempty(FNAFiles_FRN))
+        FNAFiles_2 = FNAFiles_FRN;
+    else
+        FNAFiles_2 = [];
+    end
+    if (~isempty(FNAFiles_1)&&~isempty(FNAFiles_2))
+        FNAFiles = cat(1,FNAFiles_1,FNAFiles_2);
+    elseif (~isempty(FNAFiles_1))
+        FNAFiles = FNAFiles_1;
+    elseif (~isempty(FNAFiles_2))
+        FNAFiles = FNAFiles_2;
+    else
+        FNAFiles = [];
+    end
+    if (~isempty(FNAFiles))
+        FNAFileLoc = cell(1,length(FNAFiles));
+        BioIFobj = cell(1,length(FNAFiles));
+        BioKeys = cell(1,length(FNAFiles));
+        for k=1:length(FNAFiles)
+            FNAFileLoc{k} = strcat(FNAFiles(k).folder,filesep,FNAFiles(k).name);
+            BioIFobj{k} = BioIndexedFile('FASTA',FNAFileLoc{k});
+            BioIFobj{k}.Interpreter = @(x)fastaread(x,'TRIMHEADERS',false);
+            BioKeys{k}{:} = getKeys(BioIFobj{k});
+        end
+    else
+        msg = strcat('Error. There must be FASTA DNA type files in the Root FASTA Folder location: ',SEQdbRoot);
+        error(msg)
+    end
+    strand_dict = dictionary(["plus" "minus"],1:2);
     if (runDNA)
         if (BLASTdb_DNAexists)
             if (~runRNA)
@@ -143,13 +159,13 @@ if (or(BLASTdb_DNAexists,BLASTdb_RNAexists))
                             Unique_DNA_ANs_Batches = cell(1,Num_Unique_DNA_ANs_Batches);
                             if (R==0)
                                 for k = 1:Num_Unique_DNA_ANs_Batches
-                                    Unique_DNA_ANs_Batches{k} = [targetBatchSize*(k-1)+1:targetBatchSize*k];
+                                    Unique_DNA_ANs_Batches{k} = targetBatchSize*(k-1)+1:targetBatchSize*k;
                                 end
                             else
                                 for k = 1:Num_Unique_DNA_ANs_Batches-1
-                                    Unique_DNA_ANs_Batches{k} = [targetBatchSize*(k-1)+1:targetBatchSize*k];
+                                    Unique_DNA_ANs_Batches{k} = targetBatchSize*(k-1)+1:targetBatchSize*k;
                                 end
-                                Unique_DNA_ANs_Batches{Num_Unique_DNA_ANs_Batches} = [targetBatchSize*(Num_Unique_DNA_ANs_Batches-1)+1:targetBatchSize*(Num_Unique_DNA_ANs_Batches-1)+R];
+                                Unique_DNA_ANs_Batches{Num_Unique_DNA_ANs_Batches} = targetBatchSize*(Num_Unique_DNA_ANs_Batches-1)+1:targetBatchSize*(Num_Unique_DNA_ANs_Batches-1)+R;
                             end
                             ResultsExist_DNA_ANs_Batches = zeros(1,Num_Unique_DNA_ANs_Batches);
                             ResultsDate_DNA_ANs_Batches = cell(1,Num_Unique_DNA_ANs_Batches);
@@ -327,13 +343,13 @@ if (or(BLASTdb_DNAexists,BLASTdb_RNAexists))
                             Unique_RNA_ANs_Batches = cell(1,Num_Unique_RNA_ANs_Batches);
                             if (R==0)
                                 for k = 1:Num_Unique_RNA_ANs_Batches
-                                    Unique_RNA_ANs_Batches{k} = [targetBatchSize*(k-1)+1:targetBatchSize*k];
+                                    Unique_RNA_ANs_Batches{k} = targetBatchSize*(k-1)+1:targetBatchSize*k;
                                 end
                             else
                                 for k = 1:Num_Unique_RNA_ANs_Batches-1
-                                    Unique_RNA_ANs_Batches{k} = [targetBatchSize*(k-1)+1:targetBatchSize*k];
+                                    Unique_RNA_ANs_Batches{k} = targetBatchSize*(k-1)+1:targetBatchSize*k;
                                 end
-                                Unique_RNA_ANs_Batches{Num_Unique_RNA_ANs_Batches} = [targetBatchSize*(Num_Unique_RNA_ANs_Batches-1)+1:targetBatchSize*(Num_Unique_RNA_ANs_Batches-1)+R];
+                                Unique_RNA_ANs_Batches{Num_Unique_RNA_ANs_Batches} = targetBatchSize*(Num_Unique_RNA_ANs_Batches-1)+1:targetBatchSize*(Num_Unique_RNA_ANs_Batches-1)+R;
                             end
                             ResultsExist_RNA_ANs_Batches = zeros(1,Num_Unique_RNA_ANs_Batches);
                             ResultsDate_RNA_ANs_Batches = cell(1,Num_Unique_RNA_ANs_Batches);
@@ -482,7 +498,6 @@ if (doFlankCalc)
         end
     end
 end
-
 end
 
 

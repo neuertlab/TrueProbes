@@ -35,6 +35,7 @@ gapextend = settings.BlastParameters.gapextend;
 evalue = settings.BlastParameters.evalue;
 num_alignments = settings.BlastParameters.num_alignments;
 dust = settings.BlastParameters.dust;
+task = settings.BlastParameters.task;
 if (settings.clusterStatus)
     most_recent_num = double(string(getenv('SLURM_JOB_CPUS_PER_NODE')));
 else
@@ -242,7 +243,7 @@ if (~isempty(batch_nums_to_check1))
             per_id = 100*MinHomologySize_Constant.Value/MaxProbeSize;
             strand = 'both';
             options = strcat("-num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
-                " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)," -task blastn -outfmt 5");
+                " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -task ",task," -perc_identity ",num2str(per_id)," -outfmt 5");
             if (~ismac)
                 [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", sequence_data, database_DNA, outputfile_DNA, options));
             else
@@ -259,7 +260,7 @@ if (~isempty(batch_nums_to_check1))
             per_id = 100*MinHomologySize_Constant.Value/MaxProbeSize;
             strand = 'plus';
             options = strcat("-num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
-                " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -perc_identity ",num2str(per_id)," -task blastn -outfmt 5");
+                " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -task ",task," -perc_identity ",num2str(per_id)," -outfmt 5");
             if (~ismac)
                 [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", sequence_data, database_RNA, outputfile_RNA, options));
             else
@@ -315,7 +316,11 @@ if (~isempty(batch_nums_to_check2))
                     if (contains(temp_hits_all(v).Hit_id,'BL_ORD_ID'))
                         [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
                     else
+                        if (contains(temp_hits_all(v).Hit_id,'|'))
                         [temp_hits_subnode{v}.Name] = deal(strcat(extractBetween(temp_hits_all(v).Hit_id,'|','|')," ",temp_hits_all(v).Hit_def));
+                        else
+                        [temp_hits_subnode{v}.Name] = deal(strcat(temp_hits_all(v).Hit_id," ",temp_hits_all(v).Hit_def));
+                        end
                     end
                     [temp_hits_subnode{v}.ProbeNum] = deal(probe_ids(v));
                     [temp_hits_subnode{v}.ProbeSequence] = deal(pSeq(probe_ord(v)).Sequence);
@@ -366,7 +371,11 @@ if (~isempty(batch_nums_to_check2))
                         if (contains(temp_hits_subnode.Hit(v).Hit_id,'BL_ORD_ID'))
                             [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
                         else
-                            [sub_neststruc{v}.Name] = deal(strcat(extractBetween(temp_hits_subnode.Hit(v).Hit_id,'|','|')," ",temp_hits_subnode.Hit(v).Hit_def));
+                            if (contains(temp_hits_subnode.Hit(v).Hit_id,'|'))
+                                [sub_neststruc{v}.Name] = deal(strcat(extractBetween(temp_hits_subnode.Hit(v).Hit_id,'|','|')," ",temp_hits_subnode.Hit(v).Hit_def));
+                            else
+                                [sub_neststruc{v}.Name] = deal(strcat(temp_hits_subnode.Hit(v).Hit_id," ",temp_hits_subnode.Hit(v).Hit_def));
+                            end
                         end
                         [sub_neststruc{v}.ProbeNum] = deal(Batch_List.Value{i}(w));
                         [sub_neststruc{v}.ProbeSequence] = deal(pSeq(w).Sequence);
@@ -429,7 +438,11 @@ if (~isempty(batch_nums_to_check2))
                     if (contains(temp_hits_all(v).Hit_id,'BL_ORD_ID'))
                         [temp_hits_subnode{v}.Name] = deal(temp_hits_all(v).Hit_def);
                     else
+                        if (contains(temp_hits_all(v).Hit_id,'|'))
                         [temp_hits_subnode{v}.Name] = deal(strcat(extractBetween(temp_hits_all(v).Hit_id,'|','|')," ",temp_hits_all(v).Hit_def));
+                        else
+                        [temp_hits_subnode{v}.Name] = deal(strcat(temp_hits_all(v).Hit_id," ",temp_hits_all(v).Hit_def));
+                        end
                     end
                     [temp_hits_subnode{v}.ProbeNum] = deal(probe_ids(v));
                     [temp_hits_subnode{v}.ProbeSequence] = deal(pSeq(probe_ord(v)).Sequence);
@@ -480,7 +493,11 @@ if (~isempty(batch_nums_to_check2))
                         if (contains(temp_hits_subnode.Hit(v).Hit_id,'BL_ORD_ID'))
                             [sub_neststruc{v}.Name] = deal(temp_hits_subnode.Hit(v).Hit_def);
                         else
-                            [sub_neststruc{v}.Name] = deal(strcat(extractBetween(temp_hits_subnode.Hit(v).Hit_id,'|','|')," ",temp_hits_subnode.Hit(v).Hit_def));
+                            if (contains(temp_hits_subnode.Hit(v).Hit_id,'|'))
+                                [sub_neststruc{v}.Name] = deal(strcat(extractBetween(temp_hits_subnode.Hit(v).Hit_id,'|','|')," ",temp_hits_subnode.Hit(v).Hit_def));
+                            else
+                                [sub_neststruc{v}.Name] = deal(strcat(temp_hits_subnode.Hit(v).Hit_id," ",temp_hits_subnode.Hit(v).Hit_def));
+                            end
                         end
                         [sub_neststruc{v}.ProbeNum] = deal(Batch_List.Value{i}(w));
                         [sub_neststruc{v}.ProbeSequence] = deal(pSeq(w).Sequence);

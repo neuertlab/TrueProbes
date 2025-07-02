@@ -94,8 +94,8 @@
         <Root_FASTA>data/DatabaseData/Blast_Databases/Human/NCBI_RefSeq/</Root_FASTA>
         <BLASTDB_DNA>data/DatabaseData/Blast_Databases/Human/NCBI_RefSeq/Human_NCBI_genomic</BLASTDB_DNA>
         <BLASTDB_RNA>data/DatabaseData/Blast_Databases/Human/NCBI_RefSeq/Human_NCBI_transcript</BLASTDB_RNA>
-        <GTF>data/DatabaseData/GTF_Databases/Human/NCBI_RefSeq/GCF_000001405.40_GRCh38.p14_genomic.gtf</GTF>
-        <GFF>data/DatabaseData/GFF3_Databases/Human/NCBI_RefSeq/GCF_000001405.40_GRCh38.p14_genomic.gff</GFF>
+        <GTF>data/DatabaseData/GTF_Databases/Human/NCBI_RefSeq/GCF_000001405.39_GRCh38.p13_genomic.gtf</GTF>
+        <GFF>data/DatabaseData/GFF3_Databases/Human/NCBI_RefSeq/GCF_000001405.39_GRCh38.p13_genomic.gff</GFF>
     </row>
     <row>
         <Organism>Mouse</Organism>
