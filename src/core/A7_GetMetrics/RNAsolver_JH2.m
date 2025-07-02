@@ -47,8 +47,12 @@ IntensityPerProbe_Mean = SpotIntensity_Mean/NumReferenceProbes;
 IntensityPerProbe_STD = SpotIntensity_STD/sqrt(NumReferenceProbes);
 
 Pr_Auto_I = pIntensity(SI,AutoBackground_Mean,AutoBackground_STD);%I over SI
+ExpressionMatrix(isnan(ExpressionMatrix)) = 0;
 NumNonUniformConditions = size(ExpressionMatrix,2);
-[~, ExpressionMatrix_nTPM] = tmm(ExpressionMatrix,logRatioTrim,sumTrim,Acutoff,doWeighting);
+
+
+
+[~, ExpressionMatrix_nTPM] = tmm(double(ExpressionMatrix),logRatioTrim,sumTrim,Acutoff,doWeighting);
 transcript_Expression_Equal_acrossSample = mean(ExpressionMatrix_nTPM(:));
 transcript_Expression_Average_acrossSample = mean(ExpressionMatrix_nTPM,2)';
 ExpressionMatrix_nTPM(:,NumNonUniformConditions+1) = transcript_Expression_Equal_acrossSample;
@@ -59,15 +63,15 @@ Cvec = [size(nExpressionMatrix,2)-1 size(nExpressionMatrix,2)];
 else
 Cvec = [settings.ExpressionReferenceForDesigningProbes size(nExpressionMatrix,2)-1 size(nExpressionMatrix,2)];
 end
-GeneName = settings.GeneName;
-GeneTarget = settings.transcript_IDs;
+
+
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
 gene_table_NamesZ = convertCharsToStrings(gene_table.Name);
-contains_RNA = find(ismember(gene_table_NamesZ,settings.RNAdbParser));
+contains_RNA = find(ismember(gene_table_NamesZ,settings.RNAdbParser));clear gene_table_NamesZ
 RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);clear contains_RNA
-gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
+gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);clear RNA_MissedFilteredHits
 gene_table.Ax = min(gene_table.SubjectIndices,[],2);
 gene_table.Bx = max(gene_table.SubjectIndices,[],2);
 gene_table = sortrows(gene_table,[7 13],'ascend');
@@ -102,8 +106,8 @@ end
 fprintf("Computing Probe Design Target Packing Efficiency")
 fprintf('\n')
 fprintf('\n')
-LocMax = max(cell2mat(cellfun(@(x) x,{probes{:,3}},'UniformOutput',false)));
-Lpmin = min(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
+LocMax = max(cell2mat(cellfun(@(x) x,probes(:,3),'UniformOutput',false)));
+Lpmin = min(cell2mat(cellfun(@length,probes(:,2),'UniformOutput',false)));
 TargetLength = LocMax + Lpmin - 1;
 theoryMaxProbes = floor(TargetLength/(Lpmin+settings.ProbeSpacing));
 if (theoryMaxProbes>settings.maxProbes)
@@ -183,7 +187,7 @@ for m_unique_loci = 1:length(m_unique_loc)
             ProbeConc = PC0*squeeze(permute(repmat(Dvec(d_unique_loc(d_unique_loci)),[1 1 length(Pset) 1 1 length(Cvec)]),[1 3 4 5 2 6]));
             fprintf("Solving model for free-steady state probe concentrations")
             fprintf('\n')
-            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))),"°C")) 
+            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))-273.15),"°C")) 
             fprintf('\n')
             fprintf('\n')
             [CProbes_Free,varSSE,err,iter,eqSSE] = A_ModelEquilibriumSolverWrapper_V4(ModelSolverFunctions,MaxIter,errThreshold,Pset,nExpressionMatrix,Tvec(t_unique_loc(t_unique_loci)),Mvec(m_unique_loc(m_unique_loci)),Dvec(d_unique_loc(d_unique_loci)),Cvec,Tref,Ns_Config,Nc_Config,CProbes_Free0,CProbes_Free,ProbeConc,Js_RNA,Js_DNA,Js_Sites,0);
@@ -194,9 +198,10 @@ for m_unique_loci = 1:length(m_unique_loc)
             ProbeSetMetrics.CProbes_Free{m_unique_loci,t_unique_loci,d_unique_loci} = CProbes_Free;
             fprintf("Computing model steady-state equilibrium probe-target duplex concentrations")
             fprintf('\n')
-            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))),"°C")) 
+            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))-273.15),"°C")) 
             fprintf('\n')
             fprintf('\n')
+            if (nnz(dHeq_mod(:,:,:,m_unique_loc(m_unique_loci)))+nnz(dSeq_mod(:,:,:,m_unique_loc(m_unique_loci)))>0) 
             [c_Target_nBound,p_TargetSites_Bound,c_TargetSites_Bound] = A_DetectionSolverWrapper_V4(ModelSolverFunctions,[1 1 1],Pset,settings,nExpressionMatrix,Tvec(t_unique_loc(t_unique_loci)),Mvec(m_unique_loc(m_unique_loci)),Dvec(d_unique_loc(d_unique_loci)),Cvec,Tref,CProbes_Free,DoesProbeBindSite,Js_RNA,Js_DNA,Js_Sites,Names,ON_IDs_specific,ON_IDs_agnostic,OFF_IDs);
             ProbeSetMetrics.BindingPredictions.p_TargetSites_Bound_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = p_TargetSites_Bound;   %same regardless of t has all t, currently just adds to memory, by duplication
             ProbeSetMetrics.BindingPredictions.c_TargetSites_Bound_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = c_TargetSites_Bound;    %same regardless of t has all t, currently just adds to memory, by duplication
@@ -204,7 +209,7 @@ for m_unique_loci = 1:length(m_unique_loc)
             %Probe Binding Calculations
             fprintf("Computing probe set on/off-target binding model metrics")
             fprintf('\n')
-            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))),"°C")) 
+            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))-273.15),"°C")) 
             fprintf('\n')
             fprintf(strcat("Cell Radius = ",string(Rcell),"μm"))
             fprintf('\n')
@@ -227,197 +232,153 @@ for m_unique_loci = 1:length(m_unique_loc)
             Non_P = Non_P(1:find(squeeze(sum(Non_P,2))>0, 1, 'last'),:);
             Nother_P = Nother_P(1:find(squeeze(sum(Nother_P,2))>0, 1, 'last'),:);
             Noff_P = Noff_P(1:find(squeeze(sum(Noff_P,2))>0, 1, 'last'),:);
+            output_exists = 0;
             if (isempty(Non_P))
                 Non_P = ndSparse.build([max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)]) length(Cvec)],0);
+                output_exists = 1;
             end
             if (isempty(Nother_P))
                 Nother_P = ndSparse.build([max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)]) length(Cvec)],0);
+                output_exists = 1;
             end
             if (isempty(Noff_P))
                 Noff_P = ndSparse.build([max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])  length(Cvec)],0);
+                output_exists = 1;
             end
-            Basic_Noff = sum(Noff_P.*[0:size(Noff_P,1)-1]',1);
-            IsoIgnorantConfusion_P = confusionMatrixWrapper_MultiCell(...
-                CATnWrapper({permute(Non_P(2:end,:),[2 1]), ndSparse.build([size(Non_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Non_P,1)])},2),...
-                CATnWrapper({permute(Noff_P(2:end,:),[2 1]), ndSparse.build([size(Noff_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Noff_P,1)])},2));
-            if (~isempty(Nother_P))
-                IsoSpecificConfusion_P = confusionMatrixWrapper_MultiCell(...
+            if (output_exists)
+                Basic_Noff = sum(Noff_P.*[0:size(Noff_P,1)-1]',1);
+                IsoIgnorantConfusion_P = confusionMatrixWrapper_MultiCell(...
                     CATnWrapper({permute(Non_P(2:end,:),[2 1]), ndSparse.build([size(Non_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Non_P,1)])},2),...
-                    CATnWrapper({permute(Noff_P(2:end,:),[2 1]), ndSparse.build([size(Noff_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Noff_P,1)])},2)+...
-                    CATnWrapper({permute(Nother_P(2:end,:),[2 1]), ndSparse.build([size(Nother_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Nother_P,1)])},2));
-                IsoAgnosticConfusion_P = confusionMatrixWrapper_MultiCell(...
-                    CATnWrapper({permute(Non_P(2:end,:),[2 1]), ndSparse.build([size(Non_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Non_P,1)])},2)+...
-                    CATnWrapper({permute(Nother_P(2:end,:),[2 1]), ndSparse.build([size(Nother_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Nother_P,1)])},2),...
                     CATnWrapper({permute(Noff_P(2:end,:),[2 1]), ndSparse.build([size(Noff_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Noff_P,1)])},2));
-            else
-                IsoSpecificConfusion_P = [];
-                IsoAgnosticConfusion_P = [];
-            end
-            %store first set of results
-            ProbeSetMetrics.BindingPredictions.Con_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = OnSpecificCounts;
-            ProbeSetMetrics.BindingPredictions.Cother_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = OnOtherCounts;
-            ProbeSetMetrics.BindingPredictions.Coff_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci}= OffCounts;
-            ProbeSetMetrics.BindingPredictions.Pon_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = OnSpecificDistribution;
-            ProbeSetMetrics.BindingPredictions.Pother_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = OnOtherDistribution;
-            ProbeSetMetrics.BindingPredictions.Poff_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = OffDistribution;
-            ProbeSetMetrics.BindingPredictions.Non_Count_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Non_Counts;
-            ProbeSetMetrics.BindingPredictions.Nother_Count_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Nother_Counts;
-            ProbeSetMetrics.BindingPredictions.Noff_Count_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Noff_Counts;
-            ProbeSetMetrics.BindingPredictions.Non_history_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Non_P;
-            ProbeSetMetrics.BindingPredictions.Nother_history_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci}= Nother_P;
-            ProbeSetMetrics.BindingPredictions.Noff_history_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Noff_P;
-            ProbeSetMetrics.BindingPredictions.Noff_tot_history_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Basic_Noff;
-            ProbeSetMetrics.BindingPredictions.IsoIgnorantConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoIgnorantConfusion_P;
-            ProbeSetMetrics.BindingPredictions.IsoSpecificConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoSpecificConfusion_P;
-            ProbeSetMetrics.BindingPredictions.IsoAgnosticConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoAgnosticConfusion_P;
-            fprintf("Computing predicted probe set spot intensity and spot detection model metrics")
-            fprintf('\n')
-            fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))),"°C")) 
-            fprintf('\n')
-            fprintf(strcat("Reference Mean Autofluorescence Background Intensity = ",string(AutoBackground_Mean)," ","a.u."))
-            fprintf('\n')
-            fprintf(strcat("Reference Autofluorescence Background Intensity Standard Deviation = ",string(AutoBackground_STD)))
-            fprintf('\n')
-            fprintf(strcat("Reference Mean Single Probe Intensity = ",string(IntensityPerProbe_Mean)," ","a.u."))
-            fprintf('\n')
-            fprintf(strcat("Reference Single Probe Intensity Standard Deviation = ",string(IntensityPerProbe_STD)))
-            fprintf('\n')
-            fprintf(strcat("Cell Pixel Diameter = ",string(Mean_Diameter),"px"))
-            fprintf('\n')
-            fprintf(strcat("Spot Radius = ",string(Rspot),"px"))
-            fprintf('\n')
-            fprintf('\n')
-            %Intensity Calculations
-            Ioff_Pixel = repmat(Basic_Noff,[length(Diameter_vals) 1])*IntensityPerProbe_Mean/Nstacks*Rspot^2./(pi/4*Diameter_vals'.^2);%for all diameter entries
-            Pn_XtoI_ON =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Non_P,1)-1,'Un',0),1)];
-            Pn_XtoI_OTHER =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Nother_P,1)-1,'Un',0),1)];
-            Pn_XtoI_OFF =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Noff_P,1)-1,'Un',0),1)];
-            Pon_I = permute(squeeze(sum(permute(repmat(Non_P(2:end,:)',[1 1 length(SI)]),[2 3 1]).*Pn_XtoI_ON,1))./sum(Non_P(2:end,:),1),[2 1]);%I over SI
-            Pon_I(isnan(Pon_I)) = 0;
-            if (sum(ismember(sum(Non_P,1),0))>0)
-            Pon_I(sum(Non_P,1)==0,1) = 1;
-            end
-            Non_I = sum(Non_P(2:end,:),1)'.*Pon_I;
-            if (~isempty(Nother_P))
-                Pother_I = permute(squeeze(sum(permute(repmat(Nother_P(2:end,:)',[1 1 length(SI)]),[2 3 1]).*Pn_XtoI_OTHER,1))./sum(Nother_P(2:end,:),1),[2 1]);%I over SI
-                Pother_I(isnan(Pother_I)) = 0;
-                if (sum(ismember(sum(Nother_P,1),0))>0)
-                    Pother_I(sum(Nother_P,1)==0,1) = 1;
+                if (~isempty(Nother_P))
+                    IsoSpecificConfusion_P = confusionMatrixWrapper_MultiCell(...
+                        CATnWrapper({permute(Non_P(2:end,:),[2 1]), ndSparse.build([size(Non_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Non_P,1)])},2),...
+                        CATnWrapper({permute(Noff_P(2:end,:),[2 1]), ndSparse.build([size(Noff_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Noff_P,1)])},2)+...
+                        CATnWrapper({permute(Nother_P(2:end,:),[2 1]), ndSparse.build([size(Nother_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Nother_P,1)])},2));
+                    IsoAgnosticConfusion_P = confusionMatrixWrapper_MultiCell(...
+                        CATnWrapper({permute(Non_P(2:end,:),[2 1]), ndSparse.build([size(Non_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Non_P,1)])},2)+...
+                        CATnWrapper({permute(Nother_P(2:end,:),[2 1]), ndSparse.build([size(Nother_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Nother_P,1)])},2),...
+                        CATnWrapper({permute(Noff_P(2:end,:),[2 1]), ndSparse.build([size(Noff_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Noff_P,1)])},2));
+                else
+                    IsoSpecificConfusion_P = [];
+                    IsoAgnosticConfusion_P = [];
                 end
-                Nother_I = sum(Nother_P(2:end,:),1)'.*Pother_I;
-            else
-                Pother_I = [];
-                Nother_I = [];
-            end
-            Poff_I = permute(squeeze(sum(permute(repmat(Noff_P(2:end,:)',[1 1 length(SI)]),[2 3 1]).*Pn_XtoI_OFF,1))./sum(Noff_P(2:end,:),1),[2 1]);%I over SI
-            Poff_I(isnan(Poff_I)) = 0;
-            if (sum(ismember(sum(Noff_P,1),0))>0)
-                Poff_I(sum(Noff_P,1)==0,1) = 1;
-            end
-            Noff_I = sum(Noff_P(2:end,:),1)'.*Poff_I;
-            Pon_wAuto_I = CATnWrapper(arrayfun(@(x) plus_Random(full(squeeze(Pon_I(x,:))),Pr_Auto_I),1:size(Pon_I,1),'Un',0),1);
-            if (~isempty(Nother_P))
-                Pother_wAuto_I = CATnWrapper(arrayfun(@(x) plus_Random(full(squeeze(Pother_I(x,:))),Pr_Auto_I),1:size(Pother_I,1),'Un',0),1);
-            else
-                Pother_wAuto_I = [];
-            end
-            Poff_NonAverage_wAuto_I = CATnWrapper(arrayfun(@(x) plus_Random(full(squeeze(Poff_I(x,:))),Pr_Auto_I),1:size(Poff_I,1),'Un',0),1);
-            IsoIgnorantConfusion_I = confusionMatrixWrapper_MultiCell(Non_I,Noff_I);
-            if (~isempty(Nother_P))
-                IsoSpecificConfusion_I = confusionMatrixWrapper_MultiCell(Non_I,Noff_I+Nother_I);
-                IsoAgnosticConfusion_I = confusionMatrixWrapper_MultiCell(Non_I+Nother_I,Noff_I);
-            else
-                IsoSpecificConfusion_I = [];
-                IsoAgnosticConfusion_I = [];
-            end
-            %% Itensity with Cell Size Calculations
-            %Signal Prediction Calculation
-            x =  SI_Signal_wAuto_I;
-            Px = Pon_wAuto_I;
-            Py = Pz_domain_function(Pr_Auto_I);
-            Q_Signal_Func = @(c) sum(H2_func(SI,z_domain_function(x,squeeze(Px(c,:)))).*Pz_domain_function(squeeze(Px(c,:)))',1);
-            Q_Backgd_Func = @(c,ci) sum(H2_func(SI,z_domain_function(SI+squeeze(Ioff_Pixel(ci,c)),Pr_Auto_I)).*Py',1);
-            Qsignal = CATnWrapper(arrayfun(@(nth_cell) Q_Signal_Func(nth_cell),1:size(Px,1),'Un',0),1);
-            Psignal = CATnWrapper(arrayfun(@(nth_cell) gradient(squeeze(Qsignal(nth_cell,:)),SI)/(max(squeeze(Qsignal(nth_cell,:)))-min(squeeze(Qsignal(nth_cell,:)))),1:length(Cvec),'Un',0),1);
-            Qbackgd = CATnWrapper(arrayfun(@(nth_cell) Q_Backgd_Func(nth_cell,1),1:length(Cvec),'Un',0),1);
-            Pbackgd = CATnWrapper(arrayfun(@(nth_cell) gradient(squeeze(Qbackgd(nth_cell,:)),SI)/(max(squeeze(Qbackgd(nth_cell,:)))-min(squeeze(Qbackgd(nth_cell,:)))),1:length(Cvec),'Un',0),1);
-            Psignal_minus_backgd = CATnWrapper(arrayfun(@(nth_cell) minus_Random(squeeze(Psignal(nth_cell,:)),squeeze(Pbackgd(nth_cell,:))),1:length(Cvec),'Un',0),1);
-            Qsignal_minus_backgd = CATnWrapper(arrayfun(@(nth_cell) cumsum(squeeze(Psignal_minus_backgd(nth_cell,:))),1:length(Cvec),'Un',0),1);
-            Psignal_minus_backgd = CATnWrapper(arrayfun(@(nth_cell) gradient(squeeze(Qsignal_minus_backgd(nth_cell,:)),SI_SignalMinusBackgd_I)/(max(squeeze(Qsignal_minus_backgd(nth_cell,:)))-min(squeeze(Qsignal_minus_backgd(nth_cell,:)))),1:length(Cvec),'Un',0),1);
-            ProbeSetMetrics.IntensityPredictions.Ioff_history_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Ioff_Pixel;
-            ProbeSetMetrics.IntensityPredictions.Non_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Non_I;%I over SI
-            ProbeSetMetrics.IntensityPredictions.Nother_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Nother_I;%I over SI
-            ProbeSetMetrics.IntensityPredictions.Noff_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Noff_I;%I over SI
-            ProbeSetMetrics.IntensityPredictions.P_Non_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Pon_I;%I over SI
-            ProbeSetMetrics.IntensityPredictions.P_Nother_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Pother_I;%I over SI
-            ProbeSetMetrics.IntensityPredictions.P_Noff_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Poff_I;%I over SI
-            ProbeSetMetrics.IntensityPredictions.P_Signal_wAuto_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Pon_wAuto_I;
-            ProbeSetMetrics.IntensityPredictions.P_SignalOther_wAuto_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Pother_wAuto_I;
-            ProbeSetMetrics.IntensityPredictions.P_SignalOffNonAverage_wAuto_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Poff_NonAverage_wAuto_I;
-            ProbeSetMetrics.IntensityPredictions.IsoIgnorantConfusion_Intensity_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoIgnorantConfusion_I;
-            ProbeSetMetrics.IntensityPredictions.IsoSpecificConfusion_Intensity_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoSpecificConfusion_I;
-            ProbeSetMetrics.IntensityPredictions.IsoAgnosticConfusion_Intensity_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoAgnosticConfusion_I;
-            ProbeSetMetrics.IntensityPredictions.QzCellBkg_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Qbackgd;
-            ProbeSetMetrics.IntensityPredictions.PzCellBkg_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Pbackgd;
-            ProbeSetMetrics.IntensityPredictions.QzSignalMinusBackgd_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Qsignal_minus_backgd;
-            ProbeSetMetrics.IntensityPredictions.PzSignalMinusBackgd_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Psignal_minus_backgd;
-            ProbeSetMetrics.IntensityPredictions.QzSignal_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Qsignal;
-            ProbeSetMetrics.IntensityPredictions.PzSignal_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Psignal;
-            %Computational Threshold Calculations
-            vars = {'AP','PP','TP','FP','FN','FPR','FNR','TPR','TNR','FDR','FOR','PPV','NPV','Accuracy','BalancedAccuracy','F1','P4','MCC','CKC','FowlkesMallowsIndex','Accuracy'};
-            Positive_SpotCounts_Matrix = IsoIgnorantConfusion_I.PP;
-            F1_ScoreCurve_Matrix = IsoIgnorantConfusion_I.F1;
-            F2_ScoreCurve_Matrix =  IsoIgnorantConfusion_I.Fbeta(2);
-            Fhalf_ScoreCurve_Matrix =  IsoIgnorantConfusion_I.Fbeta(0.5);
-            Filtered_SpotCountCurves = arrayfun(@(nth_cell)  unique(round(Positive_SpotCounts_Matrix(nth_cell,:)),'stable'),1:length(Cvec),'Un',0);
-            Filtered_SpotCountIndexes = arrayfun(@(nth_cell) arrayfun(@(z) find(round(Positive_SpotCounts_Matrix(nth_cell,:))==z,1),Filtered_SpotCountCurves{nth_cell}),1:length(Cvec),'Un',0);
-            param_struct_vector = arrayfun(@(x) RNAThreshold.genEmptyThresholdParamStruct(),1:length(Cvec),'Un',0);
-            for nn = 1:length(Cvec)
-                param_struct_vector{nn} = TrueSpotDefaultThParameters;
-                param_struct_vector{nn}.sample_spot_table = [[1:length(Filtered_SpotCountCurves{nn})]' Filtered_SpotCountCurves{nn}'];
-            end
-            scThresholdSuggestions = arrayfun(@(nn) RNAThreshold.scoreThresholdSuggestions(RNAThreshold.estimateThreshold(param_struct_vector{nn})),1:length(Cvec),'Un',0);
-            scThresholdSuggestions =  [scThresholdSuggestions{:}];
-            subfield_groups = {'pool','thstats'};
-            for v = 1:length(subfield_groups)
-                subfields = fieldnames(scThresholdSuggestions(1).(subfield_groups{v}));
-                for subf = 1:length(subfields)
-                    subf_vals = arrayfun(@(nn) scThresholdSuggestions(nn).(subfield_groups{v}).(subfields{subf}),1:size(scThresholdSuggestions,2),'UniformOutput',0);
-                    [scThresholdSuggestions.(subfields{subf})] = subf_vals{:};
+                %store first set of results
+                ProbeSetMetrics.BindingPredictions.Con_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = OnSpecificCounts;
+                ProbeSetMetrics.BindingPredictions.Cother_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = OnOtherCounts;
+                ProbeSetMetrics.BindingPredictions.Coff_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci}= OffCounts;
+                ProbeSetMetrics.BindingPredictions.Pon_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = OnSpecificDistribution;
+                ProbeSetMetrics.BindingPredictions.Pother_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = OnOtherDistribution;
+                ProbeSetMetrics.BindingPredictions.Poff_Distribution_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = OffDistribution;
+                ProbeSetMetrics.BindingPredictions.Non_Count_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Non_Counts;
+                ProbeSetMetrics.BindingPredictions.Nother_Count_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Nother_Counts;
+                ProbeSetMetrics.BindingPredictions.Noff_Count_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Noff_Counts;
+                ProbeSetMetrics.BindingPredictions.Non_history_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Non_P;
+                ProbeSetMetrics.BindingPredictions.Nother_history_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci}= Nother_P;
+                ProbeSetMetrics.BindingPredictions.Noff_history_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Noff_P;
+                ProbeSetMetrics.BindingPredictions.Noff_tot_history_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Basic_Noff;
+                ProbeSetMetrics.BindingPredictions.IsoIgnorantConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoIgnorantConfusion_P;
+                ProbeSetMetrics.BindingPredictions.IsoSpecificConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoSpecificConfusion_P;
+                ProbeSetMetrics.BindingPredictions.IsoAgnosticConfusion_Probe_P_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoAgnosticConfusion_P;
+                fprintf("Computing predicted probe set spot intensity and spot detection model metrics")
+                fprintf('\n')
+                fprintf(strcat("Initial Probe Concentration = ",string(PC0*Dvec(d_unique_loc(d_unique_loci))),"μM, Gibbs Model = ",string(Mvec(m_unique_loc(m_unique_loci))),",Temperature = ",string(Tvec(t_unique_loc(t_unique_loci))-273.15),"°C"))
+                fprintf('\n')
+                fprintf(strcat("Reference Mean Autofluorescence Background Intensity = ",string(AutoBackground_Mean)," ","a.u."))
+                fprintf('\n')
+                fprintf(strcat("Reference Autofluorescence Background Intensity Standard Deviation = ",string(AutoBackground_STD)))
+                fprintf('\n')
+                fprintf(strcat("Reference Mean Single Probe Intensity = ",string(IntensityPerProbe_Mean)," ","a.u."))
+                fprintf('\n')
+                fprintf(strcat("Reference Single Probe Intensity Standard Deviation = ",string(IntensityPerProbe_STD)))
+                fprintf('\n')
+                fprintf(strcat("Cell Pixel Diameter = ",string(Mean_Diameter),"px"))
+                fprintf('\n')
+                fprintf(strcat("Spot Radius = ",string(Rspot),"px"))
+                fprintf('\n')
+                fprintf('\n')
+                %Intensity Calculations
+                Ioff_Pixel = repmat(Basic_Noff,[length(Diameter_vals) 1])*IntensityPerProbe_Mean/Nstacks*Rspot^2./(pi/4*Diameter_vals'.^2);%for all diameter entries
+                Pn_XtoI_ON =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Non_P,1)-1,'Un',0),1)];
+                Pn_XtoI_OTHER =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Nother_P,1)-1,'Un',0),1)];
+                Pn_XtoI_OFF =  [CATnWrapper(arrayfun(@(x) nProbeIntensity(SI,SpotIntensity_Mean,SpotIntensity_STD,NumReferenceProbes,x),1:size(Noff_P,1)-1,'Un',0),1)];
+                Pon_I = permute(squeeze(sum(permute(repmat(Non_P(2:end,:)',[1 1 length(SI)]),[2 3 1]).*Pn_XtoI_ON,1))./sum(Non_P(2:end,:),1),[2 1]);%I over SI
+                Pon_I(isnan(Pon_I)) = 0;
+                if (sum(ismember(sum(Non_P,1),0))>0)
+                    Pon_I(sum(Non_P,1)==0,1) = 1;
                 end
-            end
-            scThresholdSuggestions = rmfield(scThresholdSuggestions,subfield_groups);
-            TrueSpot_FilteredThreshold = [scThresholdSuggestions.threshold];
-            TrueSpot_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(TrueSpot_FilteredThreshold(nth_cell)),1:length(Cvec),'Un',0));
-            F1_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
-            F1_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
-            F2_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
-            F2_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
-            Fhalf_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
-            Fhalf_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
-            TS_CountMetricFunction = @(k) IsoIgnorantConfusion_I.(vars{k})(sub2ind(size(IsoIgnorantConfusion_I.(vars{k})),1:length(Cvec),TrueSpot_ThresholdLocations));
-            F1_CountMetricFunction = @(k) IsoIgnorantConfusion_I.(vars{k})(sub2ind(size(IsoIgnorantConfusion_I.(vars{k})),1:length(Cvec),F1_ThresholdLocations));
-            F2_CountMetricFunction = @(k) IsoIgnorantConfusion_I.(vars{k})(sub2ind(size(IsoIgnorantConfusion_I.(vars{k})),1:length(Cvec),F2_ThresholdLocations));
-            Fhalf_CountMetricFunction = @(k) IsoIgnorantConfusion_I.(vars{k})(sub2ind(size(IsoIgnorantConfusion_I.(vars{k})),1:length(Cvec),Fhalf_ThresholdLocations));
-            SpotCountMetrics = [];
-            SpotCountMetrics.TrueSpot.Thresholds = TrueSpot_FilteredThreshold;
-            SpotCountMetrics.F1.Thresholds = F1_FilteredThreshold;
-            SpotCountMetrics.F2.Thresholds = F2_FilteredThreshold;
-            SpotCountMetrics.Fhalf.Thresholds = Fhalf_FilteredThreshold;
-            for k = 1:length(vars)
-                SpotCountMetrics.TrueSpot.(vars{k}) = TS_CountMetricFunction(k);
-                SpotCountMetrics.F1.(vars{k}) = F1_CountMetricFunction(k);
-                SpotCountMetrics.F2.(vars{k}) = F2_CountMetricFunction(k);
-                SpotCountMetrics.Fhalf.(vars{k}) = Fhalf_CountMetricFunction(k);
-            end
-            ProbeSetMetrics.CountPredictions.IsoIgnorant_SpotCountMetrics_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = SpotCountMetrics;
-            if (~isempty(Nother_P))
-                IsoSpecificConfusion_I = confusionMatrixWrapper_MultiCell(Non_I,Noff_I+Nother_I);
-                IsoAgnosticConfusion_I = confusionMatrixWrapper_MultiCell(Non_I+Nother_I,Noff_I);
-                Positive_SpotCounts_Matrix = IsoSpecificConfusion_I.PP;
-                F1_ScoreCurve_Matrix = IsoSpecificConfusion_I.F1;
-                F2_ScoreCurve_Matrix =  IsoSpecificConfusion_I.Fbeta(2);
-                Fhalf_ScoreCurve_Matrix =  IsoSpecificConfusion_I.Fbeta(0.5);
+                Non_I = sum(Non_P(2:end,:),1)'.*Pon_I;
+                if (~isempty(Nother_P))
+                    Pother_I = permute(squeeze(sum(permute(repmat(Nother_P(2:end,:)',[1 1 length(SI)]),[2 3 1]).*Pn_XtoI_OTHER,1))./sum(Nother_P(2:end,:),1),[2 1]);%I over SI
+                    Pother_I(isnan(Pother_I)) = 0;
+                    if (sum(ismember(sum(Nother_P,1),0))>0)
+                        Pother_I(sum(Nother_P,1)==0,1) = 1;
+                    end
+                    Nother_I = sum(Nother_P(2:end,:),1)'.*Pother_I;
+                else
+                    Pother_I = [];
+                    Nother_I = [];
+                end
+                Poff_I = permute(squeeze(sum(permute(repmat(Noff_P(2:end,:)',[1 1 length(SI)]),[2 3 1]).*Pn_XtoI_OFF,1))./sum(Noff_P(2:end,:),1),[2 1]);%I over SI
+                Poff_I(isnan(Poff_I)) = 0;
+                if (sum(ismember(sum(Noff_P,1),0))>0)
+                    Poff_I(sum(Noff_P,1)==0,1) = 1;
+                end
+                Noff_I = sum(Noff_P(2:end,:),1)'.*Poff_I;
+                Pon_wAuto_I = CATnWrapper(arrayfun(@(x) plus_Random(full(squeeze(Pon_I(x,:))),Pr_Auto_I),1:size(Pon_I,1),'Un',0),1);
+                if (~isempty(Nother_P))
+                    Pother_wAuto_I = CATnWrapper(arrayfun(@(x) plus_Random(full(squeeze(Pother_I(x,:))),Pr_Auto_I),1:size(Pother_I,1),'Un',0),1);
+                else
+                    Pother_wAuto_I = [];
+                end
+                Poff_NonAverage_wAuto_I = CATnWrapper(arrayfun(@(x) plus_Random(full(squeeze(Poff_I(x,:))),Pr_Auto_I),1:size(Poff_I,1),'Un',0),1);
+                IsoIgnorantConfusion_I = confusionMatrixWrapper_MultiCell(Non_I,Noff_I);
+                if (~isempty(Nother_P))
+                    IsoSpecificConfusion_I = confusionMatrixWrapper_MultiCell(Non_I,Noff_I+Nother_I);
+                    IsoAgnosticConfusion_I = confusionMatrixWrapper_MultiCell(Non_I+Nother_I,Noff_I);
+                else
+                    IsoSpecificConfusion_I = [];
+                    IsoAgnosticConfusion_I = [];
+                end
+                %% Itensity with Cell Size Calculations
+                %Signal Prediction Calculation
+                x =  SI_Signal_wAuto_I;
+                Px = Pon_wAuto_I;
+                Py = Pz_domain_function(Pr_Auto_I);
+                Q_Signal_Func = @(c) sum(H2_func(SI,z_domain_function(x,squeeze(Px(c,:)))).*Pz_domain_function(squeeze(Px(c,:)))',1);
+                Q_Backgd_Func = @(c,ci) sum(H2_func(SI,z_domain_function(SI+squeeze(Ioff_Pixel(ci,c)),Pr_Auto_I)).*Py',1);
+                Qsignal = CATnWrapper(arrayfun(@(nth_cell) Q_Signal_Func(nth_cell),1:size(Px,1),'Un',0),1);
+                Psignal = CATnWrapper(arrayfun(@(nth_cell) gradient(squeeze(Qsignal(nth_cell,:)),SI)/(max(squeeze(Qsignal(nth_cell,:)))-min(squeeze(Qsignal(nth_cell,:)))),1:length(Cvec),'Un',0),1);
+                Qbackgd = CATnWrapper(arrayfun(@(nth_cell) Q_Backgd_Func(nth_cell,1),1:length(Cvec),'Un',0),1);
+                Pbackgd = CATnWrapper(arrayfun(@(nth_cell) gradient(squeeze(Qbackgd(nth_cell,:)),SI)/(max(squeeze(Qbackgd(nth_cell,:)))-min(squeeze(Qbackgd(nth_cell,:)))),1:length(Cvec),'Un',0),1);
+                Psignal_minus_backgd = CATnWrapper(arrayfun(@(nth_cell) minus_Random(squeeze(Psignal(nth_cell,:)),squeeze(Pbackgd(nth_cell,:))),1:length(Cvec),'Un',0),1);
+                Qsignal_minus_backgd = CATnWrapper(arrayfun(@(nth_cell) cumsum(squeeze(Psignal_minus_backgd(nth_cell,:))),1:length(Cvec),'Un',0),1);
+                Psignal_minus_backgd = CATnWrapper(arrayfun(@(nth_cell) gradient(squeeze(Qsignal_minus_backgd(nth_cell,:)),SI_SignalMinusBackgd_I)/(max(squeeze(Qsignal_minus_backgd(nth_cell,:)))-min(squeeze(Qsignal_minus_backgd(nth_cell,:)))),1:length(Cvec),'Un',0),1);
+                ProbeSetMetrics.IntensityPredictions.Ioff_history_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Ioff_Pixel;
+                ProbeSetMetrics.IntensityPredictions.Non_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Non_I;%I over SI
+                ProbeSetMetrics.IntensityPredictions.Nother_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Nother_I;%I over SI
+                ProbeSetMetrics.IntensityPredictions.Noff_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Noff_I;%I over SI
+                ProbeSetMetrics.IntensityPredictions.P_Non_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Pon_I;%I over SI
+                ProbeSetMetrics.IntensityPredictions.P_Nother_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Pother_I;%I over SI
+                ProbeSetMetrics.IntensityPredictions.P_Noff_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Poff_I;%I over SI
+                ProbeSetMetrics.IntensityPredictions.P_Signal_wAuto_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Pon_wAuto_I;
+                ProbeSetMetrics.IntensityPredictions.P_SignalOther_wAuto_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Pother_wAuto_I;
+                ProbeSetMetrics.IntensityPredictions.P_SignalOffNonAverage_wAuto_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Poff_NonAverage_wAuto_I;
+                ProbeSetMetrics.IntensityPredictions.IsoIgnorantConfusion_Intensity_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoIgnorantConfusion_I;
+                ProbeSetMetrics.IntensityPredictions.IsoSpecificConfusion_Intensity_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoSpecificConfusion_I;
+                ProbeSetMetrics.IntensityPredictions.IsoAgnosticConfusion_Intensity_I_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoAgnosticConfusion_I;
+                ProbeSetMetrics.IntensityPredictions.QzCellBkg_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Qbackgd;
+                ProbeSetMetrics.IntensityPredictions.PzCellBkg_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Pbackgd;
+                ProbeSetMetrics.IntensityPredictions.QzSignalMinusBackgd_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Qsignal_minus_backgd;
+                ProbeSetMetrics.IntensityPredictions.PzSignalMinusBackgd_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Psignal_minus_backgd;
+                ProbeSetMetrics.IntensityPredictions.QzSignal_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Qsignal;
+                ProbeSetMetrics.IntensityPredictions.PzSignal_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = Psignal;
+                %Computational Threshold Calculations
+                vars = {'AP','PP','TP','FP','FN','FPR','FNR','TPR','TNR','FDR','FOR','PPV','NPV','Accuracy','BalancedAccuracy','F1','P4','MCC','CKC','FowlkesMallowsIndex','Accuracy'};
+                Positive_SpotCounts_Matrix = IsoIgnorantConfusion_I.PP;
+                F1_ScoreCurve_Matrix = IsoIgnorantConfusion_I.F1;
+                F2_ScoreCurve_Matrix =  IsoIgnorantConfusion_I.Fbeta(2);
+                Fhalf_ScoreCurve_Matrix =  IsoIgnorantConfusion_I.Fbeta(0.5);
                 Filtered_SpotCountCurves = arrayfun(@(nth_cell)  unique(round(Positive_SpotCounts_Matrix(nth_cell,:)),'stable'),1:length(Cvec),'Un',0);
                 Filtered_SpotCountIndexes = arrayfun(@(nth_cell) arrayfun(@(z) find(round(Positive_SpotCounts_Matrix(nth_cell,:))==z,1),Filtered_SpotCountCurves{nth_cell}),1:length(Cvec),'Un',0);
                 param_struct_vector = arrayfun(@(x) RNAThreshold.genEmptyThresholdParamStruct(),1:length(Cvec),'Un',0);
@@ -444,71 +405,122 @@ for m_unique_loci = 1:length(m_unique_loc)
                 F2_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
                 Fhalf_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
                 Fhalf_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
-                TS_CountMetricFunction = @(k) IsoSpecificConfusion_I.(vars{k})(sub2ind(size(IsoSpecificConfusion_I.(vars{k})),1:length(Cvec),TrueSpot_ThresholdLocations));
-                F1_CountMetricFunction = @(k) IsoSpecificConfusion_I.(vars{k})(sub2ind(size(IsoSpecificConfusion_I.(vars{k})),1:length(Cvec),F1_ThresholdLocations));
-                F2_CountMetricFunction = @(k) IsoSpecificConfusion_I.(vars{k})(sub2ind(size(IsoSpecificConfusion_I.(vars{k})),1:length(Cvec),F2_ThresholdLocations));
-                Fhalf_CountMetricFunction = @(k) IsoSpecificConfusion_I.(vars{k})(sub2ind(size(IsoSpecificConfusion_I.(vars{k})),1:length(Cvec),Fhalf_ThresholdLocations));
-                IsoSpecific_SpotCountMetrics = [];
-                IsoSpecific_SpotCountMetrics.TrueSpot.Thresholds = TrueSpot_FilteredThreshold;
-                IsoSpecific_SpotCountMetrics.F1.Thresholds = F1_FilteredThreshold;
-                IsoSpecific_SpotCountMetrics.F2.Thresholds = F2_FilteredThreshold;
-                IsoSpecific_SpotCountMetrics.Fhalf.Thresholds = Fhalf_FilteredThreshold;
+                TS_CountMetricFunction = @(k) IsoIgnorantConfusion_I.(vars{k})(sub2ind(size(IsoIgnorantConfusion_I.(vars{k})),1:length(Cvec),TrueSpot_ThresholdLocations));
+                F1_CountMetricFunction = @(k) IsoIgnorantConfusion_I.(vars{k})(sub2ind(size(IsoIgnorantConfusion_I.(vars{k})),1:length(Cvec),F1_ThresholdLocations));
+                F2_CountMetricFunction = @(k) IsoIgnorantConfusion_I.(vars{k})(sub2ind(size(IsoIgnorantConfusion_I.(vars{k})),1:length(Cvec),F2_ThresholdLocations));
+                Fhalf_CountMetricFunction = @(k) IsoIgnorantConfusion_I.(vars{k})(sub2ind(size(IsoIgnorantConfusion_I.(vars{k})),1:length(Cvec),Fhalf_ThresholdLocations));
+                SpotCountMetrics = [];
+                SpotCountMetrics.TrueSpot.Thresholds = TrueSpot_FilteredThreshold;
+                SpotCountMetrics.F1.Thresholds = F1_FilteredThreshold;
+                SpotCountMetrics.F2.Thresholds = F2_FilteredThreshold;
+                SpotCountMetrics.Fhalf.Thresholds = Fhalf_FilteredThreshold;
                 for k = 1:length(vars)
-                    IsoSpecific_SpotCountMetrics.TrueSpot.(vars{k}) = TS_CountMetricFunction(k);
-                    IsoSpecific_SpotCountMetrics.F1.(vars{k}) = F1_CountMetricFunction(k);
-                    IsoSpecific_SpotCountMetrics.F2.(vars{k}) = F2_CountMetricFunction(k);
-                    IsoSpecific_SpotCountMetrics.Fhalf.(vars{k}) = Fhalf_CountMetricFunction(k);
+                    SpotCountMetrics.TrueSpot.(vars{k}) = TS_CountMetricFunction(k);
+                    SpotCountMetrics.F1.(vars{k}) = F1_CountMetricFunction(k);
+                    SpotCountMetrics.F2.(vars{k}) = F2_CountMetricFunction(k);
+                    SpotCountMetrics.Fhalf.(vars{k}) = Fhalf_CountMetricFunction(k);
                 end
-                ProbeSetMetrics.CountPredictions.IsoSpecific_SpotCountMetrics{m_unique_loci,t_unique_loci,d_unique_loci} = IsoSpecific_SpotCountMetrics;
-                Positive_SpotCounts_Matrix = IsoAgnosticConfusion_I.PP;
-                F1_ScoreCurve_Matrix = IsoAgnosticConfusion_I.F1;
-                F2_ScoreCurve_Matrix =  IsoAgnosticConfusion_I.Fbeta(2);
-                Fhalf_ScoreCurve_Matrix =  IsoAgnosticConfusion_I.Fbeta(0.5);
-                Filtered_SpotCountCurves = arrayfun(@(nth_cell)  unique(round(Positive_SpotCounts_Matrix(nth_cell,:)),'stable'),1:length(Cvec),'Un',0);
-                Filtered_SpotCountIndexes = arrayfun(@(nth_cell) arrayfun(@(z) find(round(Positive_SpotCounts_Matrix(nth_cell,:))==z,1),Filtered_SpotCountCurves{nth_cell}),1:length(Cvec),'Un',0);
-                param_struct_vector = arrayfun(@(x) RNAThreshold.genEmptyThresholdParamStruct(),1:length(Cvec),'Un',0);
-                for nn = 1:length(Cvec)
-                    param_struct_vector{nn} = TrueSpotDefaultThParameters;
-                    param_struct_vector{nn}.sample_spot_table = [[1:length(Filtered_SpotCountCurves{nn})]' Filtered_SpotCountCurves{nn}'];
-                end
-                scThresholdSuggestions = arrayfun(@(nn) RNAThreshold.scoreThresholdSuggestions(RNAThreshold.estimateThreshold(param_struct_vector{nn})),1:length(Cvec),'Un',0);
-                scThresholdSuggestions =  [scThresholdSuggestions{:}];
-                subfield_groups = {'pool','thstats'};
-                for v = 1:length(subfield_groups)
-                    subfields = fieldnames(scThresholdSuggestions(1).(subfield_groups{v}));
-                    for subf = 1:length(subfields)
-                        subf_vals = arrayfun(@(nn) scThresholdSuggestions(nn).(subfield_groups{v}).(subfields{subf}),1:size(scThresholdSuggestions,2),'UniformOutput',0);
-                        [scThresholdSuggestions.(subfields{subf})] = subf_vals{:};
+                ProbeSetMetrics.CountPredictions.IsoIgnorant_SpotCountMetrics_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = SpotCountMetrics;
+                if (~isempty(Nother_P))
+                    IsoSpecificConfusion_I = confusionMatrixWrapper_MultiCell(Non_I,Noff_I+Nother_I);
+                    IsoAgnosticConfusion_I = confusionMatrixWrapper_MultiCell(Non_I+Nother_I,Noff_I);
+                    Positive_SpotCounts_Matrix = IsoSpecificConfusion_I.PP;
+                    F1_ScoreCurve_Matrix = IsoSpecificConfusion_I.F1;
+                    F2_ScoreCurve_Matrix =  IsoSpecificConfusion_I.Fbeta(2);
+                    Fhalf_ScoreCurve_Matrix =  IsoSpecificConfusion_I.Fbeta(0.5);
+                    Filtered_SpotCountCurves = arrayfun(@(nth_cell)  unique(round(Positive_SpotCounts_Matrix(nth_cell,:)),'stable'),1:length(Cvec),'Un',0);
+                    Filtered_SpotCountIndexes = arrayfun(@(nth_cell) arrayfun(@(z) find(round(Positive_SpotCounts_Matrix(nth_cell,:))==z,1),Filtered_SpotCountCurves{nth_cell}),1:length(Cvec),'Un',0);
+                    param_struct_vector = arrayfun(@(x) RNAThreshold.genEmptyThresholdParamStruct(),1:length(Cvec),'Un',0);
+                    for nn = 1:length(Cvec)
+                        param_struct_vector{nn} = TrueSpotDefaultThParameters;
+                        param_struct_vector{nn}.sample_spot_table = [[1:length(Filtered_SpotCountCurves{nn})]' Filtered_SpotCountCurves{nn}'];
                     end
+                    scThresholdSuggestions = arrayfun(@(nn) RNAThreshold.scoreThresholdSuggestions(RNAThreshold.estimateThreshold(param_struct_vector{nn})),1:length(Cvec),'Un',0);
+                    scThresholdSuggestions =  [scThresholdSuggestions{:}];
+                    subfield_groups = {'pool','thstats'};
+                    for v = 1:length(subfield_groups)
+                        subfields = fieldnames(scThresholdSuggestions(1).(subfield_groups{v}));
+                        for subf = 1:length(subfields)
+                            subf_vals = arrayfun(@(nn) scThresholdSuggestions(nn).(subfield_groups{v}).(subfields{subf}),1:size(scThresholdSuggestions,2),'UniformOutput',0);
+                            [scThresholdSuggestions.(subfields{subf})] = subf_vals{:};
+                        end
+                    end
+                    scThresholdSuggestions = rmfield(scThresholdSuggestions,subfield_groups);
+                    TrueSpot_FilteredThreshold = [scThresholdSuggestions.threshold];
+                    TrueSpot_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(TrueSpot_FilteredThreshold(nth_cell)),1:length(Cvec),'Un',0));
+                    F1_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
+                    F1_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
+                    F2_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
+                    F2_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
+                    Fhalf_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
+                    Fhalf_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
+                    TS_CountMetricFunction = @(k) IsoSpecificConfusion_I.(vars{k})(sub2ind(size(IsoSpecificConfusion_I.(vars{k})),1:length(Cvec),TrueSpot_ThresholdLocations));
+                    F1_CountMetricFunction = @(k) IsoSpecificConfusion_I.(vars{k})(sub2ind(size(IsoSpecificConfusion_I.(vars{k})),1:length(Cvec),F1_ThresholdLocations));
+                    F2_CountMetricFunction = @(k) IsoSpecificConfusion_I.(vars{k})(sub2ind(size(IsoSpecificConfusion_I.(vars{k})),1:length(Cvec),F2_ThresholdLocations));
+                    Fhalf_CountMetricFunction = @(k) IsoSpecificConfusion_I.(vars{k})(sub2ind(size(IsoSpecificConfusion_I.(vars{k})),1:length(Cvec),Fhalf_ThresholdLocations));
+                    IsoSpecific_SpotCountMetrics = [];
+                    IsoSpecific_SpotCountMetrics.TrueSpot.Thresholds = TrueSpot_FilteredThreshold;
+                    IsoSpecific_SpotCountMetrics.F1.Thresholds = F1_FilteredThreshold;
+                    IsoSpecific_SpotCountMetrics.F2.Thresholds = F2_FilteredThreshold;
+                    IsoSpecific_SpotCountMetrics.Fhalf.Thresholds = Fhalf_FilteredThreshold;
+                    for k = 1:length(vars)
+                        IsoSpecific_SpotCountMetrics.TrueSpot.(vars{k}) = TS_CountMetricFunction(k);
+                        IsoSpecific_SpotCountMetrics.F1.(vars{k}) = F1_CountMetricFunction(k);
+                        IsoSpecific_SpotCountMetrics.F2.(vars{k}) = F2_CountMetricFunction(k);
+                        IsoSpecific_SpotCountMetrics.Fhalf.(vars{k}) = Fhalf_CountMetricFunction(k);
+                    end
+                    ProbeSetMetrics.CountPredictions.IsoSpecific_SpotCountMetrics{m_unique_loci,t_unique_loci,d_unique_loci} = IsoSpecific_SpotCountMetrics;
+                    Positive_SpotCounts_Matrix = IsoAgnosticConfusion_I.PP;
+                    F1_ScoreCurve_Matrix = IsoAgnosticConfusion_I.F1;
+                    F2_ScoreCurve_Matrix =  IsoAgnosticConfusion_I.Fbeta(2);
+                    Fhalf_ScoreCurve_Matrix =  IsoAgnosticConfusion_I.Fbeta(0.5);
+                    Filtered_SpotCountCurves = arrayfun(@(nth_cell)  unique(round(Positive_SpotCounts_Matrix(nth_cell,:)),'stable'),1:length(Cvec),'Un',0);
+                    Filtered_SpotCountIndexes = arrayfun(@(nth_cell) arrayfun(@(z) find(round(Positive_SpotCounts_Matrix(nth_cell,:))==z,1),Filtered_SpotCountCurves{nth_cell}),1:length(Cvec),'Un',0);
+                    param_struct_vector = arrayfun(@(x) RNAThreshold.genEmptyThresholdParamStruct(),1:length(Cvec),'Un',0);
+                    for nn = 1:length(Cvec)
+                        param_struct_vector{nn} = TrueSpotDefaultThParameters;
+                        param_struct_vector{nn}.sample_spot_table = [[1:length(Filtered_SpotCountCurves{nn})]' Filtered_SpotCountCurves{nn}'];
+                    end
+                    scThresholdSuggestions = arrayfun(@(nn) RNAThreshold.scoreThresholdSuggestions(RNAThreshold.estimateThreshold(param_struct_vector{nn})),1:length(Cvec),'Un',0);
+                    scThresholdSuggestions =  [scThresholdSuggestions{:}];
+                    subfield_groups = {'pool','thstats'};
+                    for v = 1:length(subfield_groups)
+                        subfields = fieldnames(scThresholdSuggestions(1).(subfield_groups{v}));
+                        for subf = 1:length(subfields)
+                            subf_vals = arrayfun(@(nn) scThresholdSuggestions(nn).(subfield_groups{v}).(subfields{subf}),1:size(scThresholdSuggestions,2),'UniformOutput',0);
+                            [scThresholdSuggestions.(subfields{subf})] = subf_vals{:};
+                        end
+                    end
+                    scThresholdSuggestions = rmfield(scThresholdSuggestions,subfield_groups);
+                    TrueSpot_FilteredThreshold = [scThresholdSuggestions.threshold];
+                    TrueSpot_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(TrueSpot_FilteredThreshold(nth_cell)),1:length(Cvec),'Un',0));
+                    F1_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
+                    F1_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
+                    F2_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
+                    F2_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
+                    Fhalf_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
+                    Fhalf_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
+                    TS_CountMetricFunction = @(k) IsoAgnosticConfusion_I.(vars{k})(sub2ind(size(IsoAgnosticConfusion_I.(vars{k})),1:length(Cvec),TrueSpot_ThresholdLocations));
+                    F1_CountMetricFunction = @(k) IsoAgnosticConfusion_I.(vars{k})(sub2ind(size(IsoAgnosticConfusion_I.(vars{k})),1:length(Cvec),F1_ThresholdLocations));
+                    F2_CountMetricFunction = @(k) IsoAgnosticConfusion_I.(vars{k})(sub2ind(size(IsoAgnosticConfusion_I.(vars{k})),1:length(Cvec),F2_ThresholdLocations));
+                    Fhalf_CountMetricFunction = @(k) IsoAgnosticConfusion_I.(vars{k})(sub2ind(size(IsoAgnosticConfusion_I.(vars{k})),1:length(Cvec),Fhalf_ThresholdLocations));
+                    IsoAgnostic_SpotCountMetrics = [];
+                    IsoAgnostic_SpotCountMetrics.TrueSpot.Thresholds = TrueSpot_FilteredThreshold;
+                    IsoAgnostic_SpotCountMetrics.F1.Thresholds = F1_FilteredThreshold;
+                    IsoAgnostic_SpotCountMetrics.F2.Thresholds = F2_FilteredThreshold;
+                    IsoAgnostic_SpotCountMetrics.Fhalf.Thresholds = Fhalf_FilteredThreshold;
+                    for k = 1:length(vars)
+                        IsoAgnostic_SpotCountMetrics.TrueSpot.(vars{k}) = TS_CountMetricFunction(k);
+                        IsoAgnostic_SpotCountMetrics.F1.(vars{k}) = F1_CountMetricFunction(k);
+                        IsoAgnostic_SpotCountMetrics.F2.(vars{k}) = F2_CountMetricFunction(k);
+                        IsoAgnostic_SpotCountMetrics.Fhalf.(vars{k}) = Fhalf_CountMetricFunction(k);
+                    end
+                    ProbeSetMetrics.CountPredictions.IsoAgnostic_SpotCountMetrics_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoAgnostic_SpotCountMetrics;
+                else
+                    ProbeSetMetrics.CountPredictions.IsoSpecific_SpotCountMetrics_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = [];
+                    ProbeSetMetrics.CountPredictions.IsoAgnostic_SpotCountMetrics_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = [];
                 end
-                scThresholdSuggestions = rmfield(scThresholdSuggestions,subfield_groups);
-                TrueSpot_FilteredThreshold = [scThresholdSuggestions.threshold];
-                TrueSpot_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(TrueSpot_FilteredThreshold(nth_cell)),1:length(Cvec),'Un',0));
-                F1_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
-                F1_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F1_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
-                F2_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
-                F2_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(F2_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
-                Fhalf_FilteredThreshold = cell2mat(arrayfun(@(nth_cell) find(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1),1:length(Cvec),'Un',0));
-                Fhalf_ThresholdLocations = cell2mat(arrayfun(@(nth_cell) Filtered_SpotCountIndexes{nth_cell}(find(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})==max(Fhalf_ScoreCurve_Matrix(nth_cell,Filtered_SpotCountIndexes{nth_cell})),1)),1:length(Cvec),'Un',0));
-                TS_CountMetricFunction = @(k) IsoAgnosticConfusion_I.(vars{k})(sub2ind(size(IsoAgnosticConfusion_I.(vars{k})),1:length(Cvec),TrueSpot_ThresholdLocations));
-                F1_CountMetricFunction = @(k) IsoAgnosticConfusion_I.(vars{k})(sub2ind(size(IsoAgnosticConfusion_I.(vars{k})),1:length(Cvec),F1_ThresholdLocations));
-                F2_CountMetricFunction = @(k) IsoAgnosticConfusion_I.(vars{k})(sub2ind(size(IsoAgnosticConfusion_I.(vars{k})),1:length(Cvec),F2_ThresholdLocations));
-                Fhalf_CountMetricFunction = @(k) IsoAgnosticConfusion_I.(vars{k})(sub2ind(size(IsoAgnosticConfusion_I.(vars{k})),1:length(Cvec),Fhalf_ThresholdLocations));
-                IsoAgnostic_SpotCountMetrics = [];
-                IsoAgnostic_SpotCountMetrics.TrueSpot.Thresholds = TrueSpot_FilteredThreshold;
-                IsoAgnostic_SpotCountMetrics.F1.Thresholds = F1_FilteredThreshold;
-                IsoAgnostic_SpotCountMetrics.F2.Thresholds = F2_FilteredThreshold;
-                IsoAgnostic_SpotCountMetrics.Fhalf.Thresholds = Fhalf_FilteredThreshold;
-                for k = 1:length(vars)
-                    IsoAgnostic_SpotCountMetrics.TrueSpot.(vars{k}) = TS_CountMetricFunction(k);
-                    IsoAgnostic_SpotCountMetrics.F1.(vars{k}) = F1_CountMetricFunction(k);
-                    IsoAgnostic_SpotCountMetrics.F2.(vars{k}) = F2_CountMetricFunction(k);
-                    IsoAgnostic_SpotCountMetrics.Fhalf.(vars{k}) = Fhalf_CountMetricFunction(k);
-                end
-                ProbeSetMetrics.CountPredictions.IsoAgnostic_SpotCountMetrics_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = IsoAgnostic_SpotCountMetrics;
-            else
-                ProbeSetMetrics.CountPredictions.IsoSpecific_SpotCountMetrics_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = [];
-                ProbeSetMetrics.CountPredictions.IsoAgnostic_SpotCountMetrics_ModelTemperatureDilutionVector{m_unique_loci,t_unique_loci,d_unique_loci} = [];
+            end
             end
         end
     end
