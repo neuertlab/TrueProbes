@@ -154,7 +154,7 @@ if (isRNA)
         fprintf('\n')
         fprintf('\n')
         fprintf("Batches to Compute Probe RNA Target Statistics: ")
-        fprintf(num2str(batch_nums_to_check1))
+        fprintf(num2str(batch_nums_to_check))
         fprintf('\n')
         fprintf('\n')
         fprintf("Computing probe batch RNA off-target statistics")
@@ -202,18 +202,18 @@ if (isRNA)
                 Svec_RNA(v).Svec_RNA = cellfun(@(x) x{3},partial_designer_stats_rna_p_tmp,'Un',0);
                 Tvec_RNA(v).Tvec_RNA = cellfun(@(x) x{4},partial_designer_stats_rna_p_tmp,'Un',0);
                 Tvec_logKOFF_RNA(v).Tvec_logKOFF_RNA = cellfun(@(x) x{5},partial_designer_stats_rna_p_tmp,'Un',0);
-                Tvec_logKOFF_RNA(v).Tvec_logKOFF_RNA = cellfun(@(x) x{6},partial_designer_stats_rna_p_tmp,'Un',0);
+                Tvec_logKOFFdivON_RNA(v).Tvec_logKOFFdivON_RNA = cellfun(@(x) x{6},partial_designer_stats_rna_p_tmp,'Un',0);
                 Tvec_logKONdivOFF_RNA(v).Tvec_logKONdivOFF_RNA= cellfun(@(x) x{7},partial_designer_stats_rna_p_tmp,'Un',0);
             end
             progress(wb);
         end
-        Nvec_RNAsingle = vertcat(Nvec_RNAsingle(:).Nvec_RNAsingle);progress(wb);
-        Nvec_RNAmulti = vertcat(Nvec_RNAmulti(:).Nvec_RNAmulti);progress(wb);
-        Svec_RNA = vertcat(Svec_RNA(:).Svec_RNA);progress(wb);
-        Tvec_RNA = vertcat(Tvec_RNA(:).Tvec_RNA);progress(wb);
-        Tvec_logKOFF_RNA = vertcat(Tvec_logKOFF_RNA(:).Tvec_logKOFF_RNA);progress(wb);
-        Tvec_logKOFFdivON_RNA = vertcat(Tvec_logKOFFdivON_RNA(:).Tvec_logKOFFdivON_RNA);progress(wb);
-        Tvec_logKONdivOFF_RNA = vertcat(Tvec_logKONdivOFF_RNA(:).Tvec_logKONdivOFF_RNA);progress(wb);
+        Nvec_RNAsingle = horzcat(Nvec_RNAsingle(:).Nvec_RNAsingle);progress(wb);
+        Nvec_RNAmulti = horzcat(Nvec_RNAmulti(:).Nvec_RNAmulti);progress(wb);
+        Svec_RNA = horzcat(Svec_RNA(:).Svec_RNA);progress(wb);
+        Tvec_RNA = horzcat(Tvec_RNA(:).Tvec_RNA);progress(wb);
+        Tvec_logKOFF_RNA = horzcat(Tvec_logKOFF_RNA(:).Tvec_logKOFF_RNA);progress(wb);
+        Tvec_logKOFFdivON_RNA = horzcat(Tvec_logKOFFdivON_RNA(:).Tvec_logKOFFdivON_RNA);progress(wb);
+        Tvec_logKONdivOFF_RNA = horzcat(Tvec_logKONdivOFF_RNA(:).Tvec_logKONdivOFF_RNA);progress(wb);
         wb.delete();
         fprintf('\n')
         fprintf('\n')
@@ -346,13 +346,13 @@ if (isRNA)
             end
             progress(wb);
         end
-        NTPvec_RNAsingle = vertcat(NTPvec_RNAsingle(:).NTPvec_RNAsingle);progress(wb);
-        NTPvec_RNAmulti = vertcat(NTPvec_RNAmulti(:).NTPvec_RNAmulti);progress(wb);
-        TPvec_RNA = vertcat(TPvec_RNA(:).TPvec_RNA);progress(wb);
-        TSvec_RNA = vertcat(TSvec_RNA(:).TSvec_RNA);progress(wb);
-        TPvec_logKOFF_RNA = vertcat(TPvec_logKOFF_RNA(:).TPvec_logKOFF_RNA);progress(wb);
-        TPvec_logKOFFdivON_RNA = vertcat(TPvec_logKOFFdivON_RNA(:).TPvec_logKOFFdivON_RNA);progress(wb);
-        TPvec_logKONdivOFF_RNA = vertcat(TPvec_logKONdivOFF_RNA(:).TPvec_logKONdivOFF_RNA);progress(wb);
+        NTPvec_RNAsingle = horzcat(NTPvec_RNAsingle(:).NTPvec_RNAsingle);progress(wb);
+        NTPvec_RNAmulti = horzcat(NTPvec_RNAmulti(:).NTPvec_RNAmulti);progress(wb);
+        TPvec_RNA = horzcat(TPvec_RNA(:).TPvec_RNA);progress(wb);
+        TSvec_RNA = horzcat(TSvec_RNA(:).TSvec_RNA);progress(wb);
+        TPvec_logKOFF_RNA = horzcat(TPvec_logKOFF_RNA(:).TPvec_logKOFF_RNA);progress(wb);
+        TPvec_logKOFFdivON_RNA = horzcat(TPvec_logKOFFdivON_RNA(:).TPvec_logKOFFdivON_RNA);progress(wb);
+        TPvec_logKONdivOFF_RNA = horzcat(TPvec_logKONdivOFF_RNA(:).TPvec_logKONdivOFF_RNA);progress(wb);
         wb.delete();
         fprintf('\n')
         fprintf('\n')
@@ -522,15 +522,15 @@ if (isDNA)
             end
             progress(wb);
         end
-        Nvec_DNAsingle = vertcat(Nvec_DNAsingle(:).Nvec_DNAsingle);progress(wb);
-        Nvec_DNAmulti = vertcat(Nvec_DNAmulti(:).Nvec_DNAmulti);progress(wb);
-        Svec_DNA = vertcat(Svec_DNA(:).Svec_DNA);progress(wb);
-        Tvec_DNA = vertcat(Tvec_DNA(:).Tvec_DNA);progress(wb);
-        Tvec_logKOFF_DNA = vertcat(Tvec_logKOFF_DNA(:).Tvec_logKOFF_DNA);progress(wb);
-        Tvec_logKOFFdivON_DNA = vertcat(Tvec_logKOFFdivON_DNA(:).Tvec_logKOFFdivON_DNA);progress(wb);
-        Tvec_logKONdivOFF_DNA = vertcat(Tvec_logKONdivOFF_DNA(:).Tvec_logKONdivOFF_DNA);progress(wb);
-        Tvec_logKOFFdivCOMP_DNA = vertcat(Tvec_logKOFFdivCOMP_DNA(:).Tvec_logKOFFdivCOMP_DNA);progress(wb);
-        Tvec_logKCOMPdivOFF_DNA = vertcat(Tvec_logKCOMPdivOFF_DNA(:).Tvec_logKCOMPdivOFF_DNA);progress(wb);
+        Nvec_DNAsingle = horzcat(Nvec_DNAsingle(:).Nvec_DNAsingle);progress(wb);
+        Nvec_DNAmulti = horzcat(Nvec_DNAmulti(:).Nvec_DNAmulti);progress(wb);
+        Svec_DNA = horzcat(Svec_DNA(:).Svec_DNA);progress(wb);
+        Tvec_DNA = horzcat(Tvec_DNA(:).Tvec_DNA);progress(wb);
+        Tvec_logKOFF_DNA = horzcat(Tvec_logKOFF_DNA(:).Tvec_logKOFF_DNA);progress(wb);
+        Tvec_logKOFFdivON_DNA = horzcat(Tvec_logKOFFdivON_DNA(:).Tvec_logKOFFdivON_DNA);progress(wb);
+        Tvec_logKONdivOFF_DNA = horzcat(Tvec_logKONdivOFF_DNA(:).Tvec_logKONdivOFF_DNA);progress(wb);
+        Tvec_logKOFFdivCOMP_DNA = horzcat(Tvec_logKOFFdivCOMP_DNA(:).Tvec_logKOFFdivCOMP_DNA);progress(wb);
+        Tvec_logKCOMPdivOFF_DNA = horzcat(Tvec_logKCOMPdivOFF_DNA(:).Tvec_logKCOMPdivOFF_DNA);progress(wb);
         wb.delete();
         fprintf('\n')
         fprintf('\n')
@@ -671,15 +671,15 @@ if (isDNA)
             end
             progress(wb);
         end
-        NTPvec_DNAsingle = vertcat(NTPvec_DNAsingle(:).NTPvec_DNAsingle);progress(wb);
-        NTPvec_DNAmulti = vertcat(NTPvec_DNAmulti(:).NTPvec_DNAmulti);progress(wb);
-        TSvec_DNA = vertcat(TSvec_DNA(:).TSvec_DNA);progress(wb);
-        TPvec_DNA = vertcat(TPvec_DNA(:).TPvec_DNA);progress(wb);
-        TPvec_logKOFF_DNA = vertcat(TPvec_logKOFF_DNA(:).TPvec_logKOFF_DNA);progress(wb);
-        TPvec_logKOFFdivON_DNA = vertcat(TPvec_logKOFFdivON_DNA(:).TPvec_logKOFFdivON_DNA);progress(wb);
-        TPvec_logKONdivOFF_DNA = vertcat(TPvec_logKONdivOFF_DNA(:).TPvec_logKONdivOFF_DNA);progress(wb);
-        TPvec_logKOFFdivCOMP_DNA = vertcat(TPvec_logKOFFdivCOMP_DNA(:).TPvec_logKOFFdivCOMP_DNA);progress(wb);
-        TPvec_logKCOMPdivOFF_DNA = vertcat(TPvec_logKCOMPdivOFF_DNA(:).TPvec_logKCOMPdivOFF_DNA);progress(wb);
+        NTPvec_DNAsingle = horzcat(NTPvec_DNAsingle(:).NTPvec_DNAsingle);progress(wb);
+        NTPvec_DNAmulti = horzcat(NTPvec_DNAmulti(:).NTPvec_DNAmulti);progress(wb);
+        TSvec_DNA = horzcat(TSvec_DNA(:).TSvec_DNA);progress(wb);
+        TPvec_DNA = horzcat(TPvec_DNA(:).TPvec_DNA);progress(wb);
+        TPvec_logKOFF_DNA = horzcat(TPvec_logKOFF_DNA(:).TPvec_logKOFF_DNA);progress(wb);
+        TPvec_logKOFFdivON_DNA = horzcat(TPvec_logKOFFdivON_DNA(:).TPvec_logKOFFdivON_DNA);progress(wb);
+        TPvec_logKONdivOFF_DNA = horzcat(TPvec_logKONdivOFF_DNA(:).TPvec_logKONdivOFF_DNA);progress(wb);
+        TPvec_logKOFFdivCOMP_DNA = horzcat(TPvec_logKOFFdivCOMP_DNA(:).TPvec_logKOFFdivCOMP_DNA);progress(wb);
+        TPvec_logKCOMPdivOFF_DNA = horzcat(TPvec_logKCOMPdivOFF_DNA(:).TPvec_logKCOMPdivOFF_DNA);progress(wb);
         wb.delete();
         fprintf('\n')
         fprintf('\n')
