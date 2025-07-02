@@ -21,7 +21,7 @@ input_gene_expression_file_locations = 'GeneExpressionDataLocations.xml';
 % 	4. Text Sequence Files to Include (files). Default is Empty
 % 	5. Text Sequence Files to Exclude (files). Default is Empty
 
-%% Genes To Design Probes For
+%% Folders with files to add to path
 core_folders = genpath(strcat(pwd,filesep,'src',filesep,'core'));
 modified_matlab_function_folders = genpath(strcat(pwd,filesep,'src',filesep,'modified_matlab_functions'));
 util_folders = genpath(strcat(pwd,filesep,'src',filesep,'util'));
@@ -78,7 +78,7 @@ else
     InclusionSequenceFiles = reshape(InclusionSequenceFiles,1,[]);
 end
 RunOffline = 1;%Is Design Run Offline using databases or looks online to get genbank record
-
+UseFlankingInfo = 0;
 %% Parse Input Setting Parameters
 inputsParameterSettings = readstruct(input_parameters);
 settings.otherLocRoot =  inputsParameterSettings.customOrganism_Database_Location.customRoot_FASTA;
@@ -140,6 +140,7 @@ num_alignments = inputsParameterSettings.BLASTN_Settings.numAlignments; %Number 
 penalty = inputsParameterSettings.BLASTN_Settings.penalty; % BLAST penalty for nucleotide mismatch
 reward = inputsParameterSettings.BLASTN_Settings.reward; % BLAST reward for a nucleotide match
 word_size = inputsParameterSettings.BLASTN_Settings.wordsize; %BLAST word size for wordfinder algorithm
+task = inputsParameterSettings.BLASTN_Settings.task; %BLAST task to use for evaluating alignments, megablast, blastn, blastn-short, dc-megablast
 
 %% Model Prediction Settings (You Usually will not change)
 removeUndesiredIsoformsFromPredictionOffTargets=inputsParameterSettings.ModelSimulation_Settings.removeUndesiredIsoformsFromPrediction;%Removes other isoforms from the computation of probe statistics used in designing probes
@@ -157,7 +158,7 @@ MaxIter = inputsParameterSettings.ModelSimulation_Settings.MaxRecursiveEquilibri
 InitialGuessConc = inputsParameterSettings.ModelSimulation_Settings.InitialFreeSolutionGuessConcentration_MicroMolar;
 ProbeConcentration = inputsParameterSettings.ModelSimulation_Settings.ProbeConcentration_MicroMolar;%5uM
 if (isnumeric(inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector))
-     Dilution_Vector =  inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector;
+    Dilution_Vector =  inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector;
 else
     Dilution_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Dilution_Vector,','));
 end
@@ -167,12 +168,10 @@ else
     Temperature_Celsius_Model_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Temperature_Celsius_Model_Vector,','));
 end
 if (isnumeric(inputsParameterSettings.ModelSimulation_Settings.Gibbs_Model_Vector))
-    Gibbs_Model_Vector =  inputsParameterSettings.ModelSimulation_Settings.Gibbs_Model_Vector; 
+    Gibbs_Model_Vector =  inputsParameterSettings.ModelSimulation_Settings.Gibbs_Model_Vector;
 else
-Gibbs_Model_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Gibbs_Model_Vector ,',')); 
+    Gibbs_Model_Vector =  double(split(inputsParameterSettings.ModelSimulation_Settings.Gibbs_Model_Vector ,','));
 end
-
-
 Signal_StepSize = inputsParameterSettings.ModelSimulation_Settings.SignalStepSize;
 Signal_MaxValue = inputsParameterSettings.ModelSimulation_Settings.SignalMaxValue;
 
@@ -374,7 +373,6 @@ elseif (strcmp(settings.referenceType,'ENSEMBL'))
         ts = 1;
     end
     end
-
     geneNames = char(join(convertCharsToStrings(unique(geneInfo_Table.GeneName)),'_'));
     ids_gff_loc = find(contains(GFFobj.Attributes,'Alias').*contains(GFFobj.Attributes,'NC')); 
     if (isempty(ids_gff_loc))
@@ -442,13 +440,11 @@ allGTF_Transcript_uniNames = extractBefore(allGTF_Transcript_IDs,'.');
 if (sum(ismissing(allGTF_Transcript_uniNames))>0)
     allGTF_Transcript_uniNames(ismissing(allGTF_Transcript_uniNames)) = allGTF_Transcript_IDs(ismissing(allGTF_Transcript_uniNames));
 end
-
 allGTF_GeneIDs_IDstring = convertCharsToStrings(getTranscripts(GTFobj,"Transcript",allGTF_Transcript_IDs).GeneID);
 allGTF_GeneNames_IDstring = convertCharsToStrings(getTranscripts(GTFobj,"Transcript",allGTF_Transcript_IDs).GeneName);
 settings.pairedGTF_TranscriptIDs = convertCharsToStrings(allGTF_Transcript_uniNames(~cellfun(@isempty,allGTF_Transcript_uniNames)));
 settings.pairedGTF_GeneIDs = allGTF_GeneIDs_IDstring(~cellfun(@isempty,allGTF_Transcript_uniNames));
 settings.pairedGTF_GeneNames_EMBLonly =  allGTF_GeneNames_IDstring(~cellfun(@isempty,allGTF_Transcript_uniNames));
-
 clear GTFobj GFFobj
 
 %% Save Settings
@@ -486,6 +482,7 @@ settings.BlastParameters.gapextend = gapextend;
 settings.BlastParameters.evalue = evalue;
 settings.BlastParameters.num_alignments = num_alignments;
 settings.BlastParameters.dust = dust;
+settings.BlastParameters.task = task;
 settings.MakeblastdbParameters.parse_seqids = parse_seqids;
 settings.MakeblastdbParameters.hash_index = hash_index;
 settings.TargetBatchSize = Parallelization_targetBatchSize;
@@ -493,17 +490,21 @@ settings.MinProbeSize = minProbeSize;
 settings.MaxProbeSize = maxProbeSize;
 settings.MinHomologySearchTargetSize = MinHomologySearchTargetSize;
 settings.N_model = Gibbs_Model;
+settings.UseFlankingInfo = UseFlankingInfo;
 settings.ExpressionReferenceForDesigningProbes = ExpressionReferenceForProbeDesign;
-settings.TMM.logRatioTrim = logRatioTrim;
-settings.TMM.sumTrim = sumTrim;
-settings.TMM.Acutoff = Acutoff;
-settings.TMM.doWeighting = doWeighting;
+
+
 %% Gene Expression Parameters
 settings.DoAllGenesHaveSameExpression = DoAllGenesHaveSameExpression;
 settings.HumanSpecific.HumanExpGeneOrTransc = UseGeneOverTranscLevelExpression; % 1 (Gene/EMBL GENEID) , 0 (Transcript/EMBL Transcript ID)
 settings.UseRegularDNAExpression = UseRegularDNAExpression;%0 use DNA expression from gene expression track in expression data, 1 set expression to 2 for DNA.
 settings.UniformRNAExpression = nullRNAcopynumber;%if assuming no differences in gene's expression sets level.
 settings.DNAPloidy = nullDNAcopynumber;
+settings.TMM.logRatioTrim = logRatioTrim;
+settings.TMM.sumTrim = sumTrim;
+settings.TMM.Acutoff = Acutoff;
+settings.TMM.doWeighting = doWeighting;
+
 
 %% Cluster Parameters
 settings.clusterStatus = cluster;
@@ -797,39 +798,79 @@ catch
     fprintf('\n')
     fprintf('\n')
 end
+gene_table0 = gene_table;
+gene_table = sortrows(gene_table,[7 6],'ascend');
+gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
+MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
+gene_table_NamesZ = convertCharsToStrings(gene_table.Name);
+contains_RNA = find(ismember(gene_table_NamesZ,settings.RNAdbParser));
+RNA_MissedFilteredHits = intersect(MinusStrandedHits,contains_RNA);clear contains_RNA
+gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
+gene_table.Ax = min(gene_table.SubjectIndices,[],2);
+gene_table.Bx = max(gene_table.SubjectIndices,[],2);
+gene_table = sortrows(gene_table,[7 13],'ascend');
+Names = unique(gene_table.Name);
+Names = convertCharsToStrings(Names);
+if (and(strcmp(settings.referenceType,"ENSEMBL"),max(double(contains(extractBefore(Names,' '),'ENS')))==0))
+    uniNames = extractBefore(Names,' ');
+else
+    uniNames = extractBefore(Names,'.');
+    if (sum(ismissing(uniNames))>0)
+        uniNames(ismissing(uniNames)) = extractBefore(Names(ismissing(uniNames)),' ');
+    end
+end
+if (settings.BLASTdna)
+DNA_IDs = find(~ismember(Names,settings.DNAdbParser));%IDs
+else
+DNA_IDs = [];
+end
+if (settings.BLASTrna)
+NonDNA_IDs = find(ismember(Names,settings.RNAdbParser));%IDs
+else
+NonDNA_IDs =[];
+end
+ON_IDs_specific = find(ismember(uniNames,extractBefore(settings.transcript_IDs{:},'.')));
+ON_IDs_agnostic = find(ismember(uniNames,extractBefore(settings.transcript_IDs_desired{:},'.')));
+OFF_IDs = find(~ismember(uniNames,extractBefore(settings.transcript_IDs_desired{:},'.')));
 
 %% Print Excel Spreedsheet of Probes
 fprintf("Printing TrueProbes probes to Excel spreadsheet")
 fprintf('\n')
 fprintf('\n')
-Lpmin = min(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
-Lpmax = max(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
-TL_hits = zeros(length(min(15,Lpmin):Lpmax),size(probes,1));
-for L = min(15,Lpmin):Lpmax
-    TL_hits(L-14,:) = cell2mat(arrayfun(@(z) length(find((gene_table.ProbeNum==z).*(gene_table.Match == L)>0)),1:size(probes,1),'Un',0));
+
+Lp_designed_min = min(cell2mat(cellfun(@length,probes(chosenProbes,2),'UniformOutput',false)));
+Lp_designed_max = max(cell2mat(cellfun(@length,probes(chosenProbes,2),'UniformOutput',false)));
+TL_hits = zeros(length(min(settings.MinHomologySearchTargetSize,Lp_designed_min):Lp_designed_max),size(probes,1));
+for L = min(settings.MinHomologySearchTargetSize,Lp_designed_min):Lp_designed_max
+    TL_hits(L+1-settings.MinHomologySearchTargetSize,:) = cell2mat(arrayfun(@(z) length(find((gene_table.ProbeNum==z).*(gene_table.Match == L)>0)),1:size(probes,1),'Un',0));
 end
+final_probe_info = cell(length(chosenProbes),13+length(min(settings.MinHomologySearchTargetSize,Lp_designed_min):Lp_designed_max));
 for v = 1:length(chosenProbes)
-    probe_num = chosenProbes(v);
     Lp = length(probes{chosenProbes(v),2});
     final_probe_info{v,1} = settings.transcript_IDs;
-    final_probe_info{v,2} = probes{chosenProbes(v),3};
-    final_probe_info{v,3} = probes{chosenProbes(v),3}+Lp-1;
-    final_probe_info{v,4} = probes{chosenProbes(v),1};
+    final_probe_info{v,2} = settings.GeneName;%needs to be different for using multiple genes
+    final_probe_info{v,3} = probes{chosenProbes(v),3};
+    final_probe_info{v,4} = probes{chosenProbes(v),3}+Lp-1;
+    final_probe_info{v,5} = probes{chosenProbes(v),1};
     [rev_comp] = Reverse_complement_probes({probes{chosenProbes(v),2}});  %find reverse complement
-    final_probe_info{v,5} = rev_comp{1};
-    final_probe_info{v,6} = length(probes{chosenProbes(v),2});
-    final_probe_info{v,7} = oligoprop(rev_comp{1},'Salt',SaltConcentration,'Temp',T_hybrid).GC;
-    final_probe_info{v,8} = oligoprop(rev_comp{1},'Salt',SaltConcentration,'Temp',T_hybrid).Tm(5);
-    final_probe_info{v,9} = sum(TL_hits(6:end,chosenProbes(v)));
-    final_probe_info{v,10} = TL_hits(5,probe_num);
-    final_probe_info{v,11} = TL_hits(4,probe_num);
-    final_probe_info{v,12} = TL_hits(3,probe_num);
-    final_probe_info{v,13} = TL_hits(2,probe_num);
-    final_probe_info{v,14} = TL_hits(1,probe_num);
+    final_probe_info{v,6} = upper(rev_comp{1});
+    final_probe_info{v,7} = length(probes{chosenProbes(v),2});
+    final_probe_info{v,8} = oligoprop(rev_comp{1},'Salt',SaltConcentration,'Temp',T_hybrid).GC;
+    final_probe_info{v,9} = round(oligoprop(rev_comp{1},'Salt',SaltConcentration,'Temp',T_hybrid).Tm(5),2);
+    final_probe_info{v,10} = sum(full(squeeze(DoesProbeBindSite2(chosenProbes(v),ON_IDs_agnostic,:))),'all');
+    final_probe_info{v,11} = sum(full(squeeze(DoesProbeBindSite2(chosenProbes(v),ON_IDs_specific,:))),'all');
+    final_probe_info{v,12} = round(Off_Score(chosenProbes(v)),2);
+    final_probe_info{v,13} =  sum(TL_hits(:,chosenProbes(v)))-sum(full(squeeze(DoesProbeBindSite2(chosenProbes(v),ON_IDs_agnostic,:))),'all');
+    for Li = 1:length(min(settings.MinHomologySearchTargetSize,Lp_designed_min):Lp_designed_max)
+    final_probe_info{v,13+Li} = TL_hits(end-Li+1,chosenProbes(v))-double(Li==1)*sum(full(squeeze(DoesProbeBindSite2(chosenProbes(v),ON_IDs_agnostic,:))),'all');
+    end
 end
+OffTargetMatch_Labels = arrayfun(@(n) char(strcat('Number of '," ",string(n),'nt Off-Target Matches')),Lp_designed_max:-1:min(settings.MinHomologySearchTargetSize,Lp_designed_min),'Un',0);
 T = cell2table(final_probe_info,...
-    'VariableNames',{'Probe Target' 'Base_Position-start' 'Base_Position-stop' 'Probe ID' 'Probe Sequence' 'Probe Length' 'GC_fraction' 'Probe Tm' '20+bp matches' '19bp matches' '18bp matches' '17bp matches' '16bp matches' '15bp matches'});
-filename = [saveRoot filesep settings.FolderName filesep settings.FolderName '_probes_final_' num2str(maxNumberOfProbes) 'max.xlsx'];
+    'VariableNames',[{'Probe Target'} {'Transcript Name'} {'Base_Position-start'} {'Base_Position-stop'} {'Probe ID'} {'Probe Sequence'} {'Probe Length'} {'GC_fraction (%)'} {'Probe Tm (°C)'} ...
+    {'Number of Isoform-Agnostic On-Target Matches'} {'Number of Isoform-Specific On-Target Matches'} ...
+    {'Off-Score'} {'Total Off-Target Matches'} OffTargetMatch_Labels(:)']);
+filename = [settings.saveRoot filesep settings.FolderName filesep settings.FolderName '_probes_final_' num2str(settings.maxProbes) 'max.xlsx'];
 if exist(filename,'file')        %delete if already exists
     delete(filename)
 end
@@ -838,7 +879,7 @@ fprintf("Number of Final Designed Probes: ")
 fprintf(num2str(size(final_probe_info,1)))
 fprintf('\n')
 fprintf('\n')
-
+gene_table = gene_table0;clear gene_table0
 %% Get Metric Information (Probes, Final Probe Set)
 %Using Concentrations Solve For Equilibrium and Get Distributions and probe set metrics for detection
 try

@@ -39,9 +39,10 @@
 		<gapopen> 5 </gapopen>
 		<numAlignments> 1000 </numAlignments>
 		<penalty> -3 </penalty>
-		<reward> 2 </reward>
+		<reward> 1 </reward>
 		<wordsize> 7 </wordsize>
 		<dust> no </dust>
+		<task> megablast </task>
 	</BLASTN_Settings>
 	<GeneExpression_Settings>
 		<DoAllGenesHaveSameExpression> 0 </DoAllGenesHaveSameExpression>
