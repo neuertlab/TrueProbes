@@ -1,4 +1,7 @@
 function [CtN,p_TargetSites_Bound,c_TargetSites_Bound] = A_DetectionSolverWrapper_V4(ModelSolverFunctions,v,Pset,settings,nExpressionMatrix,Tvec,Mvec,Dvec,Cvec,Tref,CProbes_Free,DoesProbeBindSite,Js_RNA,Js_DNA,Js_Sites,Names,ON_IDs_specific,ON_IDs_agnostic,OFF_IDs)
+%% This function computes probability and concentration of on/off-targets having any number of binding sites bound by probes.
+% given equilibrium probe concentrations and handle functions for
+% converting free concentrations of probes and targets into concentration of probes bound targets.
 m = v(1);
 t = v(2);
 d = v(3);

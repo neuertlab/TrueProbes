@@ -246,7 +246,7 @@ for m_unique_loci = 1:length(m_unique_loc)
                 output_exists = 1;
             end
             if (output_exists)
-                Basic_Noff = sum(Noff_P.*[0:size(Noff_P,1)-1]',1);
+                Basic_Noff = sum(Noff_P.*(0:size(Noff_P,1)-1)',1);
                 IsoIgnorantConfusion_P = confusionMatrixWrapper_MultiCell(...
                     CATnWrapper({permute(Non_P(2:end,:),[2 1]), ndSparse.build([size(Non_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Non_P,1)])},2),...
                     CATnWrapper({permute(Noff_P(2:end,:),[2 1]), ndSparse.build([size(Noff_P,2) max([size(Non_P,1) size(Noff_P,1) size(Nother_P,1)])-size(Noff_P,1)])},2));
@@ -384,7 +384,7 @@ for m_unique_loci = 1:length(m_unique_loc)
                 param_struct_vector = arrayfun(@(x) RNAThreshold.genEmptyThresholdParamStruct(),1:length(Cvec),'Un',0);
                 for nn = 1:length(Cvec)
                     param_struct_vector{nn} = TrueSpotDefaultThParameters;
-                    param_struct_vector{nn}.sample_spot_table = [[1:length(Filtered_SpotCountCurves{nn})]' Filtered_SpotCountCurves{nn}'];
+                    param_struct_vector{nn}.sample_spot_table = [(1:length(Filtered_SpotCountCurves{nn}))' Filtered_SpotCountCurves{nn}'];
                 end
                 scThresholdSuggestions = arrayfun(@(nn) RNAThreshold.scoreThresholdSuggestions(RNAThreshold.estimateThreshold(param_struct_vector{nn})),1:length(Cvec),'Un',0);
                 scThresholdSuggestions =  [scThresholdSuggestions{:}];
@@ -433,7 +433,7 @@ for m_unique_loci = 1:length(m_unique_loc)
                     param_struct_vector = arrayfun(@(x) RNAThreshold.genEmptyThresholdParamStruct(),1:length(Cvec),'Un',0);
                     for nn = 1:length(Cvec)
                         param_struct_vector{nn} = TrueSpotDefaultThParameters;
-                        param_struct_vector{nn}.sample_spot_table = [[1:length(Filtered_SpotCountCurves{nn})]' Filtered_SpotCountCurves{nn}'];
+                        param_struct_vector{nn}.sample_spot_table = [(1:length(Filtered_SpotCountCurves{nn}))' Filtered_SpotCountCurves{nn}'];
                     end
                     scThresholdSuggestions = arrayfun(@(nn) RNAThreshold.scoreThresholdSuggestions(RNAThreshold.estimateThreshold(param_struct_vector{nn})),1:length(Cvec),'Un',0);
                     scThresholdSuggestions =  [scThresholdSuggestions{:}];
@@ -479,7 +479,7 @@ for m_unique_loci = 1:length(m_unique_loc)
                     param_struct_vector = arrayfun(@(x) RNAThreshold.genEmptyThresholdParamStruct(),1:length(Cvec),'Un',0);
                     for nn = 1:length(Cvec)
                         param_struct_vector{nn} = TrueSpotDefaultThParameters;
-                        param_struct_vector{nn}.sample_spot_table = [[1:length(Filtered_SpotCountCurves{nn})]' Filtered_SpotCountCurves{nn}'];
+                        param_struct_vector{nn}.sample_spot_table = [(1:length(Filtered_SpotCountCurves{nn}))' Filtered_SpotCountCurves{nn}'];
                     end
                     scThresholdSuggestions = arrayfun(@(nn) RNAThreshold.scoreThresholdSuggestions(RNAThreshold.estimateThreshold(param_struct_vector{nn})),1:length(Cvec),'Un',0);
                     scThresholdSuggestions =  [scThresholdSuggestions{:}];

@@ -16,7 +16,6 @@ designerName = settings.designerName;
 FolderRootName = settings.FolderRootName;
 probeBatchSize = settings.BLASTbatchSize;
 targetBatchSize = settings.TargetBatchSize;
-Organism = settings.Organism;
 %% Identify location of on-target DNA and RNA molecules in list of DNA/RNA molecules
 if (iscell(chromosome_ID))
     chromosome_IDon = cell(1,length(chromosome_ID));
@@ -26,11 +25,6 @@ if (iscell(chromosome_ID))
 else
     chromosome_IDon{1} = chromosome_ID;
 end
-chromosome_IDon_temp = extractBefore(chromosome_IDon,'.');
-if (sum(ismissing(chromosome_IDon_temp))>0)
-    chromosome_IDon_temp(ismissing(chromosome_IDon_temp)) = extractBefore(chromosome_IDon(ismissing(chromosome_IDon_temp)),' ');
-end
-chromosome_IDon = chromosome_IDon_temp;clear chromosome_IDon_temp
 if (iscell(transcript_ID))
     transcript_IDon = cell(1,length(transcript_ID));
     for v = 1:length(transcript_ID)
@@ -39,10 +33,20 @@ if (iscell(transcript_ID))
 else
     transcript_IDon{1} = transcript_ID;
 end
-transcript_IDon_temp = extractBefore(transcript_IDon,'.');
-if (sum(ismissing(transcript_IDon_temp))>0)
-    transcript_IDon_temp(ismissing(transcript_IDon_temp)) = extractBefore(transcript_IDon(ismissing(transcript_IDon_temp)),' ');
+if (and(strcmp(settings.referenceType,"ENSEMBL"),max(double(contains(extractBefore(transcript_IDon,' '),'ENS')))==0))
+    chromosome_IDon_temp = extractBefore(chromosome_IDon,' ');
+    transcript_IDon_temp = extractBefore(transcript_IDon,' ');
+else
+    chromosome_IDon_temp = extractBefore(chromosome_IDon,'.');
+    transcript_IDon_temp = extractBefore(transcript_IDon,'.');
+    if (sum(ismissing(chromosome_IDon_temp))>0)
+        chromosome_IDon_temp(ismissing(chromosome_IDon_temp)) = extractBefore(chromosome_IDon(ismissing(chromosome_IDon_temp)),' ');
+    end
+    if (sum(ismissing(transcript_IDon_temp))>0)
+        transcript_IDon_temp(ismissing(transcript_IDon_temp)) = extractBefore(transcript_IDon(ismissing(transcript_IDon_temp)),' ');
+    end
 end
+chromosome_IDon = chromosome_IDon_temp;clear chromosome_IDon_temp
 transcript_IDon = transcript_IDon_temp;clear transcript_IDon_temp
 %% Getting Probe Sequences from reverse complement of tile sequences
 RV = @(x) (seqrcomplement(x));
@@ -56,20 +60,14 @@ R = mod(N_Probes,probeBatchSize);
 Batch = cell(1,N_Batches);
 if (R==0)
     for k = 1:N_Batches
-        Batch{k} = [probeBatchSize*(k-1)+1:probeBatchSize*k];
+        Batch{k} = probeBatchSize*(k-1)+1:probeBatchSize*k;
     end
 else
     for k = 1:N_Batches-1
-        Batch{k} = [probeBatchSize*(k-1)+1:probeBatchSize*k];
+        Batch{k} = probeBatchSize*(k-1)+1:probeBatchSize*k;
     end
-    Batch{N_Batches} = [probeBatchSize*(N_Batches-1)+1:probeBatchSize*(N_Batches-1)+R];
+    Batch{N_Batches} = probeBatchSize*(N_Batches-1)+1:probeBatchSize*(N_Batches-1)+R;
 end
-%% Extract Gene Target Names
-% if (isfile(strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName,'_probetarget_flanking_sequences', settings.designerName,'.mat')));%save flanking sequence file if it does not exist already   
-% load([strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName,'_probetarget_flanking_sequences', settings.designerName,'.mat')],'probetarget_flanking_info');%save flanking sequence file if it does not exist already
-% gene_table(:,'Alignment') = array2table(arrayfun(@(n) strcat(probetarget_flanking_info.ProbeRevCompSequence_5primeTo3prime{n}',newline,'|',newline,probetarget_flanking_info.TargetSequence_5primeTo3prime{n}')',1:size(probetarget_flanking_info,1),'Un',0)');
-% %(link 1 is probe, line 3 is target)
-% end
 gene_table = sortrows(gene_table,[7 6],'ascend');
 gene_table = gene_table(gene_table.Match>=settings.MinHomologySearchTargetSize,:);
 MinusStrandedHits = find(contains(gene_table.Strand,'Minus'));
@@ -80,6 +78,12 @@ gene_table = gene_table(setdiff(1:size(gene_table,1),RNA_MissedFilteredHits),:);
 gene_table.Ax = min(gene_table.SubjectIndices,[],2);
 gene_table.Bx = max(gene_table.SubjectIndices,[],2);
 gene_table = sortrows(gene_table,[7 13],'ascend');
+if (settings.UseFlankingInfo)
+    if (isfile(strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName,'_probetarget_flanking_sequences', settings.designerName,'.mat')))%save flanking sequence file if it does not exist already
+        load([strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName,'_probetarget_flanking_sequences', settings.designerName,'.mat')],'probetarget_flanking_info');%save flanking sequence file if it does not exist already
+        gene_table(:,'Alignment') = array2table(arrayfun(@(n) strcat(probetarget_flanking_info.ProbeRevCompSequence_5primeTo3prime{n}',newline,'|',newline,probetarget_flanking_info.TargetSequence_5primeTo3prime{n}')',1:size(probetarget_flanking_info,1),'Un',0)');
+    end
+end
 %either have seperate outpit fro mismatches, or switch to using flanking
 %sequences if those files exist, thne add step to remove mismatches
 Names = unique(gene_table.Name);
@@ -167,11 +171,6 @@ if (calcOnOff)
 % parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/P-BN21.par';
 %parameter_file_noncanonical = 'src/thirdparty/VarGibbs-4.1/AOP-MM-60.par';
 %parameter_file_canonical = 'src/thirdparty/VarGibbs-4.1/AOP-OW04-69.par';
-     if (isfile(strcat(settings.FolderRootName,filesep,'(',  settings.GeneName ,')_', settings.rootName,'_probetarget_flanking_sequences', settings.designerName,'.mat')))
-     %   Alignment_Target_Sequences = probetarget_flanking_info.TargetSequence_5primeTo3prime;
-      %  Alignment_Probe_Sequences = probetarget_flanking_info.ProbeRevCompSequence_5primeTo3prime;
-     end
-
     Kon = zeros(size(probes,1),N_methods);
     Tm_on = zeros(size(probes,1),N_methods3);
     dHeq_Match = zeros(length(targetMatch),N_methods);

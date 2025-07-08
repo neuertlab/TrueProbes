@@ -244,9 +244,13 @@ if (~isempty(batch_nums_to_check1))
             strand = 'both';
             options = strcat("-num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
                 " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -task ",task," -perc_identity ",num2str(per_id)," -outfmt 5");
-            if (~ismac)
+            if (ispc)
                 [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", sequence_data, database_DNA, outputfile_DNA, options));
-            else
+            end
+            if (isunix)
+                  [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", strcat(' ''',sequence_data,''''), database_DNA, strcat(' ''',outputfile_DNA,''''), options));
+            end
+            if (ismac)
                 [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", strcat(char(39),sequence_data,char(39)), database_DNA, strcat(char(39),outputfile_DNA,char(39)), options));
             end
             if status
@@ -261,9 +265,13 @@ if (~isempty(batch_nums_to_check1))
             strand = 'plus';
             options = strcat("-num_alignments ", num2str(num_alignments)," -evalue ",num2str(evalue)," -word_size ",num2str(word_size)," -gapopen ",num2str(gapopen), ...
                 " -gapextend ",num2str(gapextend)," -strand ",strand," -penalty ",num2str(penalty)," -reward ",num2str(reward)," -dust ",dust," -task ",task," -perc_identity ",num2str(per_id)," -outfmt 5");
-            if (~ismac)
+            if (ispc)
                 [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", sequence_data, database_RNA, outputfile_RNA, options));
-            else
+            end
+            if (isunix)
+                  [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", strcat(' ''',sequence_data,''''), database_RNA, strcat(' ''',outputfile_RNA,''''), options));
+            end
+            if (ismac)
                 [status, msg] = system(sprintf('%s -query %s -db %s -out %s %s', "blastn", strcat(char(39),sequence_data,char(39)), database_RNA, strcat(char(39),outputfile_RNA,char(39)), options));
             end
             if status

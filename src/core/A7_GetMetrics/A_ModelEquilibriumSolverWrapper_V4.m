@@ -1,4 +1,5 @@
 function [CProbes_Free,varSSE,err,i,eqSSE] = A_ModelEquilibriumSolverWrapper_V4(ModelSolverFunctions,MaxIter,errThreshold,Pset,nExpressionMatrix,Tvec,Mvec,Dvec,Cvec,Tref,Ns_Config,Nc_Config,CProbes_Free0,CProbes_Free,ProbeConc,Js_RNA,Js_DNA,Js_Sites,i)
+%% This function iteratively updates probe binding equilibrium values using fixed point iteration
 K_S = ModelSolverFunctions.K_S;
 K_CDeff = ModelSolverFunctions.K_CDeff;
 h_RNA = ModelSolverFunctions.h_RNA;

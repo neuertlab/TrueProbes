@@ -117,7 +117,7 @@ if (or(BLASTdb_DNAexists,BLASTdb_RNAexists))
                     fprintf("Getting DNA BLAST database sseqids and header names")
                     fprintf('\n')
                     fprintf('\n')
-                    if (~ismac)
+                    if (ispc)
                         args_DNAparser = sprintf('%s -db %s -entry all -dbtype %s -out %s -outfmt %s', "blastdbcmd",inputDatabaseDNA, dbtype,outputDNAdb_sseqids,strcat('"',outfmt,'"'));
                     else
                         args_DNAparser = sprintf('%s -db %s -entry all -dbtype %s -out %s -outfmt %s', "blastdbcmd",inputDatabaseDNA, dbtype,strcat(char(39),outputDNAdb_sseqids,char(39)),strcat('"',outfmt,'"'));
@@ -300,7 +300,7 @@ if (or(BLASTdb_DNAexists,BLASTdb_RNAexists))
                     fprintf("Getting RNA BLAST database sseqids and header names")
                     fprintf('\n')
                     fprintf('\n')
-                    if (~ismac)
+                    if (ispc)
                         args_RNAparser = sprintf('%s -db %s -entry all -dbtype %s -out %s -outfmt %s', "blastdbcmd",inputDatabaseRNA, dbtype,outputRNAdb_sseqids,strcat('"',outfmt,'"'));
                     else
                         args_RNAparser = sprintf('%s -db %s -entry all -dbtype %s -out %s -outfmt %s', "blastdbcmd",inputDatabaseRNA, dbtype,strcat(char(39),outputRNAdb_sseqids,char(39)),strcat('"',outfmt,'"'));

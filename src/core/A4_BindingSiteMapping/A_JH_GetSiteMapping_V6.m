@@ -11,7 +11,7 @@ kb = 0.001987204259;%boltzman constant
 %get sites for on-target DNA, RNA, and Nascent.
 %or or getting mapped.
 %Also bug in Koff giving off-target score for on-target ID
-Lpmin = min(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
+Lpmin = min(cell2mat(cellfun(@length,probes(:,2),'UniformOutput',false)));
 most_recent_num_local = settings.num_parpool_local;
 T_hybrid = settings.HybridizationTemperature;
 SaltConcentration = settings.SaltConcentration;
@@ -229,7 +229,7 @@ if (calcSiteMap > 0)
                     end
                     %Gets sites with unique sets of probes
                     charIntervalArray = cellfun(@num2str, probesInInterval,'Un',0);
-                    [charIntervalArray_Unique,ia,~] = unique(charIntervalArray,'stable');
+                    [charIntervalArray_Unique,~,~] = unique(charIntervalArray,'stable');
                     probesInInterval_Unique = cellfun(@str2num,charIntervalArray_Unique,'Un',0);
                     %Lists number of probes binding in a site
                     InInterval_order = cellfun(@length,probesInInterval_Unique);

@@ -1,4 +1,6 @@
 function [Ns_Config,Nc_Config,Js_RNA,Js_DNA,Js_Sites,linearIndexed,MultiDim_PJSMC,MultiDim_PJSMTDC] = A_ModelSolverWrapper_V4(probes,Pset,settings,DoesProbeBindSite,DNA_IDs,NonDNA_IDs,dCp_mod,dHeq_mod,dSeq_mod,dCp_Complement,dSeq_Complement,dHeq_Complement)
+%% This function generates the matrices and tensors for solving probe binding equilibrium and 
+% evaluating probabilities that probes bind targets at any binding sites.
 R = 0.001987204259;%gas constant [Energy Kcal/mol K
 spfunction = @(x) sqrt(x+1)-1;
 Js = @(x) find(sum(squeeze(sum(DoesProbeBindSite(x,:,:),1)),2)>0);
