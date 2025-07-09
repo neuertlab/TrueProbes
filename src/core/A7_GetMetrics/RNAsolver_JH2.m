@@ -6,7 +6,7 @@ function ModelMetrics = RNAsolver_JH2(Pset,settings,probes,gene_table,Expression
 % The distribution of probes bound targets is computed and is
 % used to generate confusion matrix metrics, of probe performance.
 loaded_TrueSpot_default_params = 0;
-if (isfile('data/TS_DefaultParams.mat','TrueSpotDefaultThParameters'))
+if (isfile('data/TS_DefaultParams.mat'))
     load('data/TS_DefaultParams.mat','TrueSpotDefaultThParameters');
     loaded_TrueSpot_default_params = 1;
 end
