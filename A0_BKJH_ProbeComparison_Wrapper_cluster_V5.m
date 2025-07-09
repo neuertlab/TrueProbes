@@ -34,6 +34,7 @@ xml_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'xml
 trueSpot_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'TrueSpot-main'));
 progbar_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'parwaitbar'));
 VarGibbs_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'VarGibbs-4.1'));
+hpf_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'HighPrecisionFloat'));
 addpath(core_folders);
 addpath(modified_matlab_function_folders);
 addpath(util_folders);
@@ -46,6 +47,7 @@ addpath(xml_folders);
 addpath(trueSpot_folders);
 addpath(progbar_folders);
 addpath(VarGibbs_folders);
+addpath(hpf_folders);
 
 %% Parse Input FIles
 gene_num = id;
@@ -216,6 +218,9 @@ if (isMATLABReleaseOlderThan("R2022b"))
     msg = 'Error. \n MATLAB must be version 2022b or higher for design software to work.';
     error(msg)
 end
+
+if ~(ismcc || isdeployed)
+    %#exclude matlab.addons.installedAddons
 addons = matlab.addons.installedAddons;
 if (~ismember("Bioinformatics Toolbox",addons.Name))
     msg = 'Error. You need to have the Bioinformatics Toolbox installed for the software to work properly (https://www.mathworks.com/products/bioinfo.html)';
@@ -241,9 +246,15 @@ if (~ismember("Symbolic Math Toolbox",addons.Name))
     msg = 'Error. The Symbolic Math Toolbox installed must be installed for the software to work properly: (https://www.mathworks.com/products/symbolic.html)';
     error(msg)
 end
+end
 mfilePath = mfilename('fullpath');
 if contains(mfilePath,'LiveEditorEvaluationHelper')
-    mfilePath = matlab.desktop.editor.getActiveFilename;
+    if ~(ismcc || isdeployed)
+        %#exclude matlab.desktop.editor.getActiveFilename
+        mfilePath = matlab.desktop.editor.getActiveFilename;
+    else
+        mFilePath = which(fullfile('A0_BKJH_ProbeDesign_Wrapper_cluster_V5.exe'));
+    end
 end
 if (~strcmp(pwd,extractBefore(mfilePath,strcat(filesep,'A0'))))
     msg = 'Error. The script must be run in the TrueProbes main folder for the code to work properly';
