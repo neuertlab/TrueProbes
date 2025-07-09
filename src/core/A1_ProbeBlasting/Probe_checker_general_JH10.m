@@ -235,7 +235,7 @@ if (~isempty(batch_nums_to_check1))
     wb = parwaitbar(length(batch_nums_to_check1),'WaitMessage', 'Blasting');
     parfor v = 1:length(batch_nums_to_check1)
         pause(0.1);
-        i = batch_nums_to_check1(v);
+        i = batch_nums_to_check1(v);msg = [];status = [];
         if (runDNA)
             sequence_data = [FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) '.fa'];
             outputfile_DNA = [FolderRootName filesep '(' TranscriptName ')' designerName 'probebatch' num2str(i) 'resultsDNA.xml'];

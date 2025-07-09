@@ -15,10 +15,16 @@ else
 end
 
 
-
-T = str2sym(sprintf('T%d(t)',1)); % temperature in Celsius
-S = sym('salt');          % salt concentration in moles per liter (M)
-P= sym('primerConc');    % concentration of primers in mole per liter (M)
+if ~(ismcc || isdeployed)
+    %#exclude sym str2sym
+    T = str2sym(sprintf('T%d(t)',1)); % temperature in Celsius
+    S = sym('salt');          % salt concentration in moles per liter (M)
+    P= sym('primerConc');    % concentration of primers in mole per liter (M)
+else
+    T = Temperature;
+    S = SaltConcentration;
+    P = PrimerConc;
+end
 
 % compute sequence properties
 numSeq = double(nt2int(seq));
@@ -31,8 +37,12 @@ else % occurrences of ambiguous N symbols
 end
 %salt correction
 % build output structure
-
-tm0 = [arrayfun(@(x) double(subs(tm(x),'salt',SaltConcentration)),1:3) arrayfun(@(x) double(subs(subs(tm(x),'salt',SaltConcentration),'primerConc',PrimerConc)),4:9)];
+if ~(ismcc || isdeployed)
+    %#exclude subs
+    tm0 = [arrayfun(@(x) double(subs(tm(x),'salt',SaltConcentration)),1:3) arrayfun(@(x) double(subs(subs(tm(x),'salt',SaltConcentration),'primerConc',PrimerConc)),4:9)];
+else
+    tm0 = tm;
+end
 dGF  = NN(1:3,1) - ((T+273.15)  .* (NN(1:3,2)./1000)); % DeltaG
 dGR  = NN(4:6,1) - ((T+273.15)  .* (NN(4:6,2)./1000)); % DeltaG
 dGE  = NN(7:9,1) - ((T+273.15)  .* (NN(7:9,2)./1000)); % DeltaG
