@@ -1,1 +1,0 @@
-Location of where genome and transcriptome metadata is stored.
