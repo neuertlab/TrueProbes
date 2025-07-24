@@ -7,7 +7,7 @@
         <TCGA_Gene>data/DatabaseData/Gene_Expression_Data/Human/tcgaGeneExpr.bed</TCGA_Gene>
         <TCGA_Transcript>data/DatabaseData/Gene_Expression_Data/Human/tcgaTranscExpr.bed</TCGA_Transcript>
 		<SingleCellAtlas>data/DatabaseData/Gene_Expression_Data/Human/tabulasapiens_tissue_cell_type.bed</SingleCellAtlas>
-		<SingleCellAtlas>data/DatabaseData/Gene_Expression_Data/Human/SingleCellMerged.bed</SingleCellAtlas>
+		<SingleCellAtlas>data/DatabaseData/Gene_Expression_Data/Human/singleCellMerged.bed</SingleCellAtlas>
     </row>
     <row>
         <Organism>Mouse</Organism>
@@ -35,7 +35,7 @@
         <TCGA_Gene>data/DatabaseData/Gene_Expression_Data/Human/tcgaGeneExpr_samples.txt</TCGA_Gene>
         <TCGA_Transcript>data/DatabaseData/Gene_Expression_Data/Human/tcgaTranscExpr_samples.txt</TCGA_Transcript>
 		<SingleCellAtlas>data/DatabaseData/Gene_Expression_Data/Human/tabulasapiens_tissue_cell_type_samples.txt</SingleCellAtlas>
-		<SingleCellAtlasMerged>data/DatabaseData/Gene_Expression_Data/Human/SingleCellMerged_samples.txt</SingleCellAtlasMerged>
+		<SingleCellAtlasMerged>data/DatabaseData/Gene_Expression_Data/Human/singleCellMerged_samples.txt</SingleCellAtlasMerged>
     </schema>
     <schema>
         <Organism>Mouse</Organism>

@@ -35,6 +35,7 @@ trueSpot_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep
 progbar_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'parwaitbar'));
 VarGibbs_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'VarGibbs-4.1'));
 hpf_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'HighPrecisionFloat'));
+if ~(ismcc || isdeployed)
 addpath(core_folders);
 addpath(modified_matlab_function_folders);
 addpath(util_folders);
@@ -48,13 +49,14 @@ addpath(trueSpot_folders);
 addpath(progbar_folders);
 addpath(VarGibbs_folders);
 addpath(hpf_folders);
-
+end
 %% Parse Input FIles
 gene_num = id;
 saveRoot = strcat('output',filesep);
 input_file_opts = detectImportOptions(input_file);
 inputs1 = readmatrix(input_file,input_file_opts);
-
+id 
+cluster
 Organism = inputs1{gene_num,1};
 IncludeAccessionNumbers = split(inputs1{gene_num,2},',');
 ExcludeAccessionNumbers = split(inputs1{gene_num,3},',');
@@ -252,7 +254,13 @@ if contains(mfilePath,'LiveEditorEvaluationHelper')
         %#exclude matlab.desktop.editor.getActiveFilename
         mfilePath = matlab.desktop.editor.getActiveFilename;
     else
-        mFilePath = which(fullfile('A0_BKJH_ProbeDesign_Wrapper_cluster_V5.exe'));
+        if (ismac)
+            mfilePath = which(fullfile('A0_BKJH_ProbeDesign_Wrapper_cluster_V5.app'));
+        elseif (isunix)
+            mfilePath = which(fullfile('A0_BKJH_ProbeDesign_Wrapper_cluster_V5'));
+        elseif (ispc)
+            mfilePath = which(fullfile('A0_BKJH_ProbeDesign_Wrapper_cluster_V5.exe'));
+        end
     end
 end
 if (~strcmp(pwd,extractBefore(mfilePath,strcat(filesep,'A0'))))
@@ -592,7 +600,9 @@ end
 if (cluster==0)
     if (ismac)
         blastpath = strcat(filesep,'usr',filesep,'local',filesep,'ncbi',filesep,'blast',filesep,'bin');
+        if ~(ismcc || isdeployed)
         addpath(blastpath);
+        end
         setenv('PATH',[blastpath ':' getenv('PATH')]);
     else
         curr_dir = pwd;
@@ -609,7 +619,9 @@ if (cluster==0)
              error(msg)
          else
              blastpath = blast_paths(valid_path).folder;
+             if ~(ismcc || isdeployed)
              addpath(blastpath);
+             end
              if (ispc)
              setenv('PATH',[blastpath ';' getenv('PATH')]);
              end

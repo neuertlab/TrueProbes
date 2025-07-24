@@ -35,6 +35,7 @@ trueSpot_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep
 progbar_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'parwaitbar'));
 VarGibbs_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'VarGibbs-4.1'));
 hpf_folders = genpath(strcat(pwd,filesep,'src',filesep,'thirdparty',filesep,'HighPrecisionFloat'));
+if ~(ismcc || isdeployed)
 addpath(core_folders);
 addpath(modified_matlab_function_folders);
 addpath(util_folders);
@@ -48,7 +49,7 @@ addpath(trueSpot_folders);
 addpath(progbar_folders);
 addpath(VarGibbs_folders);
 addpath(hpf_folders);
-
+end
 %% Parse Input FIles
 gene_num = id;
 saveRoot = strcat('output',filesep); 
@@ -103,8 +104,6 @@ targetStrand = inputsParameterSettings.MainProbe_Settings.targetStrand; %Target 
 
 %% Design Filtering Settings (You Usually will not change)
 RemoveProbesBindingOffTargetRibosomalHits = inputsParameterSettings.DesignFiltering_Settings.RemoveProbesBindingOffTargetRibosomalHits;% Filter out probes with targets hits to ribosomal proteins
-packOptimal_ProbesWithNoOffTargets = inputsParameterSettings.DesignFiltering_Settings.packOptimal_ProbesWithNoOffTargets;%when designing probes without off-targets do optimal packing to get the most or normal selection not considering packing efficiency
-IncludeSelfHybridizationInProbeSelection = inputsParameterSettings.DesignFiltering_Settings.IncludeSelfHybridizationInProbeSelection;%when designing probes consider probe self-hybridization when ranking probes on binding affinity
 
 %% Thermodynamic Settings
 Gibbs_Model = inputsParameterSettings.Thermodynamic_Settings.Gibbs_Model; %Which Hybridization model to use for probe design and evaluation
@@ -253,7 +252,13 @@ if contains(mfilePath,'LiveEditorEvaluationHelper')
         %#exclude matlab.desktop.editor.getActiveFilename
         mfilePath = matlab.desktop.editor.getActiveFilename;
     else
-        mFilePath = which(fullfile('A0_BKJH_ProbeDesign_Wrapper_cluster_V5.exe'));
+        if (ismac)
+            mfilePath = which(fullfile('A0_BKJH_ProbeComparison_Wrapper_cluster_V5.app'));
+        elseif (isunix)
+            mfilePath = which(fullfile('A0_BKJH_ProbeComparison_Wrapper_cluster_V5'));
+        elseif (ispc)
+            mfilePath = which(fullfile('A0_BKJH_ProbeComparison_Wrapper_cluster_V5.exe'));
+        end
     end
 end
 if (~strcmp(pwd,extractBefore(mfilePath,strcat(filesep,'A0'))))
@@ -299,6 +304,7 @@ switch id2
         maxProbeSize = 38;
     case 8
         designerName = '_CustomUpload';%diff levels
+
 end
 settings.BUILD_STRING = '2025.06.04.00';
 settings.VERSION_STRING = 'v1.1.1';
@@ -585,8 +591,8 @@ Lmin = minProbeSize; Lmax = maxProbeSize;
 
 
 %% Generate Folder
-if (not(isfolder([saveRoot])))
-    mkdir([saveRoot])
+if (not(isfolder(saveRoot)))
+    mkdir(saveRoot)
 end
 fprintf("Making probe target design output folder")
 fprintf('\n')
@@ -618,7 +624,7 @@ designerName0 = '_TrueProbes';
         Lpmax = max(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
         switch id2
             case 1
-                ONP = readtable(['Probe Designer ' GeneName(2:end-1) ' probes'],'Range','B2:B100','ReadVariableNames',false);
+                ONP = readtable(['Probe Designer ' geneNames ' probes'],'Range','B2:B100','ReadVariableNames',false);
                 OldNeuertProbes = ONP.Var1.';
                 OldNeuertProbes = convertCharsToStrings(OldNeuertProbes);
                 for m = 1:length(OldNeuertProbes)
@@ -634,7 +640,7 @@ designerName0 = '_TrueProbes';
                 StellarisProbesLi = cell(1,6);
                 for v = 0:5
                     Li = strcat('L',num2str(v));
-                    SP = readtable(strcat('OtherSoftwareProbeDesign/Stellaris/', GeneName, '_', IncludeAccessionNumbers{:}, '_Stellaris.xlsx'),'Range','D2:D100','Sheet',Li,'ReadVariableNames',false);
+                    SP = readtable(strcat('OtherSoftwareProbeDesign/Stellaris/', '(',geneNames, ')_', IncludeAccessionNumbers{:}, '_Stellaris.xlsx'),'Range','D2:D100','Sheet',Li,'ReadVariableNames',false);
                     try
                         StellarisProbes = SP.Var1.';
                         StellarisProbesLi{v+1} = StellarisProbes(~isnan(StellarisProbes));
@@ -697,7 +703,7 @@ designerName0 = '_TrueProbes';
                     probe_rows{z} = find(cell2mat(arrayfun(@(x) strcmp(strtrim(paintOligos4(x).refseq),B),1:size(paintOligos4,1),'UniformOutput',false)));
                 end
                 probe_rows = cat(2,probe_rows{:});
-                probe_rows2 = find(cell2mat(arrayfun(@(x) strcmpi(strtrim(paintOligos4(x).gene_id),GeneName(2:end-1)),1:size(paintOligos4,1),'UniformOutput',false)));
+                probe_rows2 = find(cell2mat(arrayfun(@(x) strcmpi(strtrim(paintOligos4(x).gene_id),geneNames),1:size(paintOligos4,1),'UniformOutput',false)));
                 probe_rows = intersect(probe_rows,probe_rows2);
                 PaintSHOP_oligos = strtrim({paintOligos4(probe_rows).sequence});%why not just PaintSHOP_oligos
                 clear paintOligos4
@@ -775,6 +781,7 @@ designerName0 = '_TrueProbes';
             otherwise
                 ProbeSets = randomProbeSets(probes,[Lpmin Lpmax],settings.ProbeSpacing,1,max_probes);
                 chosenProbes = ProbeSets{1};
+
         end
         if (id2<7)
             probes = probes(chosenProbes,:);
@@ -788,7 +795,7 @@ designerName0 = '_TrueProbes';
         StellarisProbesLi = cell(1,6);
         for v = 0:5
             Li = strcat('L',num2str(v));
-            SP = readtable(strcat('OtherSoftwareProbeDesign/Stellaris/', GeneName, '_', IncludeAccessionNumbers{:}, '_Stellaris.xlsx'),'Range','D2:D100','Sheet',Li,'ReadVariableNames',false);
+            SP = readtable(strcat('OtherSoftwareProbeDesign/Stellaris/', '(', geneNames, ')_', IncludeAccessionNumbers{:}, '_Stellaris.xlsx'),'Range','D2:D100','Sheet',Li,'ReadVariableNames',false);
             try
                 StellarisProbes = SP.Var1.';
                 StellarisProbesLi{v+1} = StellarisProbes(~isnan(StellarisProbes));
@@ -820,7 +827,9 @@ designerName0 = '_TrueProbes';
 if (cluster==0)
     if (ismac)
         blastpath = strcat(filesep,'usr',filesep,'local',filesep,'ncbi',filesep,'blast',filesep,'bin');
+        if ~(ismcc || isdeployed)
         addpath(blastpath);
+        end
         setenv('PATH',[blastpath ':' getenv('PATH')]);
     else
         curr_dir = pwd;
@@ -837,7 +846,9 @@ if (cluster==0)
              error(msg)
          else
              blastpath = blast_paths(valid_path).folder;
+             if ~(ismcc || isdeployed)
              addpath(blastpath);
+             end
              if (ispc)
              setenv('PATH',[blastpath ';' getenv('PATH')]);
              end
@@ -876,7 +887,6 @@ end
 
 
 %% BLAST Probes
-if (settings.SingleOrMulti==1&&settings.AllIsoforms == 0)%One Gene/One Isoform
     if (id2~=2)
         try
             load([settings.FolderRootName filesep '(' geneNames ')' '_' settings.rootName '_hits_table' designerName '.mat'],'gene_table')
@@ -910,11 +920,10 @@ if (settings.SingleOrMulti==1&&settings.AllIsoforms == 0)%One Gene/One Isoform
             fprintf("Time elapsed to generate probe BLAST results table %g seconds",round(tEnd,3,"significant"))
         end
     end
-end
 fprintf("Getting Parser Information from BLAST Databases BLAST")
 fprintf('\n')
 fprintf('\n')
-[RNAdbParser, DNAdbParser,~] = A3_BlastDBCMD_JH(settings,gene_table);
+[RNAdbParser, DNAdbParser] = A3_BlastDBCMD_JH(settings,gene_table);
 settings.DNAdbParser = DNAdbParser;
 settings.RNAdbParser = RNAdbParser;
 
@@ -930,7 +939,7 @@ if (id2~=2)
             fprintf('\n')
             fprintf('\n')
         tic
-        [ExpressionMatrix,get_expression_time] = A_JH_GetExpressionInfo_V2(gene_table,settings);
+        [ExpressionMatrix,get_expression_time] = A_JH_GetExpressionInfo_V3(gene_table,settings,input_gene_expression_file_locations);
         save([settings.FolderRootName filesep '(' geneNames ')' '_' settings.rootName '_ExpressionInfo' designerName '.mat'],'ExpressionMatrix','get_expression_time','settings','-v7.3');
         tEnd = toc;fprintf('\n')
         fprintf("Time elapsed to generate probe BLAST hits gene expression information %g seconds",round(tEnd,3,"significant"))
@@ -948,7 +957,7 @@ else
         fprintf('\n')
         fprintf('\n')
         tic
-        [ExpressionMatrix,get_expression_time] = A_JH_GetExpressionInfo_V2(gene_table,settings);
+        [ExpressionMatrix,get_expression_time] = A_JH_GetExpressionInfo_V3(gene_table,settings,input_gene_expression_file_locations);
         save([settings.FolderRootName filesep '(' geneNames ')' '_' settings.rootName '_ExpressionInfo' designerName0 '.mat'],'ExpressionMatrix','get_expression_time','settings','-v7.3');
         tEnd = toc;fprintf('\n')
         fprintf("Time elapsed to generate probe BLAST hits gene expression information %g seconds",round(tEnd,3,"significant"))
@@ -976,7 +985,7 @@ if (id2~=2)
         fprintf('\n')
         tic
         [Kb_Match,Kon,Koff,dHeq_Match,dSeq_Match,dHf_Match,dSf_Match,dHr_Match,dSr_Match,dCpeq_Match,dHon_eq,dSon_eq,dHon_f,dSon_f,dHon_r,dSon_r,dCpon_eq,Tm_on,Tm_Match] = ...
-            A_JH_GenerateThermoInfo_V5(probes,gene_table,geneNames ,settings);%add Kon Koff
+            A_JH_GenerateThermoInfo_V5(probes,gene_table,geneNames,settings);%add Kon Koff
         save([settings.FolderRootName filesep '(' geneNames ')' '_' settings.rootName '_Tm' num2str(settings.HybridizationTemperature) '_OnOffThermoInfo' designerName '.mat'],'-mat','Kon','Koff','Kb_Match','-v7.3');
         save([settings.FolderRootName filesep '(' geneNames ')' '_' settings.rootName '_dHInfo' designerName '.mat'],'-mat','dHon_f','dHon_r','dHon_eq','dHeq_Match','dHf_Match','dHr_Match','-v7.3');
         save([settings.FolderRootName filesep '(' geneNames ')' '_' settings.rootName '_dSInfo' designerName '.mat'],'-mat','dSon_f','dSon_r','dSon_eq','dSeq_Match','dSf_Match','dSr_Match','-v7.3');
@@ -1044,12 +1053,12 @@ if (id2~=2)
     end
 else
     try
-        load([settings.FolderRootName filesep '(' settings.GeneName ')_binding_hits_map' designerName0 '.mat'],'DoesProbeBindSite2','Num_of_Molecule_Sites')
-        load([settings.FolderRootName filesep '(' settings.GeneName  ')_Tm' num2str(T_hybrid) '_BindingEnergyMatrix2' designerName0 '.mat'],'Kb_Complement')
-        load([settings.FolderRootName filesep '(' settings.GeneName  ')_Tm' num2str(T_hybrid) '_BindingEnergyMatrix' designerName0 '.mat'],'Kb_mod')
-        load([settings.FolderRootName filesep '(' settings.GeneName ')_BindingMatrices' designerName0 '.mat'],'dHeq_mod','dSeq_mod','dHf_mod','dSf_mod','dHr_mod','dSr_mod','Tm_mod','dCp_mod')
+        load([settings.FolderRootName filesep '(' geneNames ')_binding_hits_map' designerName0 '.mat'],'DoesProbeBindSite2','Num_of_Molecule_Sites')
+        load([settings.FolderRootName filesep '(' geneNames  ')_Tm' num2str(T_hybrid) '_BindingEnergyMatrix2' designerName0 '.mat'],'Kb_Complement')
+        load([settings.FolderRootName filesep '(' geneNames  ')_Tm' num2str(T_hybrid) '_BindingEnergyMatrix' designerName0 '.mat'],'Kb_mod')
+        load([settings.FolderRootName filesep '(' geneNames ')_BindingMatrices' designerName0 '.mat'],'dHeq_mod','dSeq_mod','dHf_mod','dSf_mod','dHr_mod','dSr_mod','Tm_mod','dCp_mod')
         if (settings.BLASTdna)
-            load([settings.FolderRootName filesep '(' settings.GeneName ')_BindingMatrices2' designerName0 '.mat'],'dHeq_Complement','dSeq_Complement','dHf_Complement','dSf_Complement','dHr_Complement','dSr_Complement','dCp_Complement')
+            load([settings.FolderRootName filesep '(' geneNames ')_BindingMatrices2' designerName0 '.mat'],'dHeq_Complement','dSeq_Complement','dHf_Complement','dSf_Complement','dHr_Complement','dSr_Complement','dCp_Complement')
         end
         fprintf("Loading probe target binding site maps")
         fprintf('\n')

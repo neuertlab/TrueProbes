@@ -279,8 +279,8 @@ classdef parwaitbar < handle
                 if obj.NoDesktop
                     % If terminal is used, use ANSI codes to move cursor.
                     %system('tput cuu1;tput el');
-                    system('printf "\033[1A"'); % Move cursor up.
-                    system('printf "\033[K"'); % Erase line.
+                    %system('printf "\033[1A"'); % Move cursor up.
+                    %system('printf "\033[K"'); % Erase line.
                 else
                     % If desktop is used, print backspaces to rewind the cursor.
                     disp(repmat(char(8), 1, obj.FullbarLength+2));
