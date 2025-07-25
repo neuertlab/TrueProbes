@@ -1,5 +1,6 @@
 # TrueProbes
-Quantitative RNA-FISH Probe Design Software
+Quantitative RNA-FISH Probe Design Software.
+Uses BLAST and Thermodynamic-Kinetic Simulations to Design and Evaluation RNA-FISH Probes that can be tailored to individual RNA-FISH experiments and applications.
 
 
 
@@ -13,19 +14,12 @@ Quantitative RNA-FISH Probe Design Software
 [MATLAB Curve Fitting Toolbox](https://www.mathworks.com/products/curvefitting.html)    
 [NCBI-BLAST+](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/)    
 
+Software Tested
 ### Project Directories:
-
 To run the `data/DatabaseData` needs to be included in the main TrueProbes folder.
+The DatabaseData folder is where all data used in designing probes are stored. This consists of Database annotation files for each organism with Blast Databases, Reference Genome/Transcriptome, Gene Annotation, and Expression Data
+
 Directory: `DatabaseData` contains the following: 
-1. **Metadata**
-   - Metadata annotation files for each organism
-
-
-Directory: `src` contains the following: 
-1. **Metadata**
-   - Metadata annotation files for each organism
-2.  **DatabaseData**
-   	- Database annotation files for each organism with Blast Databases, Reference Genome/Transcriptome, Gene Annotation, and Expression Data
     - **Blast Databases:** TrueProbes/data/DatabaseData/Blast_Databases/Organism/
     - **Reference Genome/Transcriptome:** TrueProbes/data/DatabaseData/Blast_Databases/Organism
     - **GTF:** TrueProbes/data/DatabaseData/GTF_Databases/Organism
@@ -33,19 +27,20 @@ Directory: `src` contains the following:
     - **Gene Expression Data:** TrueProbes/data/DatabaseData/GeneExpressionData/Organism
    
 Directory: `src` contains the following: 
-1. **blast**
-   - installers for blast+
-2. **core:**
+1. **core:**
    - MATLAB codes for generating each step of the TrueProbes pipeline
    - steps: (Probe Generation, Probe Blasting, Gene Expression, Thermodynamic Information,
      Binding Site Mapping, ProbeDesignerStats, Probe Selection, Probe Metrics) 
-3. **third-party:**
+2. **third-party:**
    - Other MATLAB and linux software scripts and packages  
-4. **util:**
+3. **util:**
    - general MATLAB functions utilized throughout software
-5. **wrappers:**
+4. **wrappers:**
    - general MATLAB wrapper functions
-   
+
+Directory: 'output' contains the designed probes and outputs at each step of the TrueProbes RNA-FISH probe design process.
+1. **folders for each transcript probes are designed against:**
+
 ## Basic Description of How TrueProbes Works
 **The TrueProbes software runs by performing eight steps sequentially.**     
 1. **Probe Generation.** It generates all possible probes shared between a list of inclusion IDs and inclusion te xt files, but not in exclusion text files or exclusion IDs, within a set probe length range.   
