@@ -59,7 +59,7 @@ else
         temp_loc_stable_dict = dictionary(convertCharsToStrings(unique_stable_ids'),1:length(unique_stable_ids));
         temp_inverse_stable_dict = dictionary(1:length(unique_stable_ids),convertCharsToStrings(unique_stable_ids'));
         num_matches_loc_stable = temp_loc_stable_dict(EMBLtoNCBI_mappings_Matched_P0.transcript_stable_id);
-        repeat_locs_stable = find(hist(num_matches_loc_stable,unique(num_matches_loc_stable))>1);
+        repeat_locs_stable = find(groupcounts(num_matches_loc_stable)>1)';
         EMBLtoNCBI_mappings_Matched_Single_P0 = EMBLtoNCBI_mappings_Matched_P0(~ismember(EMBLtoNCBI_mappings_Matched_P0.transcript_stable_id,temp_inverse_stable_dict(repeat_locs_stable)),:);
         EMBLtoNCBI_mappings_Matched_Multi_P0 = EMBLtoNCBI_mappings_Matched_P0(ismember(EMBLtoNCBI_mappings_Matched_P0.transcript_stable_id,temp_inverse_stable_dict(repeat_locs_stable)),:);
         multi_mapped_EMBL_transcripts = unique(EMBLtoNCBI_mappings_Matched_Multi_P0.transcript_stable_id);
@@ -74,7 +74,7 @@ else
         temp_loc_dict_xref = dictionary(convertCharsToStrings(unique_xref'),1:length(unique_xref));
         temp_inverse_dict_xref = dictionary(1:length(unique_xref),convertCharsToStrings(unique_xref'));
         num_matches_loc_xref = temp_loc_dict_xref(EMBLtoNCBI_mappings_Matched_P1.xref);
-        repeat_locs_xref = find(hist(num_matches_loc_xref,unique(num_matches_loc_xref))>1);
+        repeat_locs_xref = find(groupcounts(num_matches_loc_xref)>1)';
         EMBLtoNCBI_mappings_Matched_Single_P1 = EMBLtoNCBI_mappings_Matched_P1(~ismember(EMBLtoNCBI_mappings_Matched_P1.xref,temp_inverse_dict_xref(repeat_locs_xref)),:);
         EMBLtoNCBI_mappings_Matched_Multi_P1 = EMBLtoNCBI_mappings_Matched_P1(ismember(EMBLtoNCBI_mappings_Matched_P1.xref,temp_inverse_dict_xref(repeat_locs_xref)),:);
         multi_mapped_xref = unique(EMBLtoNCBI_mappings_Matched_Multi_P1.xref);
@@ -85,9 +85,18 @@ else
         end
         EMBLtoNCBI_mappings_Matched_Multi_P1 = sortrows(EMBLtoNCBI_mappings_Matched_Multi_P1,"xref","ascend");
         EMBLtoNCBI_mappings_Matched = [EMBLtoNCBI_mappings_Matched_Multi_P1;EMBLtoNCBI_mappings_Matched_Single_P1];
-        EMBLgeneIds = unique(EMBLtoNCBI_mappings.gene_stable_id);
-        EMBLtranscriptIds = unique(EMBLtoNCBI_mappings.transcript_stable_id);
-        NCBItranscriptIds = unique(EMBLtoNCBI_mappings.xref);
+        EMBLgeneIds = unique(EMBLtoNCBI_mappings_Matched.gene_stable_id);
+        EMBLtranscriptIds = unique(EMBLtoNCBI_mappings_Matched.transcript_stable_id);
+        NCBItranscriptIds = unique(EMBLtoNCBI_mappings_Matched.xref);
+        EMBLgeneIds_dict = dictionary(string(EMBLgeneIds)',1:length(EMBLgeneIds));
+        EMBLtranscriptIds_dict = dictionary(string(EMBLtranscriptIds)',1:length(EMBLtranscriptIds));
+        NCBItranscriptIds_dict = dictionary(string(NCBItranscriptIds)',1:length(NCBItranscriptIds));
+        inverseEMBLgeneIds_dict = dictionary(1:length(EMBLgeneIds),string(EMBLgeneIds)');
+        inverseEMBLtranscriptIds_dict = dictionary(1:length(EMBLtranscriptIds),string(EMBLtranscriptIds)');
+        inverseNCBItranscriptIds_dict = dictionary(1:length(NCBItranscriptIds),string(NCBItranscriptIds)');
+        maps = [EMBLgeneIds_dict(EMBLtoNCBI_mappings_Matched.gene_stable_id) ...
+            EMBLtranscriptIds_dict(EMBLtoNCBI_mappings_Matched.transcript_stable_id) ...
+            NCBItranscriptIds_dict(EMBLtoNCBI_mappings_Matched.xref)];
         geneExpressionDataLocations = struct2table(readstruct(input_gene_expression_file_locations).row);
         geneExpressionDataLocationsVars = struct2table(readstruct(input_gene_expression_file_locations).tracks);
         values = geneExpressionDataLocations(strcmp(geneExpressionDataLocations.Organism,Organism),:);
@@ -131,18 +140,6 @@ else
                     expFileVals_table(ii, :) = {GeneExpressionFiles{ii},'T','ENSEMBL', string(tmpPosition2)};
                 end
             end
-            EMBLgeneIds = unique(EMBLtoNCBI_mappings_Matched.gene_stable_id);
-            EMBLtranscriptIds = unique(EMBLtoNCBI_mappings_Matched.transcript_stable_id);
-            NCBItranscriptIds = unique(EMBLtoNCBI_mappings_Matched.xref);
-            EMBLgeneIds_dict = dictionary(string(EMBLgeneIds)',1:length(EMBLgeneIds));
-            EMBLtranscriptIds_dict = dictionary(string(EMBLtranscriptIds)',1:length(EMBLtranscriptIds));
-            NCBItranscriptIds_dict = dictionary(string(NCBItranscriptIds)',1:length(NCBItranscriptIds));
-            inverseEMBLgeneIds_dict = dictionary(1:length(EMBLgeneIds),string(EMBLgeneIds)');
-            inverseEMBLtranscriptIds_dict = dictionary(1:length(EMBLtranscriptIds),string(EMBLtranscriptIds)');
-            inverseNCBItranscriptIds_dict = dictionary(1:length(NCBItranscriptIds),string(NCBItranscriptIds)');
-            maps = [EMBLgeneIds_dict(EMBLtoNCBI_mappings_Matched.gene_stable_id) ...
-                EMBLtranscriptIds_dict(EMBLtoNCBI_mappings_Matched.transcript_stable_id) ...
-                NCBItranscriptIds_dict(EMBLtoNCBI_mappings_Matched.xref)];
             positions_ref = cell(1,length(GeneExpressionFiles));
             for ii = 1:length(GeneExpressionFiles)
                 %(multiple xref to transcirpt or vis versa need to share values)
