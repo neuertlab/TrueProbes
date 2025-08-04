@@ -52,7 +52,39 @@ else
         EMBLtoNCBI_opts = detectImportOptions(settings.EMBLtoNCBI(Organism),'FileType','delimitedtext','Delimiter','\t');
         EMBLtoNCBI_stableIDs = readtable(settings.EMBLtoNCBI(Organism),EMBLtoNCBI_opts);
         %filter out source identity and xref identity NaN?
-        EMBLtoNCBI_mappings = EMBLtoNCBI_stableIDs(sum(cell2mat(cellfun(@(x) contains(EMBLtoNCBI_stableIDs.xref,x),{'NM','NR','XM','XR'},'Un',0)),2)==1,{'gene_stable_id','transcript_stable_id','xref','source_identity','xref_identity'});
+        EMBLtoNCBI_mappings = EMBLtoNCBI_stableIDs(sum(cell2mat(cellfun(@(x) contains(EMBLtoNCBI_stableIDs.xref,x),{'NM','NR','XM','XR'},'Un',0)),2)==1,{'gene_stable_id','transcript_stable_id','xref','source_identity','xref_identity','info_type','db_name'});
+        EMBLtoNCBI_mappings_Matched_P0 = EMBLtoNCBI_mappings(~or(isnan(EMBLtoNCBI_mappings.source_identity),isnan(EMBLtoNCBI_mappings.xref_identity)),:);
+        EMBLtoNCBI_mappings_Matched_P0 = sortrows(EMBLtoNCBI_mappings_Matched_P0,[2 3 1 4 5 6 7],{'ascend','ascend','ascend','descend','descend','ascend','ascend'});
+        unique_stable_ids = unique(EMBLtoNCBI_mappings_Matched_P0.transcript_stable_id,'stable');
+        temp_loc_stable_dict = dictionary(convertCharsToStrings(unique_stable_ids'),1:length(unique_stable_ids));
+        temp_inverse_stable_dict = dictionary(1:length(unique_stable_ids),convertCharsToStrings(unique_stable_ids'));
+        num_matches_loc_stable = temp_loc_stable_dict(EMBLtoNCBI_mappings_Matched_P0.transcript_stable_id);
+        repeat_locs_stable = find(hist(num_matches_loc_stable,unique(num_matches_loc_stable))>1);
+        EMBLtoNCBI_mappings_Matched_Single_P0 = EMBLtoNCBI_mappings_Matched_P0(~ismember(EMBLtoNCBI_mappings_Matched_P0.transcript_stable_id,temp_inverse_stable_dict(repeat_locs_stable)),:);
+        EMBLtoNCBI_mappings_Matched_Multi_P0 = EMBLtoNCBI_mappings_Matched_P0(ismember(EMBLtoNCBI_mappings_Matched_P0.transcript_stable_id,temp_inverse_stable_dict(repeat_locs_stable)),:);
+        multi_mapped_EMBL_transcripts = unique(EMBLtoNCBI_mappings_Matched_Multi_P0.transcript_stable_id);
+        for kk = 1:length(multi_mapped_EMBL_transcripts)
+            rows = find(ismember(EMBLtoNCBI_mappings_Matched_Multi_P0.transcript_stable_id,multi_mapped_EMBL_transcripts{kk}));
+            identity = mean([EMBLtoNCBI_mappings_Matched_Multi_P0(rows,:).source_identity EMBLtoNCBI_mappings_Matched_Multi_P0(rows,:).xref_identity],2);
+            EMBLtoNCBI_mappings_Matched_Multi_P0(rows(identity<max(identity)),:) = [];
+        end
+        EMBLtoNCBI_mappings_Matched_Multi_P0 = sortrows(EMBLtoNCBI_mappings_Matched_Multi_P0,"xref","ascend");
+        EMBLtoNCBI_mappings_Matched_P1 = [EMBLtoNCBI_mappings_Matched_Multi_P0;EMBLtoNCBI_mappings_Matched_Single_P0];
+        unique_xref = unique(EMBLtoNCBI_mappings_Matched_P1.xref,'stable');
+        temp_loc_dict_xref = dictionary(convertCharsToStrings(unique_xref'),1:length(unique_xref));
+        temp_inverse_dict_xref = dictionary(1:length(unique_xref),convertCharsToStrings(unique_xref'));
+        num_matches_loc_xref = temp_loc_dict_xref(EMBLtoNCBI_mappings_Matched_P1.xref);
+        repeat_locs_xref = find(hist(num_matches_loc_xref,unique(num_matches_loc_xref))>1);
+        EMBLtoNCBI_mappings_Matched_Single_P1 = EMBLtoNCBI_mappings_Matched_P1(~ismember(EMBLtoNCBI_mappings_Matched_P1.xref,temp_inverse_dict_xref(repeat_locs_xref)),:);
+        EMBLtoNCBI_mappings_Matched_Multi_P1 = EMBLtoNCBI_mappings_Matched_P1(ismember(EMBLtoNCBI_mappings_Matched_P1.xref,temp_inverse_dict_xref(repeat_locs_xref)),:);
+        multi_mapped_xref = unique(EMBLtoNCBI_mappings_Matched_Multi_P1.xref);
+        for kk = 1:length(multi_mapped_xref)
+            rows = find(ismember(EMBLtoNCBI_mappings_Matched_Multi_P1.xref,multi_mapped_xref{kk}));
+            identity = mean([EMBLtoNCBI_mappings_Matched_Multi_P1(rows,:).source_identity EMBLtoNCBI_mappings_Matched_Multi_P1(rows,:).xref_identity],2);
+            EMBLtoNCBI_mappings_Matched_Multi_P1(rows(identity<max(identity)),:) = [];
+        end
+        EMBLtoNCBI_mappings_Matched_Multi_P1 = sortrows(EMBLtoNCBI_mappings_Matched_Multi_P1,"xref","ascend");
+        EMBLtoNCBI_mappings_Matched = [EMBLtoNCBI_mappings_Matched_Multi_P1;EMBLtoNCBI_mappings_Matched_Single_P1];
         EMBLgeneIds = unique(EMBLtoNCBI_mappings.gene_stable_id);
         EMBLtranscriptIds = unique(EMBLtoNCBI_mappings.transcript_stable_id);
         NCBItranscriptIds = unique(EMBLtoNCBI_mappings.xref);
@@ -99,7 +131,6 @@ else
                     expFileVals_table(ii, :) = {GeneExpressionFiles{ii},'T','ENSEMBL', string(tmpPosition2)};
                 end
             end
-            EMBLtoNCBI_mappings_Matched = EMBLtoNCBI_mappings(~or(isnan(EMBLtoNCBI_mappings.source_identity),isnan(EMBLtoNCBI_mappings.xref_identity)),:);
             EMBLgeneIds = unique(EMBLtoNCBI_mappings_Matched.gene_stable_id);
             EMBLtranscriptIds = unique(EMBLtoNCBI_mappings_Matched.transcript_stable_id);
             NCBItranscriptIds = unique(EMBLtoNCBI_mappings_Matched.xref);
@@ -152,7 +183,7 @@ else
                     isInEMBL_Mapping = isKey(NCBItranscriptIds_dict,order_out);
                     positions_ref{ii}(~isInEMBL_Mapping) = NaN;
                     pos_in_mapping = find(isInEMBL_Mapping);
-                    gene_ids_in_EMBL_mapping = inverseEMBLgeneIds_dict(maps_unique_NCBItranscriptId_to_unique_EMBLgeneId(NCBItranscriptIds_dict(order_out(isInEMBL_Mapping)),2));
+                    gene_ids_in_EMBL_mapping = inverseEMBLgeneIds_dict(maps_unique_NCBItranscriptId_to_unique_EMBLgeneId(arrayfun(@(zz) find(maps_unique_NCBItranscriptId_to_unique_EMBLgeneId(:,1)==zz,1),NCBItranscriptIds_dict(order_out(isInEMBL_Mapping))),2));
                     isInExpressionReference = isKey(mapping_geneIds_to_geneIds,gene_ids_in_EMBL_mapping);
                     positions_ref{ii}(pos_in_mapping(isInExpressionReference)) = mapping_geneIds_to_geneIds(gene_ids_in_EMBL_mapping(isInExpressionReference));
                     positions_ref{ii}(pos_in_mapping(~isInExpressionReference)) = NaN;
@@ -195,7 +226,7 @@ else
                     isInEMBL_Mapping = isKey(NCBItranscriptIds_dict,order_out);
                     positions_ref{ii}(~isInEMBL_Mapping) = NaN;
                     pos_in_mapping = find(isInEMBL_Mapping);
-                    transcript_ids_in_EMBL_mapping = inverseEMBLtranscriptIds_dict(maps_unique_NCBItranscriptId_to_unique_EMBLtranscriptId(NCBItranscriptIds_dict(order_out(isInEMBL_Mapping)),2));
+                    transcript_ids_in_EMBL_mapping = inverseEMBLtranscriptIds_dict(maps_unique_NCBItranscriptId_to_unique_EMBLtranscriptId(arrayfun(@(zz) find(maps_unique_NCBItranscriptId_to_unique_EMBLtranscriptId(:,1)==zz,1),NCBItranscriptIds_dict(order_out(isInEMBL_Mapping))),2));
                     isInExpressionReference = isKey(mapping_transcriptIds_to_transcriptIds,transcript_ids_in_EMBL_mapping);
                     positions_ref{ii}(pos_in_mapping(isInExpressionReference)) = mapping_transcriptIds_to_transcriptIds(transcript_ids_in_EMBL_mapping(isInExpressionReference));
                     positions_ref{ii}(pos_in_mapping(~isInExpressionReference)) = NaN;
@@ -209,9 +240,9 @@ else
                     isInEMBL_Mapping = isKey(EMBLtranscriptIds_dict,order_out);
                     positions_ref{ii}(~isInEMBL_Mapping) = NaN;
                     pos_in_mapping = find(isInEMBL_Mapping);
-                    transcript_ids_in_EMBL_mapping = inverseNCBItranscriptIds_dict(maps_unique_EMBLtranscriptId_to_unique_NCBItranscriptId(EMBLtranscriptIds_dict(order_out(isInEMBL_Mapping)),2));
-                    isInExpressionReference = isKey(mapping_transcriptIds_to_transcriptIds,transcript_ids_in_EMBL_mapping);
-                    positions_ref{ii}(pos_in_mapping(isInExpressionReference)) = mapping_transcriptIds_to_transcriptIds(transcript_ids_in_EMBL_mapping(isInExpressionReference));
+                    transcript_ids_in_NCBI_mapping = inverseNCBItranscriptIds_dict(maps_unique_EMBLtranscriptId_to_unique_NCBItranscriptId(arrayfun(@(zz) find(maps_unique_EMBLtranscriptId_to_unique_NCBItranscriptId(:,1)==zz,1),EMBLtranscriptIds_dict(order_out(isInEMBL_Mapping))),2));
+                    isInExpressionReference = isKey(mapping_transcriptIds_to_transcriptIds,transcript_ids_in_NCBI_mapping);
+                    positions_ref{ii}(pos_in_mapping(isInExpressionReference)) = mapping_transcriptIds_to_transcriptIds(transcript_ids_in_NCBI_mapping(isInExpressionReference));
                     positions_ref{ii}(pos_in_mapping(~isInExpressionReference)) = NaN;
                 end
             end

@@ -67,18 +67,58 @@ installer_opts_ProbeDesign = compiler.package.InstallerOptions(build_info_ProbeD
 installer_opts_ProbeDesign.InstallerName = strcat('TrueProbes_ProbeDesignInstaller_',computer('arch'));
 installer_opts_ProbeDesign.OutputDir = outputDirectory_ProbeDesign;
 compiler.package.installer(build_info_ProbeDesign,'Options',installer_opts_ProbeDesign);
-% try
-% if (isunix)
-% docker_opts_ProbeDesign = compiler.package.DockerOptions(build_info_ProbeDesign,'ImageName','A0_BKJH_ProbeDesign_Wrapper_cluster_V5');
-% compiler.package.docker(build_info_ProbeDesign,'Options',docker_opts_ProbeDesign)
+% if (~isMATLABReleaseOlderThan("R2024a"))
+% compiler.runtime.customInstaller(strcat('TrueProbes_ProbeDesignMinimalMCRInstaller_',computer('arch')),...
+%     build_info_ProbeDesign,'OutputDir',installer_opts_ProbeDesign.OutputDir);%custom installer
+% % compiler.runtime.customInstaller("matrixInstaller",[results1,results2],...
+% % OutputDir="customInstallers",RuntimeDelivery="installer")
 % end
-% compiler.runtime.download
-% if (~isMATLABReleaseOlderThan("R2023b"))
-% compiler.runtime.createDockerImage(build_info_ProbeDesign,'ImageName','A0_BKJH_ProbeDesign_Wrapper_cluster_V5');
-% end
-% catch
-% end
-
+if (isunix && ~ismac)
+    [status, msg] = system('docker version');
+    disp(msg);
+    if ~status
+        see_docker_images = 'docker images';
+        [~, msg] = system(see_docker_images);
+        if ~contains(msg,'ncbi/blast')
+            get_ncbi_blast_image = 'docker pull ncbi/blast';
+            [status_blast, msg] = system(get_ncbi_blast_image);
+            disp(msg)
+        else
+            status_blast = 0;
+        end
+        if ~status_blast
+            docker_blast_info = 'docker inspect ncbi/blast:latest';
+            [status_blast_info, msg_blast_info] = system(docker_blast_info);
+            blast_info = jsondecode(msg_blast_info);
+            blast_env = blast_info.ContainerConfig.Env;
+            blast_env_copies = cellfun(@(x) ['ENV ' x],blast_env,'Un',0);
+            docker_blast_dependencies = 'docker sbom ncbi/blast:latest';
+            [status_blast_dep, msg_blast_dep] = system(docker_blast_dependencies);
+            blast_info = jsondecode(msg_blast_info);
+            if (~isMATLABReleaseOlderThan("R2022b"))
+                docker_MCR_baseline = compiler.runtime.createDockerImage(build_info_ProbeDesign,...
+                    'DockerContext',strcat(pwd,filesep,'A0_BKJH_ProbeDesign_Wrapper_cluster_V5_Docker'),...
+                    'ExecuteDockerBuild','on');
+            else
+                compiler.runtime.download
+            end
+            docker_opts_ProbeDesign = compiler.package.DockerOptions(build_info_ProbeDesign,'ImageName','a0_bkjh_probedesign_wrapper_cluster_v5');
+            docker_opts_ProbeDesign.DockerContext = strcat(pwd,filesep,'A0_BKJH_ProbeDesign_Wrapper_cluster_V5_Docker');
+            if (~isMATLABReleaseOlderThan("R2022b"))
+            docker_opts_ProbeDesign.RuntimeImage = docker_MCR_baseline;
+            end
+            docker_opts_ProbeDesign.AdditionalInstructions = ...
+                [{'RUN mkdir -p /data/databaseData/Blast_Databases'},...
+                {'RUN mkdir -p /data/databaseData/ENSEMBL_NCBI_StableIDs'},...
+                {'RUN mkdir -p /data/databaseData/Gene_Expression_Data'},...
+                {'RUN mkdir -p /data/databaseData/GFF3_Databases'},...
+                {'RUN mkdir -p /data/databaseData/GTF_Databases'},...
+                {'COPY --from=ncbi/blast:latest /blast /'},...
+                blast_env_copies(:)'];    
+            compiler.package.docker(build_info_ProbeDesign,'Options',docker_opts_ProbeDesign)
+        end
+    end      
+end
 ProbeComparison_Software = 'A0_BKJH_ProbeComparison_Wrapper_cluster_V5.m';
 appFile_ProbeComparison = fullfile(which(ProbeComparison_Software));
 opts_ProbeComparison = compiler.build.StandaloneApplicationOptions(appFile_ProbeComparison);
@@ -99,9 +139,70 @@ opts_ProbeComparison.EmbedArchive = 'on';
 ProbeComparison_builder = compiler.internal.build.builder.StandaloneApplication(opts_ProbeComparison);
 build_info_ProbeComparison = ProbeComparison_builder.build;
 ProbeComparison_input0 = ProbeComparison_builder.MccInfo.MccInput;
-ProbeComparison_inputs1 = ['-R' '-softwareopengl' '-R' '-logfile,default_ProbeDesign_log' ProbeComparison_input0(1:6) '-A' 'all' ProbeComparison_input0(7:end)];
+ProbeComparison_inputs1 = ['-R' '-softwareopengl' '-R' '-logfile,default_ProbeComparison_log' ProbeComparison_input0(1:6) '-A' 'all' ProbeComparison_input0(7:end)];
 mcc(ProbeComparison_inputs1{:})
 installer_opts_ProbeComparison = compiler.package.InstallerOptions(build_info_ProbeComparison);
 installer_opts_ProbeComparison.InstallerName = strcat('TrueProbes_ProbeComparisonInstaller_',computer('arch'));
 installer_opts_ProbeComparison.OutputDir = outputDirectory_ProbeComparison;
 compiler.package.installer(build_info_ProbeComparison,'Options',installer_opts_ProbeComparison);
+if (isunix && ~ismac)
+    [status, msg] = system('docker version');
+    disp(msg);
+    if ~status
+        see_docker_images = 'docker images';
+        [~, msg] = system(see_docker_images);
+        if ~contains(msg,'ncbi/blast')
+            get_ncbi_blast_image = 'docker pull ncbi/blast';
+            [status_blast, msg] = system(get_ncbi_blast_image);
+            disp(msg)
+        else
+            status_blast = 0;
+        end
+        if ~status_blast
+            docker_blast_info = 'docker inspect ncbi/blast:latest';
+            [status_blast_info, msg_blast_info] = system(docker_blast_info);
+            blast_info = jsondecode(msg_blast_info);
+            blast_env = blast_info.ContainerConfig.Env;
+            blast_env_copies = cellfun(@(x) ['ENV ' x],blast_env,'Un',0);
+            docker_blast_dependencies = 'docker sbom ncbi/blast:latest';
+            [status_blast_dep, msg_blast_dep] = system(docker_blast_dependencies);
+            blast_info = jsondecode(msg_blast_info);
+            if (~isMATLABReleaseOlderThan("R2022b"))
+                docker_MCR_baseline = compiler.runtime.createDockerImage(build_info_ProbeComparison,...
+                    'DockerContext',strcat(pwd,filesep,'A0_BKJH_ProbeComparison_Wrapper_cluster_V5_Docker'),...
+                    'ExecuteDockerBuild','on');
+            else
+                compiler.runtime.download
+            end
+            docker_opts_ProbeComparison = compiler.package.DockerOptions(build_info_ProbeComparison,'ImageName','a0_bkjh_probecomparison_wrapper_cluster_v5');
+            docker_opts_ProbeComparison.DockerContext = strcat(pwd,filesep,'A0_BKJH_ProbeComparison_Wrapper_cluster_V5_Docker');
+            if (~isMATLABReleaseOlderThan("R2022b"))
+            docker_opts_ProbeComparison.RuntimeImage = docker_MCR_baseline;
+            end
+            docker_opts_ProbeComparison.AdditionalInstructions = ...
+                [{'RUN mkdir -p /data/databaseData/Blast_Databases'},...
+                {'RUN mkdir -p /data/databaseData/ENSEMBL_NCBI_StableIDs'},...
+                {'RUN mkdir -p /data/databaseData/Gene_Expression_Data'},...
+                {'RUN mkdir -p /data/databaseData/GFF3_Databases'},...
+                {'RUN mkdir -p /data/databaseData/GTF_Databases'},...
+                {'COPY --from=ncbi/blast:latest /blast /'},...
+                blast_env_copies(:)'];    
+            compiler.package.docker(build_info_ProbeComparison,'Options',docker_opts_ProbeComparison)
+        end
+    end      
+end
+
+
+% imageToPull = 'mathworks/matlab:r2025a'; % Example: MATLAB R2025a image
+%     command = ['docker pull ', imageToPull:2.16.0];
+% 
+%     [status, cmdout] = system(command);
+% 
+%     if status == 0
+%         disp(['Successfully pulled Docker image: ', imageToPull]);
+%         disp(cmdout); % Display output from the docker pull command
+%     else
+%         disp(['Error pulling Docker image: ', imageToPull]);
+%         disp(cmdout); % Display error message
+%     end
+% end
