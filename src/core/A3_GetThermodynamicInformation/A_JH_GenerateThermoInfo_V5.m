@@ -491,8 +491,14 @@ if (calcOnOff)
     fprintf("Aggregating 1D On/Off-Target Simple affinity index values")
     fprintf('\n')
     fprintf('\n')
+
+    Koff = [];
+    skip = 1;
+
+    if (skip==0)
     Koff = cell(1,N_Batches);
     Kb_Match_List = parallel.pool.Constant(Kb_Match);
+    set(0, 'RecursionLimit', 10*N_Batches);
     wb = parwaitbar(N_Batches,'WaitMessage', 'Aggregating');
     parfor v=1:N_Batches
         pause(0.1);
@@ -534,6 +540,7 @@ if (calcOnOff)
     end
     wb.delete();
     Koff = CATnWrapper(Koff,1);
+    end
     save([settings.FolderRootName filesep '(' TranscriptName ')_' settings.rootName '_Tm' num2str(settings.HybridizationTemperature) '_OnOffThermoInfo' settings.designerName '.mat'],'Kon','Koff','Kb_Match','-v7.3');
     fprintf('\n')
     fprintf('\n')

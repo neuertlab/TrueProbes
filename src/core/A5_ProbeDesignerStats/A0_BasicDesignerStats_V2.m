@@ -43,7 +43,7 @@ else
     end
 end
 if (settings.BLASTdna)
-    DNA_IDs = find(~ismember(Names,settings.DNAdbParser));%IDs
+    DNA_IDs = find(ismember(Names,settings.DNAdbParser));%IDs
 else
     DNA_IDs = [];
 end
@@ -482,9 +482,9 @@ if (isDNA)
                 temp_designer_stats_dna_p{w}{2} = sum(cellfun(@length,Sx(p,Js_OFFDNA(p))));
                 temp_designer_stats_dna_p{w}{3} = cell2mat(Sx(p,Js_OFFDNA(p)));
                 temp_designer_stats_dna_p{w}{4} = cell2mat(arrayfun(@(x) repmat(Js_OFFDNAi(p,x),[1 cellfun(@length,Sx(p,Js_OFFDNAi(p,x)))]),1:length(Js_OFFDNA(p)),'Un',0));
-                temp_designer_stats_dna_p{w}{5} = log10(diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{4},temp_designer_stats_dna_p{3}))))');
-                temp_designer_stats_dna_p{w}{6} = log10(diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{4},temp_designer_stats_dna_p{3}))))'/Kon_List.Value(p));
-                temp_designer_stats_dna_p{w}{7} = log10(Kon_List.Value(p)./diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{4},temp_designer_stats_dna_p{w}{3}))))');
+                temp_designer_stats_dna_p{w}{5} = log10(diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{w}{4},temp_designer_stats_dna_p{w}{3}))))');
+                temp_designer_stats_dna_p{w}{6} = log10(diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{w}{4},temp_designer_stats_dna_p{w}{3}))))'/Kon_List.Value(p));
+                temp_designer_stats_dna_p{w}{7} = log10(Kon_List.Value(p)./diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{w}{4},temp_designer_stats_dna_p{w}{3}))))');
                 temp_designer_stats_dna_p{w}{8} = log10(diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{w}{4},temp_designer_stats_dna_p{w}{3}))))'./diag(full(squeeze(Kb_Complement_List.Value(temp_designer_stats_dna_p{w}{4},temp_designer_stats_dna_p{w}{3}))))');
                 temp_designer_stats_dna_p{w}{9} = log10(diag(full(squeeze(Kb_Complement_List.Value(temp_designer_stats_dna_p{w}{4},temp_designer_stats_dna_p{w}{3}))))'./diag(full(squeeze(Kb_List.Value(p,temp_designer_stats_dna_p{w}{4},temp_designer_stats_dna_p{w}{3}))))');
             end

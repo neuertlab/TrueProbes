@@ -2,6 +2,7 @@ function [Kb_mod,Kb_Complement,DoesProbeBindSite2,Num_of_Molecule_Sites,MolProbe
 N_methods = 8;
 N_methods2 = 3;
 N_methods3 = 9;
+load_files = 1;
 %Jason Hughes code to parsing gene_table to get sites where probes bind
 %For RNA, DNA, and complementary binding for double stranded DNA
 %Code also computes nascent transcription sites given expression profile
@@ -9,23 +10,14 @@ N_methods3 = 9;
 %Fix Bug in first and last probes in tiling not entering DoesProbeBindSite
 %or or getting mapped.
 %Also bug in Koff giving off-target score for on-target ID
-Lpmin = min(cell2mat(cellfun(@length,{probes{:,2}},'UniformOutput',false)));
-RemoveMisMatches = settings.RemoveMisMatches;
-
 kb = 0.001987204259;%boltzman constant
+Lpmin = min(cell2mat(cellfun(@length,probes(:,2),'UniformOutput',false)));
 T_hybrid = settings.HybridizationTemperature;
 SaltConcentration = settings.SaltConcentration;
 PrimerConcentration = settings.PrimerConcentration;
-
-most_recent_num_local = settings.num_parpool_local;
-Organism = settings.Organism;
-ChrNum = settings.ChrNum;
-GeneChr = settings.GeneChr;
 TranscriptName = settings.GeneName;
-transcriptID = settings.transcript_IDs;
+most_recent_num_local = settings.num_parpool_local;
 FolderRootName = settings.FolderRootName;
-withNascent = [];
-probeBatchSize = settings.BLASTbatchSize;
 targetBatchSize = settings.TargetBatchSize;
 designerName = settings.designerName;
 if (settings.clusterStatus)
@@ -60,15 +52,16 @@ else
     end
 end
 if (settings.BLASTdna)
-DNA_IDs = find(~ismember(Names,settings.DNAdbParser));%IDs
+    DNA_IDs = find(ismember(Names,settings.DNAdbParser));%IDs
 else
-DNA_IDs = [];
+    DNA_IDs = [];
 end
 if (settings.BLASTrna)
-NonDNA_IDs = find(ismember(Names,settings.RNAdbParser));%IDs
+    NonDNA_IDs = find(ismember(Names,settings.RNAdbParser));%IDs
 else
-NonDNA_IDs =[];
+    NonDNA_IDs =[];
 end
+numNames = length(Names);
 %% Identify location of on-target DNA and RNA molecules in list of DNA/RNA molecules
 %generate ID vector to identify molecules that count as on-target hits
 
@@ -119,6 +112,7 @@ catch
     calcEnergyMatrix2 = 1;
 end
 
+errOccured = 0;
 if (calcSiteMap > 0)
     N_siteMappingBatches = ceil(length(Names)/targetBatchSize);
     R = mod(length(Names),targetBatchSize);
@@ -218,137 +212,145 @@ if (calcSiteMap > 0)
         fprintf('\n')
         fprintf('\n')
         wb = parwaitbar(length(batch_nums_to_check),'WaitMessage', 'Mapping');
-        parfor w =1:length(batch_nums_to_check)
-            P_ic_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            MolProbesAtEvents{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            MolN_ProbesAtEvents{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            Event_Rates_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            dHeq_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            dSeq_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            dHf_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            dSf_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            dHr_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            dSr_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            Tm_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            dCp_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            partial_binding_site_map_info_tmp{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
-            for w_sub = 1:length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)})
-                u = Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}(w_sub);
-                checkRun = 0;
-                isDNA = double(ismember(u,DNA_IDs));
-                isRNA = double(ismember(u,NonDNA_IDs));
-                if (isRNA == BLASTrna_status)
-                    checkRun = 1;
-                end
-                if (isDNA == BLASTdna_status)
-                    checkRun = 1;
-                end
-                if (checkRun)
-                    rowz = find(strcmp(gene_names,TargetNameList.Value{u}));
-                    Pn = PnEventList.Value(rowz);%Note: Might contain probes with repeats if probe binds site multiple times
-                    An = AnEventList.Value(rowz);
-                    Bn = BnEventList.Value(rowz);
-                    % get unique start and end regions where probes exist
-                    Cn = [unique([An Bn]).'];
-                    %get all intervals and assign which probes are inside and finds for each unique region
-                    % which events on a target are above the bottom end of it and length is below the size of the segment
-                    probesInInterval = cell(1,length(Cn));
-                    for x = 1:length(Cn)
-                        probesInInterval{x} = find(ge(Cn(x)-An,0).*ge(Bn-An,Cn(x)-An)).';
+        for w =1:length(batch_nums_to_check)
+                pause(0.1);
+                P_ic_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                MolProbesAtEvents{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                MolN_ProbesAtEvents{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                Event_Rates_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                dHeq_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                dSeq_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                dHf_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                dSf_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                dHr_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                dSr_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                Tm_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                dCp_In_Site_at_Target{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                partial_binding_site_map_info_tmp{w} = cell(1,length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}));
+                for w_sub = 1:length(Batch_siteMapping_Constant.Value{batch_nums_to_check(w)})
+                    u = Batch_siteMapping_Constant.Value{batch_nums_to_check(w)}(w_sub);
+                    checkRun = 0;
+                    isDNA = double(ismember(u,DNA_IDs));
+                    isRNA = double(ismember(u,NonDNA_IDs));
+                    if (isRNA == BLASTrna_status)
+                        checkRun = 1;
                     end
-                    %Gets sites with unique sets of probes
-                    charIntervalArray = cellfun(@num2str, probesInInterval,'Un',0);
-                    [charIntervalArray_Unique,ia,~] = unique(charIntervalArray,'stable');
-                    probesInInterval_Unique = cellfun(@str2num,charIntervalArray_Unique,'Un',0);
-                    %Lists number of probes binding in a site
-                    InInterval_order = cellfun(@length,probesInInterval_Unique);
-                    %Gets boundary of probe binding sites
-                    InInterval_Cmax = cell2mat(cellfun(@(x) max([An(x).' Bn(x).']),probesInInterval_Unique,'UniformOutput',false));
-                    InInterval_Cmin = cell2mat(cellfun(@(x) min([An(x).' Bn(x).']),probesInInterval_Unique,'UniformOutput',false));
-                    IsSubSet = ndSparse.build([length(probesInInterval_Unique),length(probesInInterval_Unique)],0);
-                    %get list of proposed sites which are a subset of another sites
-                    points_belowMax = find(InInterval_order<max(InInterval_order)); %Finds points below maximum size
-                    for v = points_belowMax
-                        %subset to a larger interval
-                        points_req1 = find(InInterval_order>InInterval_order(v));
-                        %and contained within that interval
-                        %i.e. bounds of subset I within larger set J
-                        points_req = points_req1(find(ge(InInterval_Cmax(points_req1),InInterval_Cmax(v)).*ge(InInterval_Cmin(v),InInterval_Cmin(points_req1))));
-                        if (~isempty(points_req))
-                            IsSubSet(v,points_req) = cell2mat(cellfun(@(x) all(ismember(probesInInterval_Unique{v},x)),{probesInInterval_Unique{points_req}},'UniformOutput',false));
+                    if (isDNA == BLASTdna_status)
+                        checkRun = 1;
+                    end
+                    if (checkRun)
+                        rowz = find(strcmp(gene_names,TargetNameList.Value{u}));
+                        Pn = PnEventList.Value(rowz);%Note: Might contain probes with repeats if probe binds site multiple times
+                        An = AnEventList.Value(rowz);
+                        Bn = BnEventList.Value(rowz);
+                        % get unique start and end regions where probes exist
+                        Cn = [unique([An Bn]).'];
+                        %get all intervals and assign which probes are inside and finds for each unique region
+                        % which events on a target are above the bottom end of it and length is below the size of the segment
+                        probesInInterval = cell(1,length(Cn));
+                        for x = 1:length(Cn)
+                            probesInInterval{x} = find(ge(Cn(x)-An,0).*ge(Bn-An,Cn(x)-An)).';
                         end
+                        %Gets sites with unique sets of probes
+                        charIntervalArray = cellfun(@num2str, probesInInterval,'Un',0);
+                        [charIntervalArray_Unique,ia,~] = unique(charIntervalArray,'stable');
+                        probesInInterval_Unique = cellfun(@str2num,charIntervalArray_Unique,'Un',0);
+                        %Lists number of probes binding in a site
+                        InInterval_order = cellfun(@length,probesInInterval_Unique);
+                        %Gets boundary of probe binding sites
+                        InInterval_Cmax = cell2mat(cellfun(@(x) max([An(x).' Bn(x).']),probesInInterval_Unique,'UniformOutput',false));
+                        InInterval_Cmin = cell2mat(cellfun(@(x) min([An(x).' Bn(x).']),probesInInterval_Unique,'UniformOutput',false));
+                        IsSubSet = ndSparse.build([length(probesInInterval_Unique),length(probesInInterval_Unique)],0);
+                        %get list of proposed sites which are a subset of another sites
+                        points_belowMax = find(InInterval_order<max(InInterval_order)); %Finds points below maximum size
+                        for v = points_belowMax
+                            %subset to a larger interval
+                            points_req1 = find(InInterval_order>InInterval_order(v));
+                            %and contained within that interval
+                            %i.e. bounds of subset I within larger set J
+                            points_req = points_req1(find(ge(InInterval_Cmax(points_req1),InInterval_Cmax(v)).*ge(InInterval_Cmin(v),InInterval_Cmin(points_req1))));
+                            if (~isempty(points_req))
+                                IsSubSet(v,points_req) = cell2mat(cellfun(@(x) all(ismember(probesInInterval_Unique{v},x)),{probesInInterval_Unique{points_req}},'UniformOutput',false));
+                            end
+                        end
+                        IsSubSet1D = sum(IsSubSet,2);
+                        nonSubset = find(IsSubSet1D==0);
+                        %get unique sites without subsets
+                        Sx = {probesInInterval_Unique{nonSubset}};
+                        %MolN_SitesBoundaryMax{w} = InInterval_Cmax(nonSubset);
+                        %MolN_SitesBoundaryMin{w} = InInterval_Cmin(nonSubset);
+                        try
+                            Mol_ProbesAtEventsID{w}{w_sub} = cellfun(@(x) rowz(x),Sx,'UniformOutput',false);% or rowz(1:length(An));
+                        catch
+                            Mol_ProbesAtEventsID{w}{w_sub} = [];
+                        end
+                        Kb_Sub = Kb_Match_List.Value(rowz,:);
+                        dHeq_Sub = dHeq_Match_List.Value(rowz,:);
+                        dSeq_Sub = dSeq_Match_List.Value(rowz,:);
+                        dHf_Sub = dHf_Match_List.Value(rowz,:);
+                        dSf_Sub = dSf_Match_List.Value(rowz,:);
+                        dHr_Sub = dHr_Match_List.Value(rowz,:);
+                        dSr_Sub = dSr_Match_List.Value(rowz,:);
+                        Tm_Sub  = Tm_Match_List.Value(rowz,:);
+                        dCp_Sub = dCpeq_Match_List.Value(rowz,:);
+                        for x = 1:length(Sx)
+                            [P_unique,~,P_ic] = unique(Pn(Sx{x}));
+                            P_ic_In_Site_at_Target{w}{w_sub}{x} = P_ic;
+                            MolProbesAtEvents{w}{w_sub}{x} = P_unique;
+                            MolN_ProbesAtEvents{w}{w_sub}(x) = length(P_unique);
+                            Event_Rates_In_Site_at_Target{w}{w_sub}{x}  = Kb_Sub(Sx{x},:);
+                            dHeq_In_Site_at_Target{w}{w_sub}{x} = dHeq_Sub(Sx{x},:);
+                            dSeq_In_Site_at_Target{w}{w_sub}{x}  = dSeq_Sub(Sx{x},:);
+                            dHf_In_Site_at_Target{w}{w_sub}{x}  = dHf_Sub(Sx{x},:);
+                            dSf_In_Site_at_Target{w}{w_sub}{x}  =  dSf_Sub(Sx{x},:);
+                            dHr_In_Site_at_Target{w}{w_sub}{x} = dHr_Sub(Sx{x},:);
+                            dSr_In_Site_at_Target{w}{w_sub}{x}  = dSr_Sub(Sx{x},:);
+                            Tm_In_Site_at_Target{w}{w_sub}{x}  = Tm_Sub(Sx{x},:);
+                            dCp_In_Site_at_Target{w}{w_sub}{x}  = dCp_Sub(Sx{x},:);
+                        end
+                        partial_binding_site_map_info_tmp{w}{w_sub} = {Sx,Mol_ProbesAtEventsID{w}{w_sub},MolProbesAtEvents{w}{w_sub},...
+                            P_ic_In_Site_at_Target{w}{w_sub},Event_Rates_In_Site_at_Target{w}{w_sub},...
+                            dHeq_In_Site_at_Target{w}{w_sub},dSeq_In_Site_at_Target{w}{w_sub},...
+                            dHf_In_Site_at_Target{w}{w_sub},dSf_In_Site_at_Target{w}{w_sub},...
+                            dHr_In_Site_at_Target{w}{w_sub},dSr_In_Site_at_Target{w}{w_sub},...
+                            Tm_In_Site_at_Target{w}{w_sub},dCp_In_Site_at_Target{w}{w_sub}};
                     end
-                    IsSubSet1D = sum(IsSubSet,2);
-                    nonSubset = find(IsSubSet1D==0);
-                    %get unique sites without subsets
-                    Sx = {probesInInterval_Unique{nonSubset}};
-                    %MolN_SitesBoundaryMax{w} = InInterval_Cmax(nonSubset);
-                    %MolN_SitesBoundaryMin{w} = InInterval_Cmin(nonSubset);
-                    try
-                        Mol_ProbesAtEventsID{w} = cellfun(@(x) rowz(x),Sx,'UniformOutput',false);% or rowz(1:length(An));
-                    catch
-                        Mol_ProbesAtEventsID{w} = [];
-                    end
-                    Kb_Sub = Kb_Match_List.Value(rowz,:);
-                    dHeq_Sub = dHeq_Match_List.Value(rowz,:);
-                    dSeq_Sub = dSeq_Match_List.Value(rowz,:);
-                    dHf_Sub = dHf_Match_List.Value(rowz,:);
-                    dSf_Sub = dSf_Match_List.Value(rowz,:);
-                    dHr_Sub = dHr_Match_List.Value(rowz,:);
-                    dSr_Sub = dSr_Match_List.Value(rowz,:);
-                    Tm_Sub  = Tm_Match_List.Value(rowz,:);
-                    dCp_Sub = dCpeq_Match_List.Value(rowz,:);
-                    for x = 1:length(Sx)
-                        [P_unique,~,P_ic] = unique(Pn(Sx{x}));
-                        P_ic_In_Site_at_Target{w}{w_sub}{x} = P_ic;
-                        MolProbesAtEvents{w}{w_sub}{x} = P_unique;
-                        MolN_ProbesAtEvents{w}{w_sub}(x) = length(P_unique);
-                        Event_Rates_In_Site_at_Target{w}{w_sub}{x}  = Kb_Sub(Sx{x},:);
-                        dHeq_In_Site_at_Target{w}{w_sub}{x} = dHeq_Sub(Sx{x},:);
-                        dSeq_In_Site_at_Target{w}{w_sub}{x}  = dSeq_Sub(Sx{x},:);
-                        dHf_In_Site_at_Target{w}{w_sub}{x}  = dHf_Sub(Sx{x},:);
-                        dSf_In_Site_at_Target{w}{w_sub}{x}  =  dSf_Sub(Sx{x},:);
-                        dHr_In_Site_at_Target{w}{w_sub}{x} = dHr_Sub(Sx{x},:);
-                        dSr_In_Site_at_Target{w}{w_sub}{x}  = dSr_Sub(Sx{x},:);
-                        Tm_In_Site_at_Target{w}{w_sub}{x}  = Tm_Sub(Sx{x},:);
-                        dCp_In_Site_at_Target{w}{w_sub}{x}  = dCp_Sub(Sx{x},:);
-                    end
-                    partial_binding_site_map_info_tmp{w}{w_sub} = {Sx,Mol_ProbesAtEventsID{w}{w_sub},MolProbesAtEvents{w}{w_sub},...
-                        P_ic_In_Site_at_Target{w}{w_sub},Event_Rates_In_Site_at_Target{w}{w_sub},...
-                        dHeq_In_Site_at_Target{w}{w_sub},dSeq_In_Site_at_Target{w}{w_sub},...
-                        dHf_In_Site_at_Target{w}{w_sub},dSf_In_Site_at_Target{w}{w_sub},...
-                        dHr_In_Site_at_Target{w}{w_sub},dSr_In_Site_at_Target{w}{w_sub},...
-                        Tm_In_Site_at_Target{w}{w_sub},dCp_In_Site_at_Target{w}{w_sub}};
                 end
-            end
-            parsave_partial_binding_site_map_info([FolderRootName filesep '(' TranscriptName ')' designerName '_BindingSiteMapInfo_batch' num2str(batch_nums_to_check(w)) '.mat'],partial_binding_site_map_info_tmp{w})
-            P_ic_In_Site_at_Target{w}=[];
-            MolProbesAtEvents{w}=[];
-            MolN_ProbesAtEvents{w}=[];
-            Event_Rates_In_Site_at_Target{w}=[];
-            dHeq_In_Site_at_Target{w}=[];
-            dSeq_In_Site_at_Target{w}=[];
-            dHf_In_Site_at_Target{w}=[];
-            dSf_In_Site_at_Target{w}=[];
-            dHr_In_Site_at_Target{w}=[];
-            dSr_In_Site_at_Target{w}=[];
-            Tm_In_Site_at_Target{w}=[];
-            dCp_In_Site_at_Target{w}=[];
-            progress(wb);
+                parsave_partial_binding_site_map_info([FolderRootName filesep '(' TranscriptName ')' designerName '_BindingSiteMapInfo_batch' num2str(batch_nums_to_check(w)) '.mat'],partial_binding_site_map_info_tmp{w})
+                P_ic_In_Site_at_Target{w}=[];
+                MolProbesAtEvents{w}=[];
+                MolN_ProbesAtEvents{w}=[];
+                Event_Rates_In_Site_at_Target{w}=[];
+                dHeq_In_Site_at_Target{w}=[];
+                dSeq_In_Site_at_Target{w}=[];
+                dHf_In_Site_at_Target{w}=[];
+                dSf_In_Site_at_Target{w}=[];
+                dHr_In_Site_at_Target{w}=[];
+                dSr_In_Site_at_Target{w}=[];
+                Tm_In_Site_at_Target{w}=[];
+                dCp_In_Site_at_Target{w}=[];
+                progress(wb);
         end
         wb.delete();
         fprintf('\n')
         fprintf('\n')
     end
+
     fprintf("Finding Largest Number of Target Binding Sites Across All Batches")
     fprintf('\n')
     fprintf('\n')
+    clear gene_names
+    clear P_ic_In_Site_at_Target MolProbesAtEvents MolN_ProbesAtEvents Event_Rates_In_Site_at_Target
+    clear dHeq_In_Site_at_Target dSeq_In_Site_at_Target dHf_In_Site_at_Target dSf_In_Site_at_Target dHr_In_Site_at_Target
+    clear dSr_In_Site_at_Target Tm_In_Site_at_Target dCp_In_Site_at_Target
     MaxSitesInBatch = zeros(1,N_siteMappingBatches);
     wb = parwaitbar(N_siteMappingBatches,'WaitMessage','Checking');
     parfor w = 1:N_siteMappingBatches
         if isfile([FolderRootName filesep '(' TranscriptName ')' designerName '_BindingSiteMapInfo_batch' num2str(w) '.mat'])
-            partial_binding_site_map_info_tmp = load([FolderRootName filesep '(' TranscriptName ')' designerName '_BindingSiteMapInfo_batch' num2str(w) '.mat']).partial_binding_site_map_info_tmp;
-            MaxSitesInBatch(w) = max(cell2mat(cellfun(@(x) length(x{1}),partial_binding_site_map_info_tmp,'Un',0)));
+            % partial_binding_site_map_info_tmp = load([FolderRootName filesep '(' TranscriptName ')' designerName '_BindingSiteMapInfo_batch' num2str(w) '.mat']).partial_binding_site_map_info_tmp;
+            % MaxSitesInBatch(w) = max(cell2mat(cellfun(@(x) length(x{1}),partial_binding_site_map_info_tmp,'Un',0)));
+            tmp_file = matfile([FolderRootName filesep '(' TranscriptName ')' designerName '_BindingSiteMapInfo_batch' num2str(w) '.mat']);
+            MaxSitesInBatch(w) = max(cell2mat(cellfun(@(x) length(x{1}),tmp_file.partial_binding_site_map_info_tmp,'Un',0)));
         end
         progress(wb);
     end
@@ -402,7 +404,7 @@ if (calcSiteMap > 0)
                     Batch_siteMapping_Constant.Value{w}(w_sub)*repelem(ones(length(cell2mat(cellfun(@(x) x, partial_binding_site_map_info_tmp{w_sub}{3}(:), 'UniformOutput', 0))),1),N_methods3,1) ...
                     repelem(cell2mat(arrayfun(@(x) x*ones(1,length(partial_binding_site_map_info_tmp{w_sub}{3}{x})),1:length(partial_binding_site_map_info_tmp{w_sub}{1}),'Un',0))',N_methods3,1) ....
                     repmat([1:N_methods3]',[length(cell2mat(cellfun(@(x) x, partial_binding_site_map_info_tmp{w_sub}{3}(:), 'Un', 0))) 1])],...
-                    1:length(partial_binding_site_map_info_tmp),'Un',0),1);            
+                    1:length(partial_binding_site_map_info_tmp),'Un',0),1);
                 Num_of_Molecule_Sites(w).Num_of_Molecule_Sites = cellfun(@(x) length(x{1}),partial_binding_site_map_info_tmp);
                 Mol_ProbesAtEventsID(w).Mol_ProbesAtEventsID = cellfun(@(x) x{2},partial_binding_site_map_info_tmp,'Un',0);
                 MolProbesAtEvents(w).MolProbesAtEvents = cellfun(@(x) x{3},partial_binding_site_map_info_tmp,'Un',0);
@@ -487,7 +489,7 @@ if (calcSiteMap > 0)
     dHr_mod = ndSparse.build(PTSM_DPS_fr_unique_vector,dHr_mod_vector,[size(probes,1) numNames max(MaxSitesInBatch) N_methods2]);progress(wb);clear dHr_mod_vector
     dSr_mod = ndSparse.build(PTSM_DPS_fr_unique_vector,dSr_mod_vector,[size(probes,1) numNames max(MaxSitesInBatch) N_methods2]);progress(wb);clear dSr_mod_vector PTSM_DPS_fr_unique_vector
     Tm_mod = ndSparse.build(PTSM_DPS_Tm_unique_vector,Tm_mod_vector,[size(probes,1) numNames max(MaxSitesInBatch) N_methods3]);progress(wb);clear Tm_mod_vector PTSM_DPS_Tm_unique_vector
-    Kb_mod = ndSparse.build(PTSM_DPS_eq_unique_vector,Kb_mod_vector,[size(probes,1) numNames max(MaxSitesInBatch) N_methods]);progress(wb);clear Kb_mod_vector 
+    Kb_mod = ndSparse.build(PTSM_DPS_eq_unique_vector,Kb_mod_vector,[size(probes,1) numNames max(MaxSitesInBatch) N_methods]);progress(wb);clear Kb_mod_vector
     dHeq_mod = ndSparse.build(PTSM_DPS_eq_unique_vector,dHeq_mod_vector,[size(probes,1) numNames max(MaxSitesInBatch) N_methods]);progress(wb);clear dHeq_mod_vector
     dSeq_mod = ndSparse.build(PTSM_DPS_eq_unique_vector,dSeq_mod_vector,[size(probes,1) numNames max(MaxSitesInBatch) N_methods]);progress(wb);clear dSeq_mod_vector
     dCp_mod = ndSparse.build(PTSM_DPS_eq_unique_vector,dCp_mod_vector,[size(probes,1) numNames max(MaxSitesInBatch) N_methods]);progress(wb);clear dCp_mod_vector PTSM_DPS_eq_unique_vector
@@ -498,7 +500,7 @@ if (calcSiteMap > 0)
     fprintf('\n')
     fprintf('\n')
     DoesProbeBindSite2 = DoesProbeBindSite;
-       wb = parwaitbar(size(probes,1),'WaitMessage', 'Filtering');
+    wb = parwaitbar(size(probes,1),'WaitMessage', 'Filtering');
     for p=1:size(probes,1)
         for i=find(sum(DoesProbeBindSite2(p,:,:),3)>0)%molecules where probe hits
             %check for overlap j>i
@@ -511,7 +513,7 @@ if (calcSiteMap > 0)
                 DoesProbeBindSite2(p,i,setdiff(1:size(DoesProbeBindSite2,3),Iz)) = 0;
             end
         end
-             progress(wb);
+        progress(wb);
     end
     wb.delete();
     save([settings.FolderRootName filesep settings.GeneName '_binding_hits_map' settings.designerName '.mat'],'DoesProbeBindSite','DoesProbeBindSite2','MolN_ProbesAtEvents','Num_of_Molecule_Sites','Mol_ProbesAtEventsID','MolProbesAtEvents','-v7.3')
@@ -522,7 +524,7 @@ if (calcSiteMap > 0)
     fprintf("Deleting temporary probe-target batch binding site map files")
     fprintf('\n')
     fprintf('\n')
-     wb = parwaitbar(N_siteMappingBatches,'WaitMessage', 'Deleting');
+    wb = parwaitbar(N_siteMappingBatches,'WaitMessage', 'Deleting');
     parfor i = 1:N_siteMappingBatches
         if exist([FolderRootName filesep '(' TranscriptName ')' designerName '_BindingSiteMapInfo_batch' num2str(i) '.mat'],'file')        %delete temp mat file if already exists
             delete([FolderRootName filesep '(' TranscriptName ')' designerName '_BindingSiteMapInfo_batch' num2str(i) '.mat'])
@@ -578,187 +580,187 @@ if (calcEnergyMatrix2)
         fprintf("Getting binding affinity of DNA probe targets complementary reactions")
         fprintf('\n')
         fprintf('\n')
-%         unique_target_seqs = unique(targetMatch);
-%         N_DNA_target_seqs = ceil(length(unique_target_seqs)/targetBatchSize);
-%         R = mod(length(unique_target_seqs),targetBatchSize);
-%         dnaTargetSeqBatches = cell(1,N_DNA_target_seqs);
-%         if (R==0)
-%             for k = 1:N_DNA_target_seqs
-%                 dnaTargetSeqBatches{k} = targetBatchSize*(k-1)+1:targetBatchSize*k;
-%             end
-%         else
-%             for k = 1:N_DNA_target_seqs-1
-%                 dnaTargetSeqBatches{k} = targetBatchSize*(k-1)+1:targetBatchSize*k;
-%             end
-%             dnaTargetSeqBatches{N_DNA_target_seqs} = targetBatchSize*(N_DNA_target_seqs-1)+1:targetBatchSize*(N_DNA_target_seqs-1)+R;
-%         end
-% 
-%         ResultsExist_DNA = zeros(1,N_DNA_target_seqs);
-%         ResultsDate_DNA = cell(1,N_DNA_target_seqs);
-%         fprintf("Check if DNA target site mapping probe batch files exist")
-%         fprintf('\n')
-%         fprintf('\n')
-%         wb = parwaitbar(N_DNA_target_seqs,'WaitMessage','Checking');
-%         parfor i = 1:N_DNA_target_seqs
-%             if (isfile([FolderRootName filesep '(' TranscriptName ')' designerName '_TargetComplementBindingSiteMapInfo_batch' num2str(i) '.mat']))%check if temp file exists
-%                 d = dir([FolderRootName filesep '(' TranscriptName ')' designerName '_TargetComplementBindingSiteMapInfo_batch' num2str(i) '.mat']);
-%                 if (d.bytes>0)%check size greater than zero
-%                     ResultsExist_DNA(i) = 1;
-%                 end
-%                 ResultsDate_DNA{i} = datetime(d.date);
-%             end
-%             progress(wb);
-%         end
-%         wb.delete();
-%         fprintf('\n')
-%         fprintf('\n')
-%         Results_NotMade_DNA = find(ResultsExist_DNA==0);
-%         Results_Made_DNA = find(ResultsExist_DNA==1);
-%         %Sort get most recent ResultsMade GeneHitsMade and GeneHitsTable Made and add to probe_check_list
-%         if (length(Results_Made_DNA)<=most_recent_num)
-%             results_check_DNA = Results_Made_DNA;
-%         else
-%             Results_RecentMade_Dates_DNA(:,1) = ResultsDate_DNA(Results_Made_DNA);
-%             Results_RecentMade_Dates_DNA(:,2) = num2cell(Results_Made_DNA);
-%             Results_RecentMade_Dates_DNA = table2timetable(cell2table(Results_RecentMade_Dates_DNA));
-%             Results_RecentMade_Dates_DNA = sortrows(Results_RecentMade_Dates_DNA,1,'descend');
-%             Results_RecentMade_Dates_DNA.Properties.VariableNames = {'ID'};
-%             results_check_DNA = Results_RecentMade_Dates_DNA.ID(1:most_recent_num).';
-%             clear Results_RecentMade_Dates_DNA
-%         end
-%         batch_nums_to_check_DNA = union(Results_NotMade_DNA,results_check_DNA);
-% 
-% CompEQ_I_vector =struct('CrossEQ_I_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% CompEQ_T_vector =struct('CrossEQ_J_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% CompEQ_S_vector =struct('CrossEQ_K_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% CompEQ_M_vector =struct('CrossEQ_M_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% CompFR_P_vector =struct('CrossFR_I_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% CompFR_T_vector =struct('CrossFR_J_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% CompFR_S_vector =struct('CrossFR_K_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% CompFR_M_vector =struct('CrossFR_M_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% Kd_eq_vector =struct('Kd_eq_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% dH_Complement_vector = struct('dHd_eq_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% dS_Complement_vector = struct('dSd_eq_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% dH_Complement_vector = struct('dHd_f_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% dSd_f_vector = struct('dSd_f_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% dH_Complement_vector =struct('dHd_r_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% dSd_Complement_vector = struct('dSd_r_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% dCp_Complement_vector = struct('dCpd_eq_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
-% 
-% 
-% 
-% 
-% unique_ordered_binding_paired_input_sequences_List = parallel.pool.Constant(unique_ordered_binding_paired_input_sequences);
-% unique_secondary_structure_pair_to_nonunique_entries_List = parallel.pool.Constant(unique_secondary_structure_pair_to_nonunique_entries);
-% FinalProbeSet_List = parallel.pool.Constant(FinalProbeSet);
-% targetMatch_List = parallel.pool.Constant(targetMatch);
-% dnaTargetSeqBatches_List = parallel.pool.Constant(dnaTargetSeqBatches);
-% targetMatch_List = parallel.pool.Constant(targetMatch);
-% unique_target_seqs_List  = parallel.pool.Constant(unique_target_seqs);
-% 
-% 
-% for unique_calc = 1:length(batch_nums_to_check_DNA)
-%             % for i=DNA_IDs
-%             % for site=1:length(MolN_ProbesAtEvents{i})
-%             %     for l=1:MolN_ProbesAtEvents{i}(site)
-%             %         PI = MolProbesAtEvents{i}{site}(l);
-%             %         currentEvent = Mol_ProbesAtEventsID{i}{site}(l);
-%         for w = 1:length(dnaTargetSeqBatches_List.Value{batch_nums_to_check_DNA(unique_calc)})
-%                target_seq = unique_target_seqs_List.Value{dnaTargetSeqBatches_List.Value{batch_nums_to_check_DNA(unique_calc)}(w)};
-%                     [dHeq, dSeq, dGeq, dHf, dSf, ~, dHr, dSr, ~,dCpeq, dTm] = F_DeltaGibson_V3(target_seq,seqrcomplement(lower(target_seq)),SaltConcentration,T_hybrid,PrimerConcentration,sequence_duplexes_thermo_generator_structure);
-%                     POGmod_Complement(PI,i,site,:) = dGeq;
-%                     dHeq_Complement(PI,i,site,:) = dHeq;
-%                     dSeq_Complement(PI,i,site,:) = dSeq;
-%                     dCp_Complement(PI,i,site,:) = dCpeq;
-%                     dHf_Complement(PI,i,site,:) = dHf;
-%                     dSf_Complement(PI,i,site,:) = dSf;
-%                     dHr_Complement(PI,i,site,:) = dHr;
-%                     dSr_Complement(PI,i,site,:) = dSr;
-%                     Tm_Complement(PI,i,site,:) = dTm;
-%                     Kb_Complement(PI,i,site,:) = exp(-full(POGmod_Complement(PI,i,site,:))/(kb*(T_hybrid+273.15)));
-%                     cross_locs = find(double(unique_secondary_structure_pair_to_nonunique_entries_List.Value(:,7)==unique_calc).*...
-%                         double(unique_secondary_structure_pair_to_nonunique_entries_List.Value(:,1)==0));
-%                     if (~isempty(cross_locs))
-%                         V_vector = unique_secondary_structure_pair_to_nonunique_entries_List.Value(cross_locs,2);
-%                         W_vector = unique_secondary_structure_pair_to_nonunique_entries_List.Value(cross_locs,3);
-%                         K_vector = unique_secondary_structure_pair_to_nonunique_entries_List.Value(cross_locs,4);
-%                         CompEQ_P_vector(unique_calc).CrossEQ_I_vector = repmat(FinalProbeSet_List.Value(V_vector),[1 N_methods])';
-%                         CompEQ_T_vector(unique_calc).CrossEQ_J_vector = repmat(FinalProbeSet_List.Value(W_vector),[1 N_methods])';
-%                         CompEQ_S_vector(unique_calc).CrossEQ_K_vector = repmat(reshape(K_vector,1,[]),[1 N_methods])';
-%                         CompEQ_M_vector(unique_calc).CrossEQ_M_vector = repelem((1:N_methods)',length(cross_locs),1);
-%                         CompFR_P_vector(unique_calc).CrossFR_I_vector = repmat(FinalProbeSet_List.Value(V_vector),[1 N_methods2])';
-%                         CompFR_T_vector(unique_calc).CrossFR_J_vector = repmat(FinalProbeSet_List.Value(W_vector),[1 N_methods2])';
-%                         CompFR_S_vector(unique_calc).CrossFR_K_vector = repmat(reshape(K_vector,1,[]),[1 N_methods2])';
-%                         CompFR_M_vector(unique_calc).CrossFR_M_vector = repelem((1:N_methods2)',length(cross_locs),1);
-%                         Kd_eq_vector(unique_calc).Kd_eq_vector = repelem(exp(-temp_dGeq/(kb*(T_hybrid+273.15))),length(cross_locs),1);
-%                         dHc_eq_vector(unique_calc).dHd_eq_vector = repelem(temp_dHeq,length(cross_locs),1);
-%                         dSc_eq_vector(unique_calc).dSd_eq_vector = repelem(temp_dSeq,length(cross_locs),1);
-%                         dHc_f_vector(unique_calc).dHd_f_vector = repelem(temp_dHf,length(cross_locs),1);
-%                         dSc_f_vector(unique_calc).dSd_f_vector = repelem(temp_dSf,length(cross_locs),1);
-%                         dHc_r_vector(unique_calc).dHd_r_vector = repelem(temp_dHr,length(cross_locs),1);
-%                         dSc_r_vector(unique_calc).dSd_r_vector = repelem(temp_dSr,length(cross_locs),1);
-%                         dCc_eq_vector(unique_calc).dCpd_eq_vector = repelem(temp_dCpeq,length(cross_locs),1);
-%                     end
-% 
-%         end
-% 
-% 
-% 
-% 
-% end
-% ComplementEQ_P_vector =struct('ComplementEQ_P_vector',cell(1,N_DNA_target_seqs));
-% ComplementEQ_T_vector =struct('ComplementEQ_T_vector',cell(1,N_DNA_target_seqs));
-% ComplementEQ_S_vector =struct('ComplementEQ_S_vector',cell(1,N_DNA_target_seqs));
-% ComplementEQ_M_vector =struct('ComplementEQ_M_vector',cell(1,N_DNA_target_seqs));
-% ComplementFR_P_vector =struct('ComplementFR_P_vector',cell(1,N_DNA_target_seqs));
-% ComplementFR_T_vector =struct('ComplementFR_T_vector',cell(1,N_DNA_target_seqs));
-% ComplementFR_S_vector =struct('ComplementFR_S_vector',cell(1,N_DNA_target_seqs));
-% ComplementFR_M_vector =struct('ComplementFR_M_vector',cell(1,N_DNA_target_seqs));
-% POGmod_Complement_vector =struct('POGmod_Complement_vector',cell(1,N_DNA_target_seqs));
-% Kb_Complement_vector =struct('Kb_Complement_vector',cell(1,N_DNA_target_seqs));
-% dHeq_Complement_vector = struct('dHeq_Complement_vector',cell(1,N_DNA_target_seqs));
-% dSeq_Complement_vector = struct('dSeq_Complement_vector',cell(1,N_DNA_target_seqs));
-% dHf_Complement_vector = struct('dHf_Complement_vector',cell(1,N_DNA_target_seqs));
-% dSf_Complement_vector = struct('dSf_Complement_vector',cell(1,N_DNA_target_seqs));
-% dHr_Complement_vector =struct('dHr_Complement_vector',cell(1,N_DNA_target_seqs));
-% dSr_Complement_vector = struct('dSr_Complement_vector',cell(1,N_DNA_target_seqs));
-% dCp_Complement_vector = struct('dCp_Complement_vector',cell(1,N_DNA_target_seqs));
-% 
-% 
-% 
-% ComplementEQ_P_vector = vertcat(ComplementEQ_P_vector(:).ComplementEQ_P_vector);
-% ComplementEQ_T_vector = vertcat(ComplementEQ_T_vector(:).ComplementEQ_T_vector);
-% ComplementEQ_S_vector= vertcat(ComplementEQ_S_vector(:).ComplementEQ_S_vector);
-% ComplementEQ_M_vector = vertcat(ComplementEQ_M_vector(:).ComplementEQ_M_vector);
-% ComplementFR_P_vector = vertcat(ComplementFR_P_vector(:).ComplementEQ_P_vector);
-% ComplementFR_T_vector = vertcat(ComplementFR_T_vector(:).ComplementEQ_T_vector);
-% ComplementFR_S_vector= vertcat(ComplementFR_S_vector(:).ComplementEQ_S_vector);
-% ComplementFR_M_vector = vertcat(ComplementFR_M_vector(:).ComplementEQ_M_vector);
-% Kb_Complement_vector = vertcat(Kb_Complement_vector(:).Kb_Complement_vector);
-% POGmod_Complement_vector = vertcat(POGmod_Complement_vector(:).POGmod_Complement_vector);
-% dHeq_Complement_vector = vertcat(dHeq_Complement_vector(:).dHeq_Complement_vector);
-% dSeq_Complement_vector = vertcat(dSeq_Complement_vector(:).dSeq_Complement_vector);
-% dCp_Complement_vector = vertcat(dCp_Complement_vector(:).dCp_Complement_vector);
-% dHf_Complement_vector = vertcat(dHf_Complement_vector(:).dHf_Complement_vector);
-% dSf_Complement_vector = vertcat(dSf_Complement_vector(:).dSf_Complement_vector);
-% dHr_Complement_vector = vertcat(dHr_Complement_vector(:).dHr_Complement_vector);
-% dSr_Complement_vector = vertcat(dSr_Complement_vector(:).dSr_Complement_vector);
-% ComplementEQ_PTSM_vector = [ComplementEQ_P_vector ComplementEQ_T_vector ComplementEQ_S_vector ComplementEQ_M_vector];
-% ComplementFR_PTSM_vector = [ComplementFR_P_vector ComplementFR_T_vector ComplementFR_S_vector ComplementFR_M_vector];
-% Kb_Complement = ndSparse.build(ComplementEQ_PTSM_vector,Kb_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods]);
-% POGmod_Complement = ndSparse.build(ComplementEQ_PTSM_vector,POGmod_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods]);
-% dHeq_Complement = ndSparse.build(ComplementEQ_PTSM_vector,dHeq_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods]);
-% dSeq_Complement = ndSparse.build(ComplementEQ_PTSM_vector,dSeq_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods]);
-% dCp_Complement = ndSparse.build(ComplementEQ_PTSM_vector,dCp_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods]);
-% dHf_Complement = ndSparse.build(ComplementFR_PTSM_vector,dHf_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods2]);
-% dSf_Complement = ndSparse.build(ComplementFR_PTSM_vector,dSf_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods2]);
-% dHr_Complement = ndSparse.build(ComplementFR_PTSM_vector,dHr_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods2]);
-% dSr_Complement = ndSparse.build(ComplementFR_PTSM_vector,dSr_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods2]);
+        %         unique_target_seqs = unique(targetMatch);
+        %         N_DNA_target_seqs = ceil(length(unique_target_seqs)/targetBatchSize);
+        %         R = mod(length(unique_target_seqs),targetBatchSize);
+        %         dnaTargetSeqBatches = cell(1,N_DNA_target_seqs);
+        %         if (R==0)
+        %             for k = 1:N_DNA_target_seqs
+        %                 dnaTargetSeqBatches{k} = targetBatchSize*(k-1)+1:targetBatchSize*k;
+        %             end
+        %         else
+        %             for k = 1:N_DNA_target_seqs-1
+        %                 dnaTargetSeqBatches{k} = targetBatchSize*(k-1)+1:targetBatchSize*k;
+        %             end
+        %             dnaTargetSeqBatches{N_DNA_target_seqs} = targetBatchSize*(N_DNA_target_seqs-1)+1:targetBatchSize*(N_DNA_target_seqs-1)+R;
+        %         end
+        %
+        %         ResultsExist_DNA = zeros(1,N_DNA_target_seqs);
+        %         ResultsDate_DNA = cell(1,N_DNA_target_seqs);
+        %         fprintf("Check if DNA target site mapping probe batch files exist")
+        %         fprintf('\n')
+        %         fprintf('\n')
+        %         wb = parwaitbar(N_DNA_target_seqs,'WaitMessage','Checking');
+        %         parfor i = 1:N_DNA_target_seqs
+        %             if (isfile([FolderRootName filesep '(' TranscriptName ')' designerName '_TargetComplementBindingSiteMapInfo_batch' num2str(i) '.mat']))%check if temp file exists
+        %                 d = dir([FolderRootName filesep '(' TranscriptName ')' designerName '_TargetComplementBindingSiteMapInfo_batch' num2str(i) '.mat']);
+        %                 if (d.bytes>0)%check size greater than zero
+        %                     ResultsExist_DNA(i) = 1;
+        %                 end
+        %                 ResultsDate_DNA{i} = datetime(d.date);
+        %             end
+        %             progress(wb);
+        %         end
+        %         wb.delete();
+        %         fprintf('\n')
+        %         fprintf('\n')
+        %         Results_NotMade_DNA = find(ResultsExist_DNA==0);
+        %         Results_Made_DNA = find(ResultsExist_DNA==1);
+        %         %Sort get most recent ResultsMade GeneHitsMade and GeneHitsTable Made and add to probe_check_list
+        %         if (length(Results_Made_DNA)<=most_recent_num)
+        %             results_check_DNA = Results_Made_DNA;
+        %         else
+        %             Results_RecentMade_Dates_DNA(:,1) = ResultsDate_DNA(Results_Made_DNA);
+        %             Results_RecentMade_Dates_DNA(:,2) = num2cell(Results_Made_DNA);
+        %             Results_RecentMade_Dates_DNA = table2timetable(cell2table(Results_RecentMade_Dates_DNA));
+        %             Results_RecentMade_Dates_DNA = sortrows(Results_RecentMade_Dates_DNA,1,'descend');
+        %             Results_RecentMade_Dates_DNA.Properties.VariableNames = {'ID'};
+        %             results_check_DNA = Results_RecentMade_Dates_DNA.ID(1:most_recent_num).';
+        %             clear Results_RecentMade_Dates_DNA
+        %         end
+        %         batch_nums_to_check_DNA = union(Results_NotMade_DNA,results_check_DNA);
+        %
+        % CompEQ_I_vector =struct('CrossEQ_I_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % CompEQ_T_vector =struct('CrossEQ_J_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % CompEQ_S_vector =struct('CrossEQ_K_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % CompEQ_M_vector =struct('CrossEQ_M_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % CompFR_P_vector =struct('CrossFR_I_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % CompFR_T_vector =struct('CrossFR_J_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % CompFR_S_vector =struct('CrossFR_K_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % CompFR_M_vector =struct('CrossFR_M_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % Kd_eq_vector =struct('Kd_eq_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % dH_Complement_vector = struct('dHd_eq_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % dS_Complement_vector = struct('dSd_eq_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % dH_Complement_vector = struct('dHd_f_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % dSd_f_vector = struct('dSd_f_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % dH_Complement_vector =struct('dHd_r_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % dSd_Complement_vector = struct('dSd_r_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        % dCp_Complement_vector = struct('dCpd_eq_vector',cell(1,size(unique_ordered_binding_paired_input_sequences,1)));
+        %
+        %
+        %
+        %
+        % unique_ordered_binding_paired_input_sequences_List = parallel.pool.Constant(unique_ordered_binding_paired_input_sequences);
+        % unique_secondary_structure_pair_to_nonunique_entries_List = parallel.pool.Constant(unique_secondary_structure_pair_to_nonunique_entries);
+        % FinalProbeSet_List = parallel.pool.Constant(FinalProbeSet);
+        % targetMatch_List = parallel.pool.Constant(targetMatch);
+        % dnaTargetSeqBatches_List = parallel.pool.Constant(dnaTargetSeqBatches);
+        % targetMatch_List = parallel.pool.Constant(targetMatch);
+        % unique_target_seqs_List  = parallel.pool.Constant(unique_target_seqs);
+        %
+        %
+        % for unique_calc = 1:length(batch_nums_to_check_DNA)
+        %             % for i=DNA_IDs
+        %             % for site=1:length(MolN_ProbesAtEvents{i})
+        %             %     for l=1:MolN_ProbesAtEvents{i}(site)
+        %             %         PI = MolProbesAtEvents{i}{site}(l);
+        %             %         currentEvent = Mol_ProbesAtEventsID{i}{site}(l);
+        %         for w = 1:length(dnaTargetSeqBatches_List.Value{batch_nums_to_check_DNA(unique_calc)})
+        %                target_seq = unique_target_seqs_List.Value{dnaTargetSeqBatches_List.Value{batch_nums_to_check_DNA(unique_calc)}(w)};
+        %                     [dHeq, dSeq, dGeq, dHf, dSf, ~, dHr, dSr, ~,dCpeq, dTm] = F_DeltaGibson_V3(target_seq,seqrcomplement(lower(target_seq)),SaltConcentration,T_hybrid,PrimerConcentration,sequence_duplexes_thermo_generator_structure);
+        %                     POGmod_Complement(PI,i,site,:) = dGeq;
+        %                     dHeq_Complement(PI,i,site,:) = dHeq;
+        %                     dSeq_Complement(PI,i,site,:) = dSeq;
+        %                     dCp_Complement(PI,i,site,:) = dCpeq;
+        %                     dHf_Complement(PI,i,site,:) = dHf;
+        %                     dSf_Complement(PI,i,site,:) = dSf;
+        %                     dHr_Complement(PI,i,site,:) = dHr;
+        %                     dSr_Complement(PI,i,site,:) = dSr;
+        %                     Tm_Complement(PI,i,site,:) = dTm;
+        %                     Kb_Complement(PI,i,site,:) = exp(-full(POGmod_Complement(PI,i,site,:))/(kb*(T_hybrid+273.15)));
+        %                     cross_locs = find(double(unique_secondary_structure_pair_to_nonunique_entries_List.Value(:,7)==unique_calc).*...
+        %                         double(unique_secondary_structure_pair_to_nonunique_entries_List.Value(:,1)==0));
+        %                     if (~isempty(cross_locs))
+        %                         V_vector = unique_secondary_structure_pair_to_nonunique_entries_List.Value(cross_locs,2);
+        %                         W_vector = unique_secondary_structure_pair_to_nonunique_entries_List.Value(cross_locs,3);
+        %                         K_vector = unique_secondary_structure_pair_to_nonunique_entries_List.Value(cross_locs,4);
+        %                         CompEQ_P_vector(unique_calc).CrossEQ_I_vector = repmat(FinalProbeSet_List.Value(V_vector),[1 N_methods])';
+        %                         CompEQ_T_vector(unique_calc).CrossEQ_J_vector = repmat(FinalProbeSet_List.Value(W_vector),[1 N_methods])';
+        %                         CompEQ_S_vector(unique_calc).CrossEQ_K_vector = repmat(reshape(K_vector,1,[]),[1 N_methods])';
+        %                         CompEQ_M_vector(unique_calc).CrossEQ_M_vector = repelem((1:N_methods)',length(cross_locs),1);
+        %                         CompFR_P_vector(unique_calc).CrossFR_I_vector = repmat(FinalProbeSet_List.Value(V_vector),[1 N_methods2])';
+        %                         CompFR_T_vector(unique_calc).CrossFR_J_vector = repmat(FinalProbeSet_List.Value(W_vector),[1 N_methods2])';
+        %                         CompFR_S_vector(unique_calc).CrossFR_K_vector = repmat(reshape(K_vector,1,[]),[1 N_methods2])';
+        %                         CompFR_M_vector(unique_calc).CrossFR_M_vector = repelem((1:N_methods2)',length(cross_locs),1);
+        %                         Kd_eq_vector(unique_calc).Kd_eq_vector = repelem(exp(-temp_dGeq/(kb*(T_hybrid+273.15))),length(cross_locs),1);
+        %                         dHc_eq_vector(unique_calc).dHd_eq_vector = repelem(temp_dHeq,length(cross_locs),1);
+        %                         dSc_eq_vector(unique_calc).dSd_eq_vector = repelem(temp_dSeq,length(cross_locs),1);
+        %                         dHc_f_vector(unique_calc).dHd_f_vector = repelem(temp_dHf,length(cross_locs),1);
+        %                         dSc_f_vector(unique_calc).dSd_f_vector = repelem(temp_dSf,length(cross_locs),1);
+        %                         dHc_r_vector(unique_calc).dHd_r_vector = repelem(temp_dHr,length(cross_locs),1);
+        %                         dSc_r_vector(unique_calc).dSd_r_vector = repelem(temp_dSr,length(cross_locs),1);
+        %                         dCc_eq_vector(unique_calc).dCpd_eq_vector = repelem(temp_dCpeq,length(cross_locs),1);
+        %                     end
+        %
+        %         end
+        %
+        %
+        %
+        %
+        % end
+        % ComplementEQ_P_vector =struct('ComplementEQ_P_vector',cell(1,N_DNA_target_seqs));
+        % ComplementEQ_T_vector =struct('ComplementEQ_T_vector',cell(1,N_DNA_target_seqs));
+        % ComplementEQ_S_vector =struct('ComplementEQ_S_vector',cell(1,N_DNA_target_seqs));
+        % ComplementEQ_M_vector =struct('ComplementEQ_M_vector',cell(1,N_DNA_target_seqs));
+        % ComplementFR_P_vector =struct('ComplementFR_P_vector',cell(1,N_DNA_target_seqs));
+        % ComplementFR_T_vector =struct('ComplementFR_T_vector',cell(1,N_DNA_target_seqs));
+        % ComplementFR_S_vector =struct('ComplementFR_S_vector',cell(1,N_DNA_target_seqs));
+        % ComplementFR_M_vector =struct('ComplementFR_M_vector',cell(1,N_DNA_target_seqs));
+        % POGmod_Complement_vector =struct('POGmod_Complement_vector',cell(1,N_DNA_target_seqs));
+        % Kb_Complement_vector =struct('Kb_Complement_vector',cell(1,N_DNA_target_seqs));
+        % dHeq_Complement_vector = struct('dHeq_Complement_vector',cell(1,N_DNA_target_seqs));
+        % dSeq_Complement_vector = struct('dSeq_Complement_vector',cell(1,N_DNA_target_seqs));
+        % dHf_Complement_vector = struct('dHf_Complement_vector',cell(1,N_DNA_target_seqs));
+        % dSf_Complement_vector = struct('dSf_Complement_vector',cell(1,N_DNA_target_seqs));
+        % dHr_Complement_vector =struct('dHr_Complement_vector',cell(1,N_DNA_target_seqs));
+        % dSr_Complement_vector = struct('dSr_Complement_vector',cell(1,N_DNA_target_seqs));
+        % dCp_Complement_vector = struct('dCp_Complement_vector',cell(1,N_DNA_target_seqs));
+        %
+        %
+        %
+        % ComplementEQ_P_vector = vertcat(ComplementEQ_P_vector(:).ComplementEQ_P_vector);
+        % ComplementEQ_T_vector = vertcat(ComplementEQ_T_vector(:).ComplementEQ_T_vector);
+        % ComplementEQ_S_vector= vertcat(ComplementEQ_S_vector(:).ComplementEQ_S_vector);
+        % ComplementEQ_M_vector = vertcat(ComplementEQ_M_vector(:).ComplementEQ_M_vector);
+        % ComplementFR_P_vector = vertcat(ComplementFR_P_vector(:).ComplementEQ_P_vector);
+        % ComplementFR_T_vector = vertcat(ComplementFR_T_vector(:).ComplementEQ_T_vector);
+        % ComplementFR_S_vector= vertcat(ComplementFR_S_vector(:).ComplementEQ_S_vector);
+        % ComplementFR_M_vector = vertcat(ComplementFR_M_vector(:).ComplementEQ_M_vector);
+        % Kb_Complement_vector = vertcat(Kb_Complement_vector(:).Kb_Complement_vector);
+        % POGmod_Complement_vector = vertcat(POGmod_Complement_vector(:).POGmod_Complement_vector);
+        % dHeq_Complement_vector = vertcat(dHeq_Complement_vector(:).dHeq_Complement_vector);
+        % dSeq_Complement_vector = vertcat(dSeq_Complement_vector(:).dSeq_Complement_vector);
+        % dCp_Complement_vector = vertcat(dCp_Complement_vector(:).dCp_Complement_vector);
+        % dHf_Complement_vector = vertcat(dHf_Complement_vector(:).dHf_Complement_vector);
+        % dSf_Complement_vector = vertcat(dSf_Complement_vector(:).dSf_Complement_vector);
+        % dHr_Complement_vector = vertcat(dHr_Complement_vector(:).dHr_Complement_vector);
+        % dSr_Complement_vector = vertcat(dSr_Complement_vector(:).dSr_Complement_vector);
+        % ComplementEQ_PTSM_vector = [ComplementEQ_P_vector ComplementEQ_T_vector ComplementEQ_S_vector ComplementEQ_M_vector];
+        % ComplementFR_PTSM_vector = [ComplementFR_P_vector ComplementFR_T_vector ComplementFR_S_vector ComplementFR_M_vector];
+        % Kb_Complement = ndSparse.build(ComplementEQ_PTSM_vector,Kb_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods]);
+        % POGmod_Complement = ndSparse.build(ComplementEQ_PTSM_vector,POGmod_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods]);
+        % dHeq_Complement = ndSparse.build(ComplementEQ_PTSM_vector,dHeq_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods]);
+        % dSeq_Complement = ndSparse.build(ComplementEQ_PTSM_vector,dSeq_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods]);
+        % dCp_Complement = ndSparse.build(ComplementEQ_PTSM_vector,dCp_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods]);
+        % dHf_Complement = ndSparse.build(ComplementFR_PTSM_vector,dHf_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods2]);
+        % dSf_Complement = ndSparse.build(ComplementFR_PTSM_vector,dSf_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods2]);
+        % dHr_Complement = ndSparse.build(ComplementFR_PTSM_vector,dHr_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods2]);
+        % dSr_Complement = ndSparse.build(ComplementFR_PTSM_vector,dSr_Complement_vector,[size(probes,1),size(probes,1),max(MaxSitesInBatch),N_methods2]);
 
 
 
 
-        
+
 
 
 
@@ -917,7 +919,7 @@ nascentInfo = [];
 %             disp(ME.message)
 %         end
 %         save([settings.FolderRootName filesep settings.GeneName '_Tm' num2str(T_hybrid) '_NascentInfo' NascentRecordID settings.designerName '.mat'],'nascentInfo','-v7.3','-append');
-% 
+%
 %     end
 % catch ME
 %     disp(ME.message)

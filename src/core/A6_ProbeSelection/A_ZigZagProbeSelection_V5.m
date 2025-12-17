@@ -30,7 +30,7 @@ else
     end
 end
 if (settings.BLASTdna)
-DNA_IDs = find(~ismember(Names,settings.DNAdbParser));%IDs
+DNA_IDs = find(ismember(Names,settings.DNAdbParser));%IDs
 else
 DNA_IDs = [];
 end
@@ -65,9 +65,21 @@ else
     ProbesWithRibosomalHits = [];
 end
 
+%% Filtering Probes Based on Ribosomal Restrictions and Other Design Constraints
+probe_length = cellfun(@length,probes(:,2));
+%probe_GC = [cellfun(@oligoprop,probes(:,2)).GC];
+%probe_Tm = [cellfun(@ (x) oligoprop(x).Tm(1),probes(:,2))];
+ProbesViolatingLengthRestrictions = find(double(probe_length<settings.MinProbeSize)+double(probe_length>settings.MaxProbeSize)>0);
+UnAllowableProbes = union(ProbesWithRibosomalHits,ProbesViolatingLengthRestrictions);
+% Next Version add min and max GC and max and max Tm requirement which can
+% be added optionally, allows futher comparison of design when further restricting design on other probe thermodynamic properties
+% ProbesViolatingGCRestrictions = find(double(probe_GC<settings.MinGC)+double(probe_GC>settings.MaxGC)>0);
+% ProbesViolatingTmRestrictions = find(double(probe_Tm<settings.MinTm)+double(probe_Tm>settings.MaxTm)>0);
+% UnAllowableProbes = unique([ProbesWithRibosomalHits ProbesViolatingLengthRestrictions ProbesViolatingGCRestrictions ProbesViolatingTmRestrictions]);
+
 %% Allow Matrix
 spacing = settings.ProbeSpacing;
-AllowableProbes = setdiff(1:size(probes,1),ProbesWithRibosomalHits);
+AllowableProbes = setdiff(1:size(probes,1),UnAllowableProbes );
 AllowMatrix = zeros(length(AllowableProbes),length(AllowableProbes));
 for u1 = 1:length(AllowableProbes)
     u = AllowableProbes(u1);
@@ -101,6 +113,7 @@ Sx =@(x,Z) arrayfun(@(y) find(squeeze(DoesProbeBindSite(x,y,:))==1)',Z,'Un',0);
    end
    spacing_req = settings.ProbeSpacing;
    spacing_matrix = zeros(1,spacing_req*2+Lpmin*2 + max(probe_poses(:,1)));  
+   %only RNA
    NumOffTargetOptions = unique(Nvec_RNAmulti(AllowableProbes));
    Probes_WithNOFF_targets = arrayfun(@(i) AllowableProbes(Nvec_RNAmulti(AllowableProbes)==NumOffTargetOptions(i)),1:length(NumOffTargetOptions),'Un',0);
    

@@ -55,7 +55,7 @@ else
     end
 end
 if (settings.BLASTdna)
-    DNA_IDs = find(~ismember(Names,settings.DNAdbParser));%IDs
+    DNA_IDs = find(ismember(Names,settings.DNAdbParser));%IDs
 else
     DNA_IDs = [];
 end
@@ -254,11 +254,7 @@ if (calcSiteMap > 0)
                     nonSubset = find(IsSubSet1D==0);
                     %get unique sites without subsets
                     Sx = {probesInInterval_Unique{nonSubset}};
-                    try
-                        Mol_ProbesAtEventsID{w}{w_sub} = cellfun(@(x) rowz(x),Sx,'UniformOutput',false);% or rowz(1:length(An));
-                    catch
-                        Mol_ProbesAtEventsID{w}{w_sub} = [];
-                    end
+                   Mol_ProbesAtEventsID{w}{w_sub} = cellfun(@(x) rowz(x),Sx,'UniformOutput',false);% or rowz(1:length(An));
                     Kb_Sub = Kb_Match_List.Value(rowz,:);
                     dHeq_Sub = dHeq_Match_List.Value(rowz,:);
                     dSeq_Sub = dSeq_Match_List.Value(rowz,:);
@@ -554,18 +550,18 @@ end
 %         Bn = gene_table.Bx(rowz);
 %         Cn = [unique([An Bn]).'];
 if (calcEnergyMatrix2)
-    POGmod_Complement = ndSparse.build([size(probes,1),numNames,size(probes,1)-Lpmin+1,N_methods],0);
-    Kb_Complement = ndSparse.build([size(probes,1),numNames,size(probes,1)-Lpmin+1,N_methods],0);
-    dCp_Complement = ndSparse.build([size(probes,1),numNames,size(probes,1)-Lpmin+1,N_methods],0);
-    Tm_Complement = ndSparse.build([size(probes,1),numNames,size(probes,1)-Lpmin+1,N_methods+1],0);
-    dHeq_Complement = ndSparse.build([size(probes,1),numNames,size(probes,1)-Lpmin+1,N_methods],0);
-    dSeq_Complement = ndSparse.build([size(probes,1),numNames,size(probes,1)-Lpmin+1,N_methods],0);
-    dHf_Complement = ndSparse.build([size(probes,1),numNames,size(probes,1)-Lpmin+1,N_methods2],0);
-    dSf_Complement = ndSparse.build([size(probes,1),numNames,size(probes,1)-Lpmin+1,N_methods2],0);
-    dHr_Complement = ndSparse.build([size(probes,1),numNames,size(probes,1)-Lpmin+1,N_methods2],0);
-    dSr_Complement = ndSparse.build([size(probes,1),numNames,size(probes,1)-Lpmin+1,N_methods2],0);
-    
-    if (settings.BLASTdna)
+    if (~settings.BLASTdna)
+        POGmod_Complement = ndSparse.build([numNames,size(DoesProbeBindSite2,3),N_methods],0);
+        Kb_Complement = ndSparse.build([numNames,size(DoesProbeBindSite2,3),N_methods],0);
+        dCp_Complement = ndSparse.build([numNames,size(DoesProbeBindSite2,3),N_methods],0);
+        Tm_Complement = ndSparse.build([numNames,size(DoesProbeBindSite2,3),N_methods+1],0);
+        dHeq_Complement = ndSparse.build([numNames,size(DoesProbeBindSite2,3),N_methods],0);
+        dSeq_Complement = ndSparse.build([numNames,size(DoesProbeBindSite2,3),N_methods],0);
+        dHf_Complement = ndSparse.build([numNames,size(DoesProbeBindSite2,3),N_methods2],0);
+        dSf_Complement = ndSparse.build([numNames,size(DoesProbeBindSite2,3),N_methods2],0);
+        dHr_Complement = ndSparse.build([numNames,size(DoesProbeBindSite2,3),N_methods2],0);
+        dSr_Complement = ndSparse.build([numNames,size(DoesProbeBindSite2,3),N_methods2],0);
+    else
         sequence_duplexes_thermo_generator_struct_Multi = struct();
         sequence_duplexes_thermo_generator_struct_Multi.Model{1} = F_NearestNeighbors_Parser('Bres86','src/thirdparty/VarGibbs-4.1/P-BS86.par',[]);
         sequence_duplexes_thermo_generator_struct_Multi.Model{2}  = F_NearestNeighbors_Parser('Sant96','src/thirdparty/VarGibbs-4.1/AOP-SL96.par',[]);
@@ -576,43 +572,146 @@ if (calcEnergyMatrix2)
         sequence_duplexes_thermo_generator_struct_Multi.Model{7}   = F_NearestNeighbors_Parser('Rejali21','src/thirdparty/VarGibbs-4.1/AOP-RJ21KE.par',[]);
         sequence_duplexes_thermo_generator_struct_Multi.Model{8}   = F_NearestNeighbors_Parser('Martins24','src/thirdparty/VarGibbs-4.1/AOP-OW04-69.par','src/thirdparty/VarGibbs-4.1/AOP-MM-60.par');
         sequence_duplexes_thermo_generator_structure = struct2table([sequence_duplexes_thermo_generator_struct_Multi.Model{:}]);
-        fprintf("Getting binding affinity of DNA probe targets complementary reactions")
-        fprintf('\n')
-        fprintf('\n')
-        wb = parwaitbar(length(DNA_IDs),'WaitMessage', 'Computing');
-        for i=DNA_IDs
-            for site=1:length(MolN_ProbesAtEvents{i})
-                for l=1:MolN_ProbesAtEvents{i}(site)
-                    PI = MolProbesAtEvents{i}{site}(l);
-                    currentEvent = Mol_ProbesAtEventsID{i}{site}(l);
-                    [dHeq, dSeq, dGeq, dHf, dSf, ~, dHr, dSr, ~,dCpeq, dTm] = F_DeltaGibson_V3(targetMatch{currentEvent},seqrcomplement(lower(targetMatch{currentEvent})),SaltConcentration,T_hybrid,PrimerConcentration,sequence_duplexes_thermo_generator_structure);
-                    POGmod_Complement(PI,i,site,:) = dGeq;
-                    dHeq_Complement(PI,i,site,:) = dHeq;
-                    dSeq_Complement(PI,i,site,:) = dSeq;
-                    dCp_Complement(PI,i,site,:) = dCpeq;
-                    dHf_Complement(PI,i,site,:) = dHf;
-                    dSf_Complement(PI,i,site,:) = dSf;
-                    dHr_Complement(PI,i,site,:) = dHr;
-                    dSr_Complement(PI,i,site,:) = dSr;
-                    Tm_Complement(PI,i,site,:) = dTm;
-                    Kb_Complement(PI,i,site,:) = exp(-full(POGmod_Complement(PI,i,site,:))/(kb*(T_hybrid+273.15)));
-                end
-            end
-            progress(wb);
+      
+  %  DNA_Complementary_SeqInput1 = cellfun(@(x) strrep(x,'-','N'),targetMatch,'Un',0)';
+%DNA_Complementary_SeqInput2 = cellfun(@(x) seqrcomplement(strrep(x,'-','N')),targetMatch,'Un',0)';
+%unique_DNA_complementary_binding_seqs = unique([DNA_Complementary_SeqInput1; DNA_Complementary_SeqInput2;...
+  %  cellfun(@seqreverse,[DNA_Complementary_SeqInput1; DNA_Complementary_SeqInput2],'Un',0)]);
+%DNA_Complementary_binding_seqs_dictionary = dictionary(convertCharsToStrings(unique_DNA_complementary_binding_seqs)',1:length(unique_DNA_complementary_binding_seqs));
+%DNA_Complementary_inverse_binding_seqs_dictionary = dictionary(1:length(unique_DNA_complementary_binding_seqs),convertCharsToStrings(unique_DNA_complementary_binding_seqs)');
+%DNA_Complementary_unique_Seq1_id_List = DNA_Complementary_binding_seqs_dictionary(convertCharsToStrings(DNA_Complementary_SeqInput1));
+%DNA_Complementary_unique_Seq2_id_List = DNA_Complementary_binding_seqs_dictionary(convertCharsToStrings(DNA_Complementary_SeqInput2));
+%seq_pair_ids_nonunique = [DNA_Complementary_unique_Seq1_id_List DNA_Complementary_unique_Seq2_id_List];
+%[unique_pair_ids,~,matched_unique_location] = unique(seq_pair_ids_nonunique,'rows');
+%unique_ordered_binding_paired_input_sequences = DNA_Complementary_inverse_binding_seqs_dictionary(unique_pair_ids); 
+[targetUnique,~,Ci] = unique(targetMatch);
+currentEvent_Index_to_Unique_Index = dictionary(1:length(targetMatch),Ci');
+I_vector_ISL = cell2mat(arrayfun(@(i) cell2mat(arrayfun(@(x) i*ones(1,x),MolN_ProbesAtEvents{i},'Un',0)) ,reshape(DNA_IDs,1,[]),'Un',0));
+S_vector_ISL = cell2mat(arrayfun(@(i) cell2mat(arrayfun(@(x) x*ones(1,MolN_ProbesAtEvents{i}(x)),1:length(MolN_ProbesAtEvents{i}),'Un',0)) ,reshape(DNA_IDs,1,[]),'Un',0));
+L_vector_ISL = cell2mat(arrayfun(@(i) cell2mat(arrayfun(@(x) 1:x,MolN_ProbesAtEvents{i},'Un',0)),reshape(DNA_IDs,1,[]),'Un',0));
+PI_vector_ISL = arrayfun(@(x) MolProbesAtEvents{I_vector_ISL(x)}{S_vector_ISL(x)}(L_vector_ISL(x)),1:length(I_vector_ISL));
+Mol_ProbesAtEventsID_ISL = arrayfun(@(x) Mol_ProbesAtEventsID{I_vector_ISL(x)}{S_vector_ISL(x)}(L_vector_ISL(x)),1:length(I_vector_ISL));
+Unique_Indexed = currentEvent_Index_to_Unique_Index(Mol_ProbesAtEventsID_ISL);
+       
+DNACompEQ_P_vector =struct('DNACompEQ_P_vector',cell(1,length(targetUnique)));
+DNACompEQ_T_vector =struct('DNACompEQ_T_vector',cell(1,length(targetUnique)));
+DNACompEQ_S_vector =struct('DNACompEQ_S_vector',cell(1,length(targetUnique)));
+DNACompEQ_M_vector =struct('DNACompEQ_M_vector',cell(1,length(targetUnique)));
+DNACompFR_P_vector =struct('DNACompFR_P_vector',cell(1,length(targetUnique)));
+DNACompFR_T_vector =struct('DNACompFR_T_vector',cell(1,length(targetUnique)));
+DNACompFR_S_vector =struct('DNACompFR_S_vector',cell(1,length(targetUnique)));
+DNACompFR_M_vector =struct('DNACompFR_M_vector',cell(1,length(targetUnique)));
+Kcomp_eq_vector =struct('Kcomp_eq_vector',cell(1,length(targetUnique)));
+dHcomp_eq_vector = struct('dHcomp_eq_vector',cell(1,length(targetUnique)));
+dScomp_eq_vector = struct('dScomp_eq_vector',cell(1,length(targetUnique)));
+dHcomp_f_vector = struct('dHcomp_f_vector',cell(1,length(targetUnique)));
+dScomp_f_vector = struct('dScomp_f_vector',cell(1,length(targetUnique)));
+dHcomp_r_vector =struct('dHcomp_r_vector',cell(1,length(targetUnique)));
+dScomp_r_vector = struct('dScomp_r_vector',cell(1,length(targetUnique)));
+dCpcomp_eq_vector = struct('dCpcomp_eq_vector',cell(1,length(targetUnique)));
+dGcomp_eq_vector = struct('dGcomp_eq_vector',cell(1,length(targetUnique)));
+dTmcomp_vector = struct('dTmcomp_vector',cell(1,length(targetUnique)));
+PI_vector_ISL_List = parallel.pool.Constant(PI_vector_ISL);
+I_vector_ISL_List = parallel.pool.Constant(I_vector_ISL);
+S_vector_ISL_List = parallel.pool.Constant(S_vector_ISL);
+unique_ordered_comp_binding_input_sequences_List = parallel.pool.Constant(targetUnique);
+fprintf("Getting binding affinity of DNA probe targets complementary reactions")
+fprintf('\n')
+fprintf('\n')
+wb = parwaitbar(length(targetUnique),'WaitMessage', 'Computing');
+parfor unique_calc = 1:length(targetUnique)
+    pause(0.1)
+         [temp_dHeq, temp_dSeq, temp_dGeq, ...
+          temp_dHf, temp_dSf, ~, ...
+          temp_dHr, temp_dSr, ~,temp_dCpeq,temp_dTm] = ...
+          F_DeltaGibson_V3(char(unique_ordered_comp_binding_input_sequences_List.Value(unique_calc)),seqrcomplement(char(unique_ordered_comp_binding_input_sequences_List.Value(unique_calc))),SaltConcentration,T_hybrid,PrimerConcentration,sequence_duplexes_thermo_generator_structure);
+        comp_locs = find(Unique_Indexed==unique_calc);
+        if (~isempty(comp_locs))
+            DNACompEQ_P_vector(unique_calc).DNACompEQ_P_vector = repmat(PI_vector_ISL_List.Value(comp_locs),[1 N_methods])';
+            DNACompEQ_T_vector(unique_calc).DNACompEQ_T_vector = repmat(I_vector_ISL_List.Value(comp_locs),[1 N_methods])';
+            DNACompEQ_S_vector(unique_calc).DNACompEQ_S_vector = repmat(S_vector_ISL_List.Value(comp_locs),[1 N_methods])';
+            DNACompEQ_M_vector(unique_calc).DNACompEQ_M_vector = repelem((1:N_methods)',length(comp_locs),1);
+            DNACompFR_P_vector(unique_calc).DNACompFR_P_vector = repmat(PI_vector_ISL_List.Value(comp_locs),[1 N_methods2])';
+            DNACompFR_T_vector(unique_calc).DNACompFR_T_vector = repmat(I_vector_ISL_List.Value(comp_locs),[1 N_methods2])';
+            DNACompFR_S_vector(unique_calc).DNACompFR_S_vector = repmat(S_vector_ISL_List.Value(comp_locs),[1 N_methods2])';
+            DNACompFR_M_vector(unique_calc).DNACompFR_M_vector = repelem((1:N_methods2)',length(comp_locs),1);
+             Kcomp_eq_vector(unique_calc).Kcomp_eq_vector = repelem(exp(-temp_dGeq/(kb*(T_hybrid+273.15))),length(comp_locs),1);
+            dGcomp_eq_vector(unique_calc).dGcomp_eq_vector = repelem(temp_dGeq,length(comp_locs),1);
+          % dTmcomp_vector(unique_calc).dTmcomp_vector = repelem(temp_dTm',length(comp_locs),1);
+            dHcomp_eq_vector(unique_calc).dHcomp_eq_vector = repelem(temp_dHeq,length(comp_locs),1);
+            dScomp_eq_vector(unique_calc).dScomp_eq_vector = repelem(temp_dSeq,length(comp_locs),1);
+            dHcomp_f_vector(unique_calc).dHcomp_f_vector = repelem(temp_dHf,length(comp_locs),1);
+            dScomp_f_vector(unique_calc).dScomp_f_vector = repelem(temp_dSf,length(comp_locs),1);
+            dHcomp_r_vector(unique_calc).dHcomp_r_vector = repelem(temp_dHr,length(comp_locs),1);
+            dScomp_r_vector(unique_calc).dScomp_r_vector = repelem(temp_dSr,length(comp_locs),1);
+            dCpcomp_eq_vector(unique_calc).dCpcomp_eq_vector = repelem(temp_dCpeq,length(comp_locs),1);
         end
-        delete(wb);
-        fprintf('\n')
-        fprintf('\n')
-    end
-    Kb_Complement = squeeze(max(Kb_Complement,[],1));
-    dHeq_Complement = squeeze(max(dHeq_Complement,[],1));
-    dSeq_Complement = squeeze(max(dSeq_Complement,[],1));
-    dHf_Complement = squeeze(max(dHf_Complement,[],1));
-    dSf_Complement = squeeze(max(dSf_Complement,[],1));
-    dHr_Complement = squeeze(max(dHr_Complement,[],1));
-    dSr_Complement = squeeze(max(dSr_Complement,[],1));
-    dCp_Complement = squeeze(max(dCp_Complement,[],1));
-    Tm_Complement = squeeze(max(Tm_Complement,[],1));
+        progress(wb);      
+end
+delete(wb);
+fprintf('\n')
+fprintf('\n')
+DNACompEQ_P_vector = vertcat(DNACompEQ_P_vector(:).DNACompEQ_P_vector);
+DNACompEQ_T_vector = vertcat(DNACompEQ_T_vector(:).DNACompEQ_T_vector);
+DNACompEQ_S_vector = vertcat(DNACompEQ_S_vector(:).DNACompEQ_S_vector);
+DNACompEQ_M_vector = vertcat(DNACompEQ_M_vector(:).DNACompEQ_M_vector);
+DNACompFR_P_vector = vertcat(DNACompFR_P_vector(:).DNACompFR_P_vector);
+DNACompFR_T_vector = vertcat(DNACompFR_T_vector(:).DNACompFR_T_vector);
+DNACompFR_S_vector = vertcat(DNACompFR_S_vector(:).DNACompFR_S_vector);
+DNACompFR_M_vector = vertcat(DNACompFR_M_vector(:).DNACompFR_M_vector);
+Kcomp_eq_vector = vertcat(Kcomp_eq_vector(:).Kcomp_eq_vector);
+dGcomp_eq_vector = vertcat(dGcomp_eq_vector(:).dGcomp_eq_vector);
+dHcomp_eq_vector = vertcat(dHcomp_eq_vector(:).dHcomp_eq_vector);
+dScomp_eq_vector = vertcat(dScomp_eq_vector(:).dScomp_eq_vector);
+dCpcomp_eq_vector = vertcat(dCpcomp_eq_vector(:).dCpcomp_eq_vector);
+dHcomp_f_vector = vertcat(dHcomp_f_vector(:).dHcomp_f_vector);
+dScomp_f_vector = vertcat(dScomp_f_vector(:).dScomp_f_vector);
+dHcomp_r_vector = vertcat(dHcomp_r_vector(:).dHcomp_r_vector);
+dScomp_r_vector = vertcat(dScomp_r_vector(:).dScomp_r_vector);
+dTmcomp_vector = vertcat(dTmcomp_vector(:).dTmcomp_vector);
+DNACompEQ_PTSM_vector = [DNACompEQ_P_vector DNACompEQ_T_vector DNACompEQ_S_vector DNACompEQ_M_vector];
+DNACompFR_PTSM_vector = [DNACompFR_P_vector DNACompFR_T_vector DNACompFR_S_vector DNACompFR_M_vector];
+Kb_Complement = ndSparse.build(DNACompEQ_PTSM_vector,Kcomp_eq_vector,[size(probes,1),numNames,size(DoesProbeBindSite2,3),N_methods]);
+POGmod_Complement = ndSparse.build(DNACompEQ_PTSM_vector,dGcomp_eq_vector,[size(probes,1),numNames,size(DoesProbeBindSite2,3),N_methods]);
+dHeq_Complement = ndSparse.build(DNACompEQ_PTSM_vector,dHcomp_eq_vector,[size(probes,1),numNames,size(DoesProbeBindSite2,3),N_methods]);
+dSeq_Complement = ndSparse.build(DNACompEQ_PTSM_vector,dScomp_eq_vector,[size(probes,1),numNames,size(DoesProbeBindSite2,3),N_methods]);
+dCp_Complement = ndSparse.build(DNACompEQ_PTSM_vector,dCpcomp_eq_vector,[size(probes,1),numNames,size(DoesProbeBindSite2,3),N_methods]);
+Tm_Complement= [];%ndSparse.build(DNACompEQ_PTSM_vector,dTmcomp_vector,[size(probes,1),numNames,size(DoesProbeBindSite2,3),N_methods3]);
+dHf_Complement = ndSparse.build(DNACompFR_PTSM_vector,dHcomp_f_vector,[size(probes,1),numNames,size(DoesProbeBindSite2,3),N_methods2]);
+dSf_Complement = ndSparse.build(DNACompFR_PTSM_vector,dScomp_f_vector,[size(probes,1),numNames,size(DoesProbeBindSite2,3),N_methods2]);
+dHr_Complement = ndSparse.build(DNACompFR_PTSM_vector,dHcomp_r_vector,[size(probes,1),numNames,size(DoesProbeBindSite2,3),N_methods2]);
+dSr_Complement = ndSparse.build(DNACompFR_PTSM_vector,dScomp_r_vector,[size(probes,1),numNames,size(DoesProbeBindSite2,3),N_methods2]);
+     
+Kb_Complement = squeeze(max(Kb_Complement,[],1));
+POGmod_Complement = squeeze(min(POGmod_Complement,[],1));
+dHeq_Complement = squeeze(min(dHeq_Complement,[],1));
+dHf_Complement = squeeze(min(dHf_Complement,[],1));
+dHr_Complement = squeeze(min(dHr_Complement,[],1));
+dCp_Complement = squeeze(max(dCp_Complement,[],1));
+% [~,Tvec,Svec,Mvec] = ind2sub(size(Tm_Complement),find(Tm_Complement~=0));
+% [G,ID1,ID2,ID3] = findgroups([Tvec Svec Mvec]);
+% V = Tm_Complement(find(Tm_Complement~=0));
+% Tm_mean = accumarray(G, full(V), [max(G), 1], @mean, Inf);
+% Tm_Complement = ndSparse.build([ID1 ID2 ID3],Tm_mean,[numNames,size(DoesProbeBindSite2,3),N_methods3]);
+
+[~,Tvec,Svec,Mvec] = ind2sub(size(dSeq_Complement),find(dSeq_Complement~=0));
+[G,ID1,ID2,ID3] = findgroups(Tvec, Svec, Mvec);
+V = dSeq_Complement(dSeq_Complement~=0);
+Seq_min = accumarray(G, full(V), [max(G), 1], @max, Inf);
+dSeq_Complement = ndSparse.build([ID1 ID2 ID3],Seq_min,[numNames,size(DoesProbeBindSite2,3),N_methods]);
+
+[~,Tvec,Svec,Mvec] = ind2sub(size(dSf_Complement),find(dSf_Complement~=0));
+[G,ID1,ID2,ID3] = findgroups(Tvec, Svec, Mvec);
+V = dSf_Complement(dSf_Complement~=0);
+Sf_min = accumarray(G, full(V), [max(G), 1], @max, Inf);
+dSf_Complement = ndSparse.build([ID1 ID2 ID3],Sf_min,[numNames,size(DoesProbeBindSite2,3),N_methods2]);
+
+[~,Tvec,Svec,Mvec] = ind2sub(size(dSr_Complement),find(dSr_Complement~=0));
+[G,ID1,ID2,ID3] = findgroups(Tvec,Svec,Mvec);
+V = dSr_Complement(dSr_Complement~=0);
+Sr_min = accumarray(G, full(V), [max(G), 1], @max, Inf);
+dSr_Complement = ndSparse.build([ID1 ID2 ID3],Sr_min,[numNames,size(DoesProbeBindSite2,3),N_methods2]);
+    end    
     save([settings.FolderRootName filesep '(' TranscriptName  ')_Tm' num2str(T_hybrid) '_BindingEnergyMatrix2' settings.designerName '.mat'],'POGmod_Complement','Kb_Complement','-v7.3')
     save([settings.FolderRootName filesep '(' TranscriptName ')_BindingMatrices2' settings.designerName '.mat'],'dHeq_Complement','dSeq_Complement','dHf_Complement','dSf_Complement','dHr_Complement','dSr_Complement','Tm_Complement','dCp_Complement','-v7.3')
 end
