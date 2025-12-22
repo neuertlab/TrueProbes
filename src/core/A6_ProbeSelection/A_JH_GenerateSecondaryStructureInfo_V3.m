@@ -70,116 +70,47 @@ if overrides.includeCross
     BotCrossDimerSeqParsed2 = cell(1,length(FinalProbeSet));
     BotCrossDimerSeqParsed3 = cell(1,length(FinalProbeSet));
     BotCrossDimerSeqParsed4 = cell(1,length(FinalProbeSet));
-    for i=1:1:length(FinalProbeSet)
-        for j=i:length(FinalProbeSet)
-            if (i ~= j)
-                [~,tempAlign1] = swalign(pi_seq{FinalProbeSet(i)},pi_seq{FinalProbeSet(j)},'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT');
-                TopCrossDimerSeqParsed1{i}{j} = tempAlign1(1,:);
-                BotCrossDimerSeqParsed1{i}{j} = tempAlign1(3,:);
-                TopCrossDimerSeqParsed1{j}{i} = tempAlign1(1,:);
-                BotCrossDimerSeqParsed1{j}{i} = tempAlign1(3,:);
-                [~,tempAlign2] = swalign(pi_seq{FinalProbeSet(i)},reverse(pi_seq{FinalProbeSet(j)}),'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT');
-                TopCrossDimerSeqParsed2{i}{j} = tempAlign2(1,:);
-                BotCrossDimerSeqParsed2{i}{j} = tempAlign2(3,:);
-                TopCrossDimerSeqParsed2{j}{i} = tempAlign2(1,:);
-                BotCrossDimerSeqParsed2{j}{i} = tempAlign2(3,:);
-                [~,tempAlign3] = swalign(reverse(pi_seq{FinalProbeSet(i)}),pi_seq{FinalProbeSet(j)},'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT');
-                TopCrossDimerSeqParsed3{i}{j} = tempAlign3(1,:);
-                BotCrossDimerSeqParsed3{i}{j} = tempAlign3(3,:);
-                TopCrossDimerSeqParsed3{j}{i} = tempAlign3(1,:);
-                BotCrossDimerSeqParsed3{j}{i} = tempAlign3(3,:);
-                [~,tempAlign4] = swalign(reverse(reverse(pi_seq{FinalProbeSet(i)})),reverse(pi_seq{FinalProbeSet(j)}),'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT');
-                TopCrossDimerSeqParsed4{i}{j} = tempAlign4(1,:);
-                BotCrossDimerSeqParsed4{i}{j} = tempAlign4(3,:);
-                TopCrossDimerSeqParsed4{j}{i} = tempAlign4(1,:);
-                BotCrossDimerSeqParsed4{j}{i} = tempAlign4(3,:);
-                clear tempAlign*
-            else
-                [~,tempAlign1] = swalign(pi_seq{FinalProbeSet(i)},reverse(pi_seq{FinalProbeSet(j)}),'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT');
-                TopCrossDimerSeqParsed1{i}{j} = tempAlign1(1,:);
-                BotCrossDimerSeqParsed1{i}{j} = tempAlign1(3,:);
-                [~,tempAlign2] = swalign(pi_seq{FinalProbeSet(i)},pi_seq{FinalProbeSet(j)},'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT');
-                TopCrossDimerSeqParsed2{i}{j} = tempAlign2(1,:);
-                BotCrossDimerSeqParsed2{i}{j} = tempAlign2(3,:);
-                clear tempAlign*
-                TopCrossDimerSeqParsed3{i}{j} = '';
-                BotCrossDimerSeqParsed3{i}{j} = '';
-                TopCrossDimerSeqParsed4{i}{j} = '';
-                BotCrossDimerSeqParsed4{i}{j} = '';
-            end
-        end
-    end
     cross_pair_combos = [nchoosek(1:length(FinalProbeSet),2);repmat(1:length(FinalProbeSet),[2 1])'];
     cross_pair_combos_with_flip =  [nchoosek(1:length(FinalProbeSet),2);fliplr(nchoosek(1:length(FinalProbeSet),2));repmat(1:length(FinalProbeSet),[2 1])'];
-    TopCrossDimerSeqParsed1_Vector = cell(1,length(FinalProbeSet));
-    TopCrossDimerSeqParsed2_Vector = cell(1,length(FinalProbeSet));
-    TopCrossDimerSeqParsed3_Vector = cell(1,length(FinalProbeSet));
-    TopCrossDimerSeqParsed4_Vector = cell(1,length(FinalProbeSet));
-    BotCrossDimerSeqParsed1_Vector = cell(1,length(FinalProbeSet));
-    BotCrossDimerSeqParsed2_Vector = cell(1,length(FinalProbeSet));
-    BotCrossDimerSeqParsed3_Vector = cell(1,length(FinalProbeSet));
-    BotCrossDimerSeqParsed4_Vector= cell(1,length(FinalProbeSet));
-    [~,tempAlign1_Vector] = arrayfun(@(nn) swalign(pi_seq{FinalProbeSet(cross_pair_combos(nn,1))},pi_seq{FinalProbeSet(cross_pair_combos(nn,2))},'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT'),...
-        1:size(cross_pair_combos,1),'Un',0);
-    [~,tempAlign2_Vector] = arrayfun(@(nn) swalign(pi_seq{FinalProbeSet(cross_pair_combos(nn,1))},reverse(pi_seq{FinalProbeSet(cross_pair_combos(nn,2))}),'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT'),...
-        1:size(cross_pair_combos,1),'Un',0);
-    [~,tempAlign3_Vector] = arrayfun(@(nn) swalign(reverse(pi_seq{FinalProbeSet(cross_pair_combos(nn,1))}),pi_seq{FinalProbeSet(cross_pair_combos(nn,2))},'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT'),...
-        1:size(cross_pair_combos,1),'Un',0);
-    [~,tempAlign4_Vector] = arrayfun(@(nn) swalign(reverse(reverse(pi_seq{FinalProbeSet(cross_pair_combos(nn,1))})),reverse(pi_seq{FinalProbeSet(cross_pair_combos(nn,2))}),'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT'),...
-        1:size(cross_pair_combos,1),'Un',0);
-    for nn = 1:size(cross_pair_combos,1)
-        if (cross_pair_combos(nn,1)~=cross_pair_combos(nn,2))
-            TopCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign1_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign1_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign1_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign1_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign2_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign2_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign2_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign2_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign3_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign3_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign3_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign3_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign4_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign4_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign4_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign4_Vector{nn}(3,:);
+    cross_pair_combos_List = parallel.pool.Constant(cross_pair_combos);
+    tempAlign1 = cell(1,size(cross_pair_combos,1));
+    tempAlign2 = cell(1,size(cross_pair_combos,1));
+    tempAlign3 = cell(1,size(cross_pair_combos,1));
+    tempAlign4 = cell(1,size(cross_pair_combos,1));
+    FinalProbeSet_List = parallel.pool.Constant(FinalProbeSet);
+    pi_seq_List = parallel.pool.Constant(pi_seq);
+    parfor nn = 1:size(cross_pair_combos,1)
+        [~,tempAlign1{nn}] = swalign(pi_seq_List.Value{FinalProbeSet_List.Value(cross_pair_combos_List.Value(nn,1))},pi_seq_List.Value{FinalProbeSet_List.Value(cross_pair_combos_List.Value(nn,2))},'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT');
+        [~,tempAlign2{nn}] = swalign(pi_seq_List.Value{FinalProbeSet_List.Value(cross_pair_combos(nn,1))},reverse(pi_seq_List.Value{FinalProbeSet_List.Value(cross_pair_combos_List.Value(nn,2))}),'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT');
+        [~,tempAlign3{nn}] = swalign(reverse(pi_seq_List.Value{FinalProbeSet_List.Value(cross_pair_combos_List.Value(nn,1))}),pi_seq_List.Value{FinalProbeSet_List.Value(cross_pair_combos_List.Value(nn,2))},'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT');
+        [~,tempAlign4{nn}] = swalign(reverse(pi_seq_List.Value{FinalProbeSet_List.Value(cross_pair_combos_List.Value(nn,1))}),reverse(pi_seq_List.Value{FinalProbeSet_List.Value(cross_pair_combos_List.Value(nn,2))}),'SCORINGMATRIX',scr_mat,'GAPOPEN',gapOpen,'ALPHA','NT');
+    end
+    parfor_tempAlignIntermediateC = cell(size(cross_pair_combos,1), 1);
+    parfor ii = 1:size(cross_pair_combos,1)
+        if (~isequal(cross_pair_combos_List.Value(ii,1),cross_pair_combos_List.Value(ii,2)))
+            Current_Z = {tempAlign1{ii}(1,:);tempAlign1{ii}(3,:); tempAlign2{ii}(1,:);tempAlign2{ii}(3,:); tempAlign3{ii}(1,:);tempAlign3{ii}(3,:);tempAlign4{ii}(1,:);tempAlign4{ii}(3,:)};
+            parfor_tempAlignIntermediateC{ii} = {[cross_pair_combos_List.Value(ii,1); cross_pair_combos_List.Value(ii,2)],[cross_pair_combos_List.Value(ii,2); cross_pair_combos_List.Value(ii,1)],[Current_Z Current_Z]'};
         else
-            TopCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign2_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign2_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign2_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign2_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign1_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign1_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign1_Vector{nn}(1,:);
-            BotCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign1_Vector{nn}(3,:);
-            TopCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = '';
-            BotCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = '';
-            TopCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = '';
-            BotCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = '';
-            TopCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = '';
-            BotCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = '';
-            TopCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = '';
-            BotCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = '';
+            Current_Z = {tempAlign2{ii}(1,:);tempAlign2{ii}(3,:);tempAlign1{ii}(1,:);tempAlign1{ii}(3,:);'';'';'';''};
+             parfor_tempAlignIntermediateC{ii} = {cross_pair_combos_List.Value(ii,1),cross_pair_combos_List.Value(ii,2),(Current_Z)'};
         end
-        % New Version Post Release Should use this case for times swalign(A,B) is not same as reversse(swalign(reverse(A),reverse(B))
-        % TopCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign1_Vector{nn}(1,:);
-        % BotCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign1_Vector{nn}(3,:);
-        % TopCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign1_Vector{nn}(1,:);
-        % BotCrossDimerSeqParsed1_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign1_Vector{nn}(3,:);
-        % TopCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign2_Vector{nn}(1,:);
-        % BotCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign2_Vector{nn}(3,:);
-        % TopCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign2_Vector{nn}(1,:);
-        % BotCrossDimerSeqParsed2_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign2_Vector{nn}(3,:);
-        % TopCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign3_Vector{nn}(1,:);
-        % BotCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign3_Vector{nn}(3,:);
-        % TopCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign3_Vector{nn}(1,:);
-        % BotCrossDimerSeqParsed3_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign3_Vector{nn}(3,:);
-        % TopCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign4_Vector{nn}(1,:);
-        % BotCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,1)}{cross_pair_combos(nn,2)} = tempAlign4_Vector{nn}(3,:);
-        % TopCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign4_Vector{nn}(1,:);
-        % BotCrossDimerSeqParsed4_Vector{cross_pair_combos(nn,2)}{cross_pair_combos(nn,1)} = tempAlign4_Vector{nn}(3,:);
+    end
+    clear tempAlign*
+    positionX = cell2mat(cellfun(@(x) x{1}, parfor_tempAlignIntermediateC, 'Un', 0));
+    positionY = cell2mat(cellfun(@(x) x{2}, parfor_tempAlignIntermediateC, 'Un', 0));
+    positionZ = CATnWrapper(cellfun(@(x) x{3}, parfor_tempAlignIntermediateC, 'Un', 0),1);
+    clear parfor_tempAlignIntermediate*
+    positionY_List = parallel.pool.Constant(positionY);
+    positionZ_List = parallel.pool.Constant(positionZ);
+    parfor ii = 1:length(FinalProbeSet)
+        TopCrossDimerSeqParsed1{ii}(positionY_List.Value(positionX==ii)) = positionZ_List.Value((positionX==ii),1);
+        BotCrossDimerSeqParsed1{ii}(positionY_List.Value(positionX==ii)) = positionZ_List.Value((positionX==ii),2);
+        TopCrossDimerSeqParsed2{ii}(positionY_List.Value(positionX==ii)) = positionZ_List.Value((positionX==ii),3);
+        BotCrossDimerSeqParsed2{ii}(positionY_List.Value(positionX==ii)) = positionZ_List.Value((positionX==ii),4);
+        TopCrossDimerSeqParsed3{ii}(positionY_List.Value(positionX==ii)) = positionZ_List.Value((positionX==ii),5);
+        BotCrossDimerSeqParsed3{ii}(positionY_List.Value(positionX==ii)) = positionZ_List.Value((positionX==ii),6);
+        TopCrossDimerSeqParsed4{ii}(positionY_List.Value(positionX==ii)) = positionZ_List.Value((positionX==ii),7);
+        BotCrossDimerSeqParsed4{ii}(positionY_List.Value(positionX==ii)) = positionZ_List.Value((positionX==ii),8);
     end
     CrossDictionary = ...
         [CATnWrapper(arrayfun(@(nn) TopCrossDimerSeqParsed1{nn}(~cellfun(@isempty,TopCrossDimerSeqParsed1{nn})), 1:length(FinalProbeSet),'Un',0),2) ...
@@ -189,20 +120,9 @@ if overrides.includeCross
         CATnWrapper(arrayfun(@(nn) BotCrossDimerSeqParsed1{nn}(~cellfun(@isempty,BotCrossDimerSeqParsed1{nn})), 1:length(FinalProbeSet),'Un',0),2) ...
         CATnWrapper(arrayfun(@(nn) BotCrossDimerSeqParsed2{nn}(~cellfun(@isempty,BotCrossDimerSeqParsed2{nn})), 1:length(FinalProbeSet),'Un',0),2) ...
         CATnWrapper(arrayfun(@(nn) BotCrossDimerSeqParsed3{nn}(~cellfun(@isempty,BotCrossDimerSeqParsed3{nn})), 1:length(FinalProbeSet),'Un',0),2) ...
-        CATnWrapper(arrayfun(@(nn) BotCrossDimerSeqParsed3{nn}(~cellfun(@isempty,BotCrossDimerSeqParsed3{nn})), 1:length(FinalProbeSet),'Un',0),2)];
-    % New Version Post Release Should use this case for times swalign(A,B) is not same as reversse(swalign(reverse(A),reverse(B))
-    % CrossDictionary = ...
-    %     [arrayfun(@(nn) tempAlign1_Vector{nn}(1,:), find(~cellfun(@isempty,tempAlign1_Vector)),'Un',0)...
-    %     arrayfun(@(nn) tempAlign1_Vector{nn}(3,:), find(~cellfun(@isempty,tempAlign1_Vector)),'Un',0)...
-    %     arrayfun(@(nn) tempAlign2_Vector{nn}(1,:), find(~cellfun(@isempty,tempAlign2_Vector)),'Un',0)...
-    %     arrayfun(@(nn) tempAlign2_Vector{nn}(3,:), find(~cellfun(@isempty,tempAlign2_Vector)),'Un',0)...
-    %     arrayfun(@(nn) tempAlign3_Vector{nn}(1,:), find(~cellfun(@isempty,tempAlign3_Vector)),'Un',0)...
-    %     arrayfun(@(nn) tempAlign3_Vector{nn}(3,:), find(~cellfun(@isempty,tempAlign3_Vector)),'Un',0)...
-    %     arrayfun(@(nn) tempAlign4_Vector{nn}(1,:), find(~cellfun(@isempty,tempAlign4_Vector)),'Un',0)...
-    %     arrayfun(@(nn) tempAlign4_Vector{nn}(3,:), find(~cellfun(@isempty,tempAlign4_Vector)),'Un',0)];
+        CATnWrapper(arrayfun(@(nn) BotCrossDimerSeqParsed4{nn}(~cellfun(@isempty,BotCrossDimerSeqParsed4{nn})), 1:length(FinalProbeSet),'Un',0),2)];
     CrossDimerDictionary.Names = unique(CrossDictionary);
     %% Find Unique Pairs of Hairpin and Self Hybridization Sequences
-    %% Remove Pairs of Flips (Redundant matches, that look different but are a different pair both flipped)
     tempPair1_Exists = arrayfun(@(nn) sum(strcmp(CrossDimerDictionary.Names,TopCrossDimerSeqParsed1{cross_pair_combos_with_flip(nn,1)}{cross_pair_combos_with_flip(nn,2)})),1:size(cross_pair_combos_with_flip,1));
     tempPair2_Exists = arrayfun(@(nn) sum(strcmp(CrossDimerDictionary.Names,TopCrossDimerSeqParsed2{cross_pair_combos_with_flip(nn,1)}{cross_pair_combos_with_flip(nn,2)})),1:size(cross_pair_combos_with_flip,1));
     tempPair3_Exists = arrayfun(@(nn) sum(strcmp(CrossDimerDictionary.Names,TopCrossDimerSeqParsed3{cross_pair_combos_with_flip(nn,1)}{cross_pair_combos_with_flip(nn,2)})),1:size(cross_pair_combos_with_flip,1));
@@ -216,38 +136,50 @@ if overrides.includeCross
         find(strcmp(CrossDimerDictionary.Names,BotCrossDimerSeqParsed3{cross_pair_combos_with_flip(nn,1)}{cross_pair_combos_with_flip(nn,2)})) cross_pair_combos_with_flip(nn,1) cross_pair_combos_with_flip(nn,2)],find(tempPair3_Exists),'Un',0),1);...
         CATnWrapper(arrayfun(@(nn) [find(strcmp(CrossDimerDictionary.Names,TopCrossDimerSeqParsed4{cross_pair_combos_with_flip(nn,1)}{cross_pair_combos_with_flip(nn,2)})) ...
         find(strcmp(CrossDimerDictionary.Names,BotCrossDimerSeqParsed4{cross_pair_combos_with_flip(nn,1)}{cross_pair_combos_with_flip(nn,2)})) cross_pair_combos_with_flip(nn,1) cross_pair_combos_with_flip(nn,2)],find(tempPair4_Exists),'Un',0),1)];
+    clear tempPair*
     UniquePairs = unique(DictionaryPairs,'rows');
+    clear DictionaryPairs
     %% Map Unique Pairs back to probes pairs
     CrossDimerSeqParsed = cell(length(FinalProbeSet),length(FinalProbeSet));
     Row_Vector =  CATnWrapper(arrayfun(@(nn)  find((UniquePairs(:,3)==cross_pair_combos_with_flip(nn,1)).*(UniquePairs(:,4)==cross_pair_combos_with_flip(nn,2))),1:size(cross_pair_combos_with_flip,1),'Un',0),1);
     K_Vector =  CATnWrapper(arrayfun(@(nn)  reshape(1:size(find((UniquePairs(:,3)==cross_pair_combos_with_flip(nn,1)).*(UniquePairs(:,4)==cross_pair_combos_with_flip(nn,2))),1),[],1),1:size(cross_pair_combos_with_flip,1),'Un',0),1);
     U_Vector =  CATnWrapper(arrayfun(@(nn)  cross_pair_combos_with_flip(nn,1)*ones(size(find((UniquePairs(:,3)==cross_pair_combos_with_flip(nn,1)).*(UniquePairs(:,4)==cross_pair_combos_with_flip(nn,2))))),1:size(cross_pair_combos_with_flip,1),'Un',0),1);
     V_Vector = CATnWrapper(arrayfun(@(nn)  cross_pair_combos_with_flip(nn,2)*ones(size(find((UniquePairs(:,3)==cross_pair_combos_with_flip(nn,1)).*(UniquePairs(:,4)==cross_pair_combos_with_flip(nn,2))))),1:size(cross_pair_combos_with_flip,1),'Un',0),1);
-    for nn = 1:length(Row_Vector)
-        CrossDimerSeqParsed{U_Vector(nn),V_Vector(nn)}{K_Vector(nn),1} = CrossDimerDictionary.Names{UniquePairs(Row_Vector(nn),1)};
-        CrossDimerSeqParsed{U_Vector(nn),V_Vector(nn)}{K_Vector(nn),2} = CrossDimerDictionary.Names{UniquePairs(Row_Vector(nn),2)};
-    end
-    %% Remove Pairs of Flips (Redundant matches, that look different but are a different pair both flipped)
-    for nn = 1:size(cross_pair_combos_with_flip,1)
-        u = cross_pair_combos_with_flip(nn,1);
-        v = cross_pair_combos_with_flip(nn,2);
-        nl = size(CrossDimerSeqParsed{u,v},1);
-        Cross_Flip_Identity1 = cell2mat(arrayfun(@(y) strcmp(flip(CrossDimerSeqParsed{u,v}{y,1}),CrossDimerSeqParsed{u,v}(:,1)),1:nl,'UniformOutput',false));
-        Cross_Flip_Identity2 = cell2mat(arrayfun(@(y) strcmp(flip(CrossDimerSeqParsed{u,v}{y,2}),CrossDimerSeqParsed{u,v}(:,2)),1:nl,'UniformOutput',false));
-        Flip_Identity1 = triu(Cross_Flip_Identity1);
-        Flip_Identity2 = triu(Cross_Flip_Identity2);
-        [row1,~] = find(Flip_Identity1);
-        [row2,~] = find(Flip_Identity2);
-        if (~isempty(row1)&&~isempty(row2))
-            for w = 1:length(row1)
-                CrossDimerSeqParsed{u,v}{row1(w),1} = [];
-            end
-            for w = 1:length(row2)
-                CrossDimerSeqParsed{u,v}{row2(w),2} = [];
-            end
+    K_Vector_List = parallel.pool.Constant(K_Vector);
+    Row_Vector_List = parallel.pool.Constant(Row_Vector);
+    UniquePairs_List = parallel.pool.Constant(UniquePairs);
+    CrossDimerDictionaryNames_List = parallel.pool.Constant(CrossDimerDictionary.Names);
+    L = length(FinalProbeSet);
+    parfor ii = 1:length(FinalProbeSet)
+        for ij = 1:L
+            CrossDimerSeqParsed{ii,ij}(K_Vector_List.Value((U_Vector==ii).*(V_Vector==ij)==1),1) = CrossDimerDictionaryNames_List.Value(UniquePairs_List.Value(Row_Vector_List.Value((U_Vector==ii).*(V_Vector==ij)==1),1));
+            CrossDimerSeqParsed{ii,ij}(K_Vector_List.Value((U_Vector==ii).*(V_Vector==ij)==1),2) = CrossDimerDictionaryNames_List.Value(UniquePairs_List.Value(Row_Vector_List.Value((U_Vector==ii).*(V_Vector==ij)==1),2));
         end
     end
-    clear row Flip_Identity1 Flip_Identity2 Cross_Flip_Identity1 Cross_Flip_Identity2 row1 row2
+    clear Row_Vector* K_Vector* U_Vector* V_Vector* CrossDimerDictionary*
+    %% Remove Pairs of Flips (Redundant matches, that look different but are a different pair both flipped)
+    parfor_tempPar = cell(size(cross_pair_combos,1), 1);
+    cross_pair_combos_with_flip_List = parallel.pool.Constant(cross_pair_combos_with_flip);
+    CrossDimerSeqParsed_List = parallel.pool.Constant(CrossDimerSeqParsed);
+    parfor nn = 1:size(cross_pair_combos_with_flip,1)
+        u = cross_pair_combos_with_flip_List.Value(nn,1);
+        v = cross_pair_combos_with_flip_List.Value(nn,2);
+        [row1,~] = find(triu(cell2mat(arrayfun(@(y) strcmp(flip(CrossDimerSeqParsed_List.Value{u,v}{y,1}),CrossDimerSeqParsed_List.Value{u,v}(:,1)),1:size(CrossDimerSeqParsed_List.Value{u,v},1),'UniformOutput',false))));
+        [row2,~] = find(triu(cell2mat(arrayfun(@(y) strcmp(flip(CrossDimerSeqParsed_List.Value{u,v}{y,2}),CrossDimerSeqParsed_List.Value{u,v}(:,2)),1:size(CrossDimerSeqParsed_List.Value{u,v},1),'UniformOutput',false))));
+        parfor_tempPar{nn} = {u,v, row1, row2};
+    end
+    clear CrossDimerSeqParsed_List cross_pair_combos_with_flip_List
+    U_Vector = cross_pair_combos_with_flip(:,1);
+    V_Vector = cross_pair_combos_with_flip(:,2);
+    parfor_tempPar_List = parallel.pool.Constant(parfor_tempPar);
+    clear parfor_tempPar
+    parfor ii = 1:length(FinalProbeSet)
+        for ij = 1:L
+            CrossDimerSeqParsed{ii,ij}(arrayfun(@(nn) parfor_tempPar_List.Value{nn}{3},find((U_Vector == ii).*(V_Vector==ij))),1) = arrayfun(@(x) [],find((U_Vector == ii).*(V_Vector==ij)),'Un',0);
+            CrossDimerSeqParsed{ii,ij}(arrayfun(@(nn) parfor_tempPar_List.Value{nn}{4},find((U_Vector == ii).*(V_Vector==ij))),2) = arrayfun(@(x) [],find((U_Vector == ii).*(V_Vector==ij)),'Un',0);
+        end
+    end
+    clear row Flip_Identity1 Flip_Identity2 Cross_Flip_Identity1 Cross_Flip_Identity2 row1 row2 parfor_tempPar_List
     crossNotExist = cellfun(@isempty,CrossDimerSeqParsed);
     [crossId1,crossId2] = find(crossNotExist==1);
     for i = 1:length(crossId1)
