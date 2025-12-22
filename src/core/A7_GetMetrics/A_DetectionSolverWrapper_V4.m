@@ -1,4 +1,4 @@
-function [CtN,p_TargetSites_Bound,c_TargetSites_Bound] = A_DetectionSolverWrapper_V4(ModelSolverFunctions,v,Pset,settings,nExpressionMatrix,Tvec,Mvec,Dvec,Cvec,Tref,CProbes_Free,DoesProbeBindSite,Js_RNA,Js_DNA,Js_Sites,Names,ON_IDs_specific,ON_IDs_agnostic,OFF_IDs)
+function [CtN,p_TargetSites_Bound,c_TargetSites_Bound,Ct,Pt_ModelCellVector,tHit] = A_DetectionSolverWrapper_V4(ModelSolverFunctions,v,Pset,settings,nExpressionMatrix,Tvec,Mvec,Dvec,Cvec,Tref,CProbes_Free,DoesProbeBindSite,Js_RNA,Js_DNA,Js_Sites,Names,ON_IDs_specific,ON_IDs_agnostic,OFF_IDs)
 %% This function computes probability and concentration of on/off-targets having any number of binding sites bound by probes.
 % given equilibrium probe concentrations and handle functions for
 % converting free concentrations of probes and targets into concentration of probes bound targets.
@@ -85,6 +85,9 @@ switch ModelSolverFunctions.solverType
 end
 p_TargetSites_Bound(isnan(p_TargetSites_Bound)) = 0;
 c_TargetSites_Bound(isnan(c_TargetSites_Bound)) = 0;
+
+
+%different for multi-weave and split or probes having any number of labels
 switch ModelSolverFunctions.solverType
     case 0
         if (length(Pset)>1)
@@ -116,6 +119,6 @@ if (~isempty(tHit))
     CtON_specific = squeeze(sum(Ct(pON_IDs,:,:),1,'omitnan'));
     CtON_other = squeeze(sum(Ct(pON_IDs_other,:,:),1,'omitnan'));
     CtOFF = squeeze(sum(Ct(pOFF_IDs,:,:),1,'omitnan'));
-    CtN = permute(CATnWrapper({CtON_specific,CtON_other,CtOFF},3),[3 1 2]);
+    CtN = permute(CATnWrapper({CtON_specific,CtON_other,CtOFF},3),[3 1 2]);   
 end
 end
