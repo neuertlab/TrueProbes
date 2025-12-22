@@ -175,8 +175,8 @@ if overrides.includeCross
     clear parfor_tempPar
     parfor ii = 1:length(FinalProbeSet)
         for ij = 1:L
-            CrossDimerSeqParsed{ii,ij}(arrayfun(@(nn) parfor_tempPar_List.Value{nn}{3},find((U_Vector == ii).*(V_Vector==ij))),1) = arrayfun(@(x) [],find((U_Vector == ii).*(V_Vector==ij)),'Un',0);
-            CrossDimerSeqParsed{ii,ij}(arrayfun(@(nn) parfor_tempPar_List.Value{nn}{4},find((U_Vector == ii).*(V_Vector==ij))),2) = arrayfun(@(x) [],find((U_Vector == ii).*(V_Vector==ij)),'Un',0);
+            CrossDimerSeqParsed{ii,ij}( cell2mat(arrayfun(@(nn) parfor_tempPar_List.Value{nn}{3},find((U_Vector == ii).*(V_Vector==ij)),'Un',0))    ,1) = arrayfun(@(x) [],find((U_Vector == ii).*(V_Vector==ij)),'Un',0);
+            CrossDimerSeqParsed{ii,ij}( cell2mat(arrayfun(@(nn) parfor_tempPar_List.Value{nn}{4},find((U_Vector == ii).*(V_Vector==ij)),'Un',0))  ,  2) = arrayfun(@(x) [],find((U_Vector == ii).*(V_Vector==ij)),'Un',0);
         end
     end
     clear row Flip_Identity1 Flip_Identity2 Cross_Flip_Identity1 Cross_Flip_Identity2 row1 row2 parfor_tempPar_List
